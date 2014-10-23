@@ -61,6 +61,8 @@ function init() {
         selectedEntity = null;
         for(var i = entities.length - 1; i >= 0; i-- ) {
             var entity = entities[i];
+            if(!entity) continue;
+
             if (event.offsetX === undefined) {
                 var x = event.layerX;
                 var y = event.layerY;
@@ -74,7 +76,7 @@ function init() {
                 offsetY = event.offsetY - entity.y;
             }
 
-            if (entity && x > entity.x && y > entity.y && x < parseFloat(entity.x + entity.image.width) && y < parseFloat(entity.y + entity.image.height)) {
+            if (x > entity.x && y > entity.y && x < parseFloat(entity.x + entity.image.width) && y < parseFloat(entity.y + entity.image.height)) {
                 canvas.addEventListener("mousemove", handle_mousemove, false);
                 selectedEntity = entity;
                 break;
@@ -109,7 +111,17 @@ function init() {
         }
     }
 
+    function handle_window_resize(event) {
+        console.log("yep");
+        ctx.canvas.width = drop_zone.offsetWidth;
+        ctx.canvas.height = drop_zone.offsetHeight;
+        draw();
+    }
+
+
     window.addEventListener("keydown", handle_keypress, false);
+    window.addEventListener("resize", handle_window_resize, false);
+
 
     document.body.addEventListener("dragover", handle_dragover, false)
     document.body.addEventListener("drop", stop_default_drop, false);
