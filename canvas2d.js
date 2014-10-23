@@ -138,7 +138,6 @@ function init() {
         else if(selectedEntity && (event.keyCode === 107 || event.keyCode === 187)  ) {
             for(var i in entities) {
                 if (entities[i] === selectedEntity) {
-                    console.log(i + "   " + entities.length);
                     if(i < entities.length-1) {
                         var temp = entities[parseInt(i) + 1];
                         entities[parseInt(i) + 1] = entities[i];
