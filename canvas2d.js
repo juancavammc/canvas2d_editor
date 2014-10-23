@@ -46,18 +46,36 @@ function init() {
         event.preventDefault();
     }
 
+    var offsetX = 0;
+    var offsetY = 0;
     function handle_mousemove(event) {
-        entity.x = event.offsetX;
-        entity.y = event.offsetY;
+        if(event.offsetX === undefined) {
+            entity.x = event.layerX - offsetX;
+            entity.y = event.layerY - offsetY;
+        }
+        else {
+            entity.x = event.offsetX - offsetX;
+            entity.y = event.offsetY - offsetY;
+        }
         ctx.clearRect(0,0, ctx.canvas.width, ctx.canvas.height);
         ctx.drawImage(entity.image, entity.x, entity.y);
     }
 
     function handle_mousedown(event) {
-        console.log( event.offsetX + " < " + parseFloat(entity.x+entity.image.width) );
-        console.log( event.offsetY + " < " + parseFloat(entity.y+entity.image.height) );
+        if(event.offsetX === undefined) {
+            var x = event.layerX;
+            var y = event.layerY;
+            offsetX = event.layerX - entity.x;
+            offsetY = event.layerY - entity.y;
+        }
+        else {
+            var x = event.offsetX;
+            var y = event.offsetY;
+            offsetX = event.offsetX - entity.x;
+            offsetY = event.offsetY - entity.y;
+        }
 
-        if(entity && event.offsetX > entity.x && event.offsetY > entity.y && event.offsetX < parseFloat(entity.x+entity.image.width) && event.offsetY < parseFloat(entity.y+entity.image.height) ) {
+        if(entity && x > entity.x && y > entity.y && x < parseFloat(entity.x+entity.image.width) && y < parseFloat(entity.y+entity.image.height) ) {
             console.log("click!");
             canvas.addEventListener("mousemove", handle_mousemove, false);
         }
