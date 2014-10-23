@@ -14,6 +14,10 @@ body {
     font:  14px 'Tahoma';
 }
 
+#all {
+    width: 100%;
+    height: 100%;
+}
 #wrap {
     background-color: #3c3c3c;
     position: absolute;
