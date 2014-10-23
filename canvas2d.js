@@ -124,6 +124,7 @@ function init() {
     }
 
     function handle_keypress(event) {
+        //console.log(event.keyCode);
         if(selectedEntity && event.keyCode === 46) { //DEL == 46
             for(var i in entities) {
                 if(entities[i] === selectedEntity) {
@@ -131,6 +132,33 @@ function init() {
                     entities[i] = null;
                     entities = entities.filter(function(n){ return n != undefined });
                     draw();
+                }
+            }
+        }
+        else if(selectedEntity && (event.keyCode === 107 || event.keyCode === 187)  ) {
+            for(var i in entities) {
+                if (entities[i] === selectedEntity) {
+                    console.log(i + "   " + entities.length);
+                    if(i < entities.length-1) {
+                        var temp = entities[parseInt(i) + 1];
+                        entities[parseInt(i) + 1] = entities[i];
+                        entities[i] = temp;
+                        draw();
+                        break;
+                    }
+                }
+            }
+        }
+        else if(selectedEntity && (event.keyCode === 109 || event.keyCode === 189)  ) {
+            for(var i in entities) {
+                if (entities[i] === selectedEntity) {
+                    if(i > 0) {
+                        var temp = entities[parseInt(i) - 1];
+                        entities[parseInt(i) - 1] = entities[i];
+                        entities[i] = temp;
+                        draw();
+                        break;
+                    }
                 }
             }
         }
