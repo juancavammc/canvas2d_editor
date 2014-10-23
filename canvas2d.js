@@ -18,8 +18,15 @@ function init() {
         event.stopPropagation();
         event.preventDefault();
         var files = event.dataTransfer.files;
-        if(files.length) {
-            var file = files[0];
+        //if(files.length) {
+        for(var i in files) {
+            if(!(files[i] instanceof File)) continue;
+            var file = files[i];
+            var pattern = /image\//i;
+            if( !file.type.match(pattern) ) {
+                console.log("Not an image."); //TODO: Throw error/message?
+                continue;
+            }
             var reader = new FileReader();
             reader.onloadend = function() {
                 var img = new Image();
@@ -29,9 +36,8 @@ function init() {
                 ///////////////
                 img.onload = function() {
                     ctx.drawImage(this, 0, 0);
-                    entities.push( {image: img, x: 0, y: 0} );
+                    entities.push( {image: img, x: 0, y: 0, width: img.width, height: img.height} );
                 }
-
             };
             reader.readAsDataURL(file);
         }
@@ -112,7 +118,6 @@ function init() {
     }
 
     function handle_window_resize(event) {
-        console.log("yep");
         ctx.canvas.width = drop_zone.offsetWidth;
         ctx.canvas.height = drop_zone.offsetHeight;
         draw();
