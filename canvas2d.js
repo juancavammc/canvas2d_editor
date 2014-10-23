@@ -7,6 +7,9 @@ function init() {
     ctx.canvas.height = drop_zone.offsetHeight;
     console.log(drop_zone.offsetWidth);
     console.log(drop_zone.offsetHeight);
+
+    var entities = [];
+    //var selectedEntity = null;
     var entity = null; //TODO: Pueden haber más de una imagen (lista)?
 
     function handle_dragover(event) {
@@ -18,7 +21,7 @@ function init() {
     function handle_drop(event) {
         event.stopPropagation();
         event.preventDefault();
-        ctx.clearRect(0,0, ctx.canvas.width, ctx.canvas.height);
+        //ctx.clearRect(0,0, ctx.canvas.width, ctx.canvas.height);
         var files = event.dataTransfer.files;
         if(files.length) {
             var file = files[0];
@@ -32,12 +35,11 @@ function init() {
                 ///////////////
                 img.onload = function() {
                     ctx.drawImage(this, 0, 0);
-                    entity = {image: img, x: 0, y: 0};
+                    entities.push( {image: img, x: 0, y: 0} );
                 }
 
             };
             reader.readAsDataURL(file);
-            console.log(reader.result);
         }
     }
 
@@ -49,7 +51,7 @@ function init() {
     var offsetX = 0;
     var offsetY = 0;
     function handle_mousemove(event) {
-        if(event.offsetX === undefined) {
+        if (event.offsetX === undefined) {
             entity.x = event.layerX - offsetX;
             entity.y = event.layerY - offsetY;
         }
@@ -57,28 +59,38 @@ function init() {
             entity.x = event.offsetX - offsetX;
             entity.y = event.offsetY - offsetY;
         }
-        ctx.clearRect(0,0, ctx.canvas.width, ctx.canvas.height);
-        ctx.drawImage(entity.image, entity.x, entity.y);
+        ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+        for (var i in entities) {
+            ctx.drawImage(entities[i].image, entities[i].x, entities[i].y);
+        }
     }
 
     function handle_mousedown(event) {
-        if(event.offsetX === undefined) {
-            var x = event.layerX;
-            var y = event.layerY;
-            offsetX = event.layerX - entity.x;
-            offsetY = event.layerY - entity.y;
-        }
-        else {
-            var x = event.offsetX;
-            var y = event.offsetY;
-            offsetX = event.offsetX - entity.x;
-            offsetY = event.offsetY - entity.y;
-        }
+        for(var i = entities.length - 1; i >= 0; i-- ) {
+        //for(var i in entities) {
+            console.log("I'm in!");
+            var ent = entities[i];
+            if (event.offsetX === undefined) {
+                var x = event.layerX;
+                var y = event.layerY;
+                offsetX = event.layerX - ent.x;
+                offsetY = event.layerY - ent.y;
+            }
+            else {
+                var x = event.offsetX;
+                var y = event.offsetY;
+                offsetX = event.offsetX - ent.x;
+                offsetY = event.offsetY - ent.y;
+            }
 
-        if(entity && x > entity.x && y > entity.y && x < parseFloat(entity.x+entity.image.width) && y < parseFloat(entity.y+entity.image.height) ) {
-            console.log("click!");
-            canvas.addEventListener("mousemove", handle_mousemove, false);
+            if (ent && x > ent.x && y > ent.y && x < parseFloat(ent.x + ent.image.width) && y < parseFloat(ent.y + ent.image.height)) {
+                console.log("click!");
+                canvas.addEventListener("mousemove", handle_mousemove, false);
+                entity = ent;
+                break;
+            }
         }
+        //entity = null;
     }
 
     function handle_mouseup(event) {
