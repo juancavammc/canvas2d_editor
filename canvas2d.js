@@ -18,8 +18,15 @@ function init() {
         event.stopPropagation();
         event.preventDefault();
         var files = event.dataTransfer.files;
-        if(files.length) {
-            var file = files[0];
+
+        for(var i in files) {
+            if(!(files[i] instanceof File)) continue;
+            var file = files[i];
+            var pattern = /image\//i;
+            if( !file.type.match(pattern) ) {
+                console.log("Not an image."); //TODO: Throw error/message?
+                continue;
+            }
             var reader = new FileReader();
             reader.onloadend = function() {
                 var img = new Image();
@@ -27,11 +34,14 @@ function init() {
                 ///////////////
                 //TODO: Image on center
                 ///////////////
-                img.onload = function() {
+//                img.onload = function() {
+//                    ctx.drawImage(this, 0, 0);
+//                    entities.push( {image: img, x: 0, y: 0, width: img.width, height: img.height} );
+//                }
+                img.addEventListener("load", function() {
                     ctx.drawImage(this, 0, 0);
-                    entities.push( {image: img, x: 0, y: 0} );
-                }
-
+                    entities.push( {image: img, x: 0, y: 0, width: img.width, height: img.height} );
+                }, false);
             };
             reader.readAsDataURL(file);
         }
@@ -76,7 +86,7 @@ function init() {
                 offsetY = event.offsetY - entity.y;
             }
 
-            if (x > entity.x && y > entity.y && x < parseFloat(entity.x + entity.image.width) && y < parseFloat(entity.y + entity.image.height)) {
+            if (x > entity.x && y > entity.y && x < parseFloat(entity.x + entity.width) && y < parseFloat(entity.y + entity.height)) {
                 canvas.addEventListener("mousemove", handle_mousemove, false);
                 selectedEntity = entity;
                 break;
@@ -87,11 +97,26 @@ function init() {
 
     function draw() {
         ctx.strokeStyle="#FF0000";
+        ctx.fillStyle="#FF0000";
         ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
         for (var i in entities) {
             if(entities[i]) ctx.drawImage(entities[i].image, entities[i].x, entities[i].y);
         }
-        if (selectedEntity) ctx.strokeRect(selectedEntity.x, selectedEntity.y, selectedEntity.image.width, selectedEntity.image.height);
+        if (selectedEntity) drawSelectedStroke();
+    }
+
+    function drawSelectedStroke() {
+        ctx.strokeRect(selectedEntity.x, selectedEntity.y, selectedEntity.width, selectedEntity.height);
+        var size = 4;
+        ctx.fillRect(selectedEntity.x-size, selectedEntity.y-size, size*2, size*2);
+        ctx.fillRect(selectedEntity.x-size+selectedEntity.width, selectedEntity.y-size, size*2, size*2);
+        ctx.fillRect(selectedEntity.x-size, selectedEntity.y-size+selectedEntity.height, size*2, size*2);
+        ctx.fillRect(selectedEntity.x-size+selectedEntity.width, selectedEntity.y-size+selectedEntity.height, size*2, size*2);
+
+        ctx.fillRect(selectedEntity.x-size+(+selectedEntity.width/2), selectedEntity.y-size, size*2, size*2);
+        ctx.fillRect(selectedEntity.x-size+selectedEntity.width, selectedEntity.y-size+(selectedEntity.height/2), size*2, size*2);
+        ctx.fillRect(selectedEntity.x-size, selectedEntity.y+(size+selectedEntity.height/2), size*2, size*2);
+        ctx.fillRect(selectedEntity.x-size+(selectedEntity.width/2), selectedEntity.y-size+selectedEntity.height, size*2, size*2);
     }
 
     function handle_mouseup(event) {
@@ -99,6 +124,7 @@ function init() {
     }
 
     function handle_keypress(event) {
+        //console.log(event.keyCode);
         if(selectedEntity && event.keyCode === 46) { //DEL == 46
             for(var i in entities) {
                 if(entities[i] === selectedEntity) {
@@ -109,10 +135,35 @@ function init() {
                 }
             }
         }
+        else if(selectedEntity && (event.keyCode === 107 || event.keyCode === 187)  ) {
+            for(var i in entities) {
+                if (entities[i] === selectedEntity) {
+                    if(i < entities.length-1) {
+                        var temp = entities[parseInt(i) + 1];
+                        entities[parseInt(i) + 1] = entities[i];
+                        entities[i] = temp;
+                        draw();
+                        break;
+                    }
+                }
+            }
+        }
+        else if(selectedEntity && (event.keyCode === 109 || event.keyCode === 189)  ) {
+            for(var i in entities) {
+                if (entities[i] === selectedEntity) {
+                    if(i > 0) {
+                        var temp = entities[parseInt(i) - 1];
+                        entities[parseInt(i) - 1] = entities[i];
+                        entities[i] = temp;
+                        draw();
+                        break;
+                    }
+                }
+            }
+        }
     }
 
     function handle_window_resize(event) {
-        console.log("yep");
         ctx.canvas.width = drop_zone.offsetWidth;
         ctx.canvas.height = drop_zone.offsetHeight;
         draw();
