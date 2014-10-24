@@ -22,8 +22,9 @@ function init() {
         for(var i in files) {
             if(!(files[i] instanceof File)) continue;
             var file = files[i];
-            var pattern = /image\//i;
-            if( !file.type.match(pattern) ) {
+            //var pattern = /image\//i;
+            //if( !file.type.match(pattern) ) {
+            if(file.type.substring(0,6) !== "image/") {
                 console.log("Not an image."); //TODO: Throw error/message?
                 continue;
             }
@@ -34,13 +35,10 @@ function init() {
                 ///////////////
                 //TODO: Image on center
                 ///////////////
-//                img.onload = function() {
-//                    ctx.drawImage(this, 0, 0);
-//                    entities.push( {image: img, x: 0, y: 0, width: img.width, height: img.height} );
-//                }
+
                 img.addEventListener("load", function() {
-                    ctx.drawImage(this, 0, 0);
                     entities.push( {image: img, x: 0, y: 0, width: img.width, height: img.height} );
+                    draw();
                 }, false);
             };
             reader.readAsDataURL(file);
@@ -95,6 +93,10 @@ function init() {
         draw();
     }
 
+    function handle_mouseup(event) {
+        canvas.removeEventListener("mousemove", handle_mousemove, false);
+    }
+
     function draw() {
         ctx.strokeStyle="#FF0000";
         ctx.fillStyle="#FF0000";
@@ -117,10 +119,6 @@ function init() {
         ctx.fillRect(selectedEntity.x-size+selectedEntity.width, selectedEntity.y-size+(selectedEntity.height/2), size*2, size*2);
         ctx.fillRect(selectedEntity.x-size, selectedEntity.y+(size+selectedEntity.height/2), size*2, size*2);
         ctx.fillRect(selectedEntity.x-size+(selectedEntity.width/2), selectedEntity.y-size+selectedEntity.height, size*2, size*2);
-    }
-
-    function handle_mouseup(event) {
-        canvas.removeEventListener("mousemove", handle_mousemove, false);
     }
 
     function handle_keypress(event) {
@@ -182,6 +180,4 @@ function init() {
 
     canvas.addEventListener("mousedown", handle_mousedown, false);
     canvas.addEventListener("mouseup", handle_mouseup, false);
-
-    //TODO: RESIZE EVENT
 };
