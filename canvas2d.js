@@ -7,12 +7,55 @@ function CanvasEditor() {
     this.selectedEntity = null;
 }
 
-CanvasEditor.prototype.init = function() {
+CanvasEditor.prototype.init = function(options) {
     var that = this;
-    that.ctx = document.getElementById("canvas_test").getContext("2d");
-    that.drop_zone = document.getElementById("drop_zone");
-    that.ctx.canvas.width = that.drop_zone.offsetWidth; //TODO: Firefox?
-    that.ctx.canvas.height = that.drop_zone.offsetHeight;
+    options = options || {};
+    var canvas = null;
+
+    //Drop zone
+    if(options.drop_zone) {
+        if(typeof(options.drop_zone) == "string")
+        {
+            console.log("dropzone");
+            that.drop_zone = document.getElementById( options.drop_zone );
+            if(!that.drop_zone) throw("Drop zone element not found: " + options.drop_zone );
+        }
+        else {
+            that.drop_zone = options.drop_zone;
+        }
+    }
+    else {
+        throw("Drop zone element not found: " + options.drop_zone);
+    }
+    //Canvas
+    if(options.canvas)
+    {
+        if(typeof(options.canvas) == "string")
+        {
+            console.log("canvas");
+            canvas = document.getElementById( options.canvas );
+            canvas.width = that.drop_zone.offsetWidth; //TODO: Firefox?
+            canvas.height = that.drop_zone.offsetHeight;
+            if(!canvas) throw("Canvas element not found: " + options.canvas );
+        }
+        else {
+            canvas = options.canvas;
+        }
+    }
+    else {
+        canvas = createCanvas(options.width || 800, options.height || 600); //TODO
+    }
+
+
+    that.ctx = canvas.getContext("2d");
+
+
+
+
+//    that.ctx = document.getElementById("canvas_test").getContext("2d");
+//    that.drop_zone = document.getElementById("drop_zone");
+//    that.ctx.canvas.width = that.drop_zone.offsetWidth; //TODO: Firefox?
+//    that.ctx.canvas.height = that.drop_zone.offsetHeight;
 
     function handle_dragover(event) {
         event.stopPropagation();
@@ -187,3 +230,10 @@ CanvasEditor.prototype.init = function() {
     that.ctx.canvas.addEventListener("mousedown", handle_mousedown, false);
     that.ctx.canvas.addEventListener("mouseup", handle_mouseup, false);
 };
+
+function createCanvas(width, height) {
+    var canvas = document.createElement('canvas');
+    canvas.width = width;
+    canvas.height = height;
+    return canvas;
+}
