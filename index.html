@@ -10,10 +10,16 @@
 
             <div id="wrap">
                 <div id="drop_zone">
-                    <canvas id="canvas_test"></canvas>
+                    <!-- <canvas id="canvas_test"></canvas> -->
                 </div>
             </div>
 
-        <script>init()</script>
+        <script>
+            var container = document.getElementById("drop_zone");
+            var editor1 = new CanvasEditor();
+            //editor1.init({canvas: "canvas_test", drop_zone: "drop_zone", width: container.offsetWidth, height: container.offsetHeight});
+            editor1.init({drop_zone: "drop_zone", width: container.offsetWidth, height: container.offsetHeight});
+            container.appendChild(editor1.ctx.canvas);
+        </script>
     </body>
 </html>
