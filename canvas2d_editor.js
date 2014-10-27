@@ -8,7 +8,8 @@ function CanvasEditor() {
     this.strokeColor = "#FF0000";
 }
 
-CanvasEditor.prototype.init = function(options) {
+//TODO: drag por toda la pantalla
+CanvasEditor.prototype.create = function(options) {
     var that = this;
     options = options || {};
     var canvas = null;
@@ -232,6 +233,7 @@ CanvasEditor.prototype.init = function(options) {
 
     window.addEventListener("keydown", handle_keypress, false);
     window.addEventListener("resize", handle_window_resize, false);
+    //that.ctx.canvas.addEventListener("resize", handle_window_resize, false);
 
     document.body.addEventListener("dragover", handle_dragover, false)
     document.body.addEventListener("drop", stop_default_drop, false);

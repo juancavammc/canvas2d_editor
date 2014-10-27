@@ -4,7 +4,6 @@
         <meta charset="utf-8">
         <title>Canvas2D Test</title>
         <link rel="stylesheet" type="text/css" href="style.css" />
-        <script type="text/javascript" src="canvas2d_editor.js"></script>
     </head>
     <body>
 
@@ -13,13 +12,7 @@
                     <!-- <canvas id="canvas_test"></canvas> -->
                 </div>
             </div>
-
-        <script>
-            var container = document.getElementById("drop_zone");
-            var editor1 = new CanvasEditor();
-            //editor1.init({canvas: "canvas_test", drop_zone: "drop_zone", width: container.offsetWidth, height: container.offsetHeight});
-            editor1.init({drop_zone: "drop_zone", width: container.offsetWidth, height: container.offsetHeight});
-            container.appendChild(editor1.ctx.canvas);
-        </script>
+            <script type="text/javascript" src="canvas2d_editor.js"></script>
+            <script type="text/javascript" src="editor.js"></script>
     </body>
 </html>
