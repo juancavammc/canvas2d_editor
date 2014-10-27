@@ -53,54 +53,6 @@ CanvasEditor.prototype.create = function(options) {
     var offsetX = 0;
     var offsetY = 0;
 
-    function draw() {
-        that.ctx.clearRect(0, 0, that.ctx.canvas.width, that.ctx.canvas.height);
-        //for (var i in that.entities) {
-        for(var i = 0; i < that.entities.length; ++i) {
-            if (that.entities[i]) {
-                that.ctx.save();
-                var entity = that.entities[i];
-                that.ctx.translate(entity.x, entity.y);
-                that.ctx.drawImage(entity.image, 0, 0, entity.width, entity.height);
-                that.ctx.restore();
-            }
-        }
-        if (that.selectedEntity) drawSelectedStroke();
-    }
-
-    function drawSelectedStroke() {
-        //console.log("draw: " + that.selectedEntity.x + "," + that.selectedEntity.y);
-        that.ctx.save();
-        that.ctx.strokeStyle = that.strokeColor;
-        that.ctx.fillStyle = that.strokeColor;
-        var entity = that.selectedEntity;
-        var x = entity.x;
-        var y = entity.y;
-        var w = entity.width;
-        var h = entity.height
-        var size = 4;
-
-        that.ctx.translate(x,y);
-
-        that.ctx.strokeRect(0,0,w,h);
-
-        fillSquare(0,0,size);
-        fillSquare(w,0,size);
-        fillSquare(0,h,size);
-        fillSquare(w,h,size);
-
-        fillSquare(w/2,0,size);
-        fillSquare(0,h/2,size);
-        fillSquare(w/2,h,size);
-        fillSquare(w,h/2,size);
-
-        that.ctx.restore();
-    }
-
-    function fillSquare(x, y, halfsize) {
-        that.ctx.fillRect(x-halfsize, y-halfsize, halfsize*2, halfsize*2);
-    }
-
     function deleteSelectedEntity() {
         //for (var i in that.entities) {
         for(var i = 0; i < that.entities.length; ++i) {
@@ -110,7 +62,7 @@ CanvasEditor.prototype.create = function(options) {
                 that.entities = that.entities.filter(function (n) {
                     return n != undefined
                 });
-                draw();
+                that.draw();
                 break;
             }
         }
@@ -124,7 +76,7 @@ CanvasEditor.prototype.create = function(options) {
                     var temp = that.entities[i+1];
                     that.entities[i+1] = that.entities[i];
                     that.entities[i] = temp;
-                    draw();
+                    that.draw();
                     break;
                 }
             }
@@ -139,7 +91,7 @@ CanvasEditor.prototype.create = function(options) {
                     var temp = that.entities[i-1];
                     that.entities[i-1] = that.entities[i];
                     that.entities[i] = temp;
-                    draw();
+                    that.draw();
                     break;
                 }
             }
@@ -166,12 +118,12 @@ CanvasEditor.prototype.create = function(options) {
 
                 img.addEventListener("load", function () {
                     that.entities.push({image: img, x: 0, y: 0, width: img.width, height: img.height});
-                    draw();
+                    that.draw();
                 }, false);
             };
             reader.readAsDataURL(file);
         }
-        draw();
+        that.draw();
     }
 
     function selectEntity(event) {
@@ -194,14 +146,14 @@ CanvasEditor.prototype.create = function(options) {
                 break;
             }
         }
-        draw();
+        that.draw();
     }
 
     function setNewPosition(event) {
         //console.log(event.x, that.selectedEntity.x, that.selectedEntity.width, offsetX);
         that.selectedEntity.x = event.x - offsetX;
         that.selectedEntity.y = event.y - offsetY;
-        draw();
+        that.draw();
     }
 
     function keyPressed(event) {
@@ -254,29 +206,16 @@ CanvasEditor.prototype.create = function(options) {
         keyPressed(event);
     }
 
-    //TODO: Debería ir fuera de la clase, que se encargue el que crea el objeto
-    function handle_window_resize(event) {
-        that.ctx.canvas.width = that.drop_zone.offsetWidth;
-        that.ctx.canvas.height = that.drop_zone.offsetHeight;
-        draw();
-    }
-
     function stop_default_drop(event) {
         event.stopPropagation();
         event.preventDefault();
     }
 
     window.addEventListener("keydown", handle_keypress, false);
-    window.addEventListener("resize", handle_window_resize, false);
-    //that.ctx.canvas.addEventListener("resize", handle_window_resize, false);
-
     document.body.addEventListener("drop", stop_default_drop, false);
-
     that.drop_zone.addEventListener("dragover", handle_dragover, false);
     that.drop_zone.addEventListener("drop", handle_drop, false);
-
     that.ctx.canvas.addEventListener("mousedown", handle_mousedown, false);
-
 
     //TODO: Cambiar nombre
     function parseEvent(event) {
@@ -287,11 +226,59 @@ CanvasEditor.prototype.create = function(options) {
             event.y = event.clientY;
         }
     }
+
+    function createCanvas(width, height) {
+        var canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        return canvas;
+    }
 };
 
-function createCanvas(width, height) {
-    var canvas = document.createElement('canvas');
-    canvas.width = width;
-    canvas.height = height;
-    return canvas;
+CanvasEditor.prototype.draw = function() {
+    this.ctx.clearRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height);
+    //for (var i in that.entities) {
+    for(var i = 0; i < this.entities.length; ++i) {
+        if (this.entities[i]) {
+            this.ctx.save();
+            var entity = this.entities[i];
+            this.ctx.translate(entity.x, entity.y);
+            this.ctx.drawImage(entity.image, 0, 0, entity.width, entity.height);
+            this.ctx.restore();
+        }
+    }
+    if (this.selectedEntity) this.drawSelectedStroke();
+}
+
+CanvasEditor.prototype.drawSelectedStroke = function() {
+    //console.log("draw: " + this.selectedEntity.x + "," + this.selectedEntity.y);
+    this.ctx.save();
+    this.ctx.strokeStyle = this.strokeColor;
+    this.ctx.fillStyle = this.strokeColor;
+    var entity = this.selectedEntity;
+    var x = entity.x;
+    var y = entity.y;
+    var w = entity.width;
+    var h = entity.height
+    var size = 4;
+
+    this.ctx.translate(x,y);
+
+    this.ctx.strokeRect(0,0,w,h);
+
+    this.fillSquare(0,0,size);
+    this.fillSquare(w,0,size);
+    this.fillSquare(0,h,size);
+    this.fillSquare(w,h,size);
+
+    this.fillSquare(w/2,0,size);
+    this.fillSquare(0,h/2,size);
+    this.fillSquare(w/2,h,size);
+    this.fillSquare(w,h/2,size);
+
+    this.ctx.restore();
+}
+
+CanvasEditor.prototype.fillSquare = function(x, y, halfsize) {
+    this.ctx.fillRect(x-halfsize, y-halfsize, halfsize*2, halfsize*2);
 }
