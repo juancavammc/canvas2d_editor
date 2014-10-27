@@ -9,6 +9,10 @@ function CanvasEditor() {
 }
 
 //TODO: drag por toda la pantalla
+//TODO: drag al monitor secundario descoloca la imagen
+//TODO: Recorrer array for tradicional
+//TODO: solucionar evento de mas cuando mouseup (llama a un mousemove de mas)
+//TODO: Sacar draw. Usuario tiene que llamar draw si hace un resize.
 CanvasEditor.prototype.create = function(options) {
     var that = this;
     options = options || {};
@@ -177,15 +181,18 @@ CanvasEditor.prototype.create = function(options) {
 
     function handle_mousemove(event) {
         parseEvent(event);
-        //that.selectedEntity.x = event.offsetX - offsetX;
-        //that.selectedEntity.y = event.offsetY - offsetY;
+        event.stopPropagation();
+        event.preventDefault();
         that.selectedEntity.x = event.x - offsetX;
         that.selectedEntity.y = event.y - offsetY;
-        console.log("move: " + that.selectedEntity.x + "," + that.selectedEntity.y);
+
+        //console.log(Date.now(),"move: ", that.selectedEntity.x,",", that.selectedEntity.y);
         draw();
     }
 
     function handle_mousedown(event) {
+        event.stopPropagation();
+        event.preventDefault();
         that.selectedEntity = null;
         for (var i = that.entities.length - 1; i >= 0; i--) {
             var entity = that.entities[i];
@@ -194,14 +201,12 @@ CanvasEditor.prototype.create = function(options) {
             parseEvent(event);
             var x = event.offsetX;
             var y = event.offsetY;
-            //offsetX = event.offsetX - entity.x;
-            //offsetY = event.offsetY - entity.y;
             offsetX = event.x - entity.x;
             offsetY = event.y - entity.y;
 
-            if (x > entity.x && y > entity.y && x < parseFloat(entity.x + entity.width) && y < parseFloat(entity.y + entity.height)) {
-                //that.ctx.canvas.addEventListener("mousemove", handle_mousemove, false);
+            if (x > entity.x && y > entity.y && x < (entity.x + entity.width) && y < (entity.y + entity.height)) {
                 window.addEventListener("mousemove", handle_mousemove, false);
+                window.addEventListener("mouseup", handle_mouseup, false);
                 that.selectedEntity = entity;
                 break;
             }
@@ -210,9 +215,11 @@ CanvasEditor.prototype.create = function(options) {
     }
 
     function handle_mouseup(event) {
-        //that.ctx.canvas.removeEventListener("mousemove", handle_mousemove, false);
+        event.stopPropagation();
+        event.preventDefault();
         window.removeEventListener("mousemove", handle_mousemove, false);
-        console.log("up: " + that.selectedEntity.x + "," + that.selectedEntity.y);
+        window.removeEventListener("mouseup", handle_mousemove, false);
+        //if(that.selectedEntity) console.log(Date.now(),"up: " + that.selectedEntity.x + "," + that.selectedEntity.y);
     }
 
     function handle_keypress(event) {
@@ -244,15 +251,13 @@ CanvasEditor.prototype.create = function(options) {
     window.addEventListener("resize", handle_window_resize, false);
     //that.ctx.canvas.addEventListener("resize", handle_window_resize, false);
 
-    document.body.addEventListener("dragover", handle_dragover, false)
     document.body.addEventListener("drop", stop_default_drop, false);
 
     that.drop_zone.addEventListener("dragover", handle_dragover, false);
     that.drop_zone.addEventListener("drop", handle_drop, false);
 
     that.ctx.canvas.addEventListener("mousedown", handle_mousedown, false);
-    //that.ctx.canvas.addEventListener("mouseup", handle_mouseup, false);
-    window.addEventListener("mouseup", handle_mouseup, false);
+
 
     function parseEvent(event) {
         if(event.offsetX === undefined) {
