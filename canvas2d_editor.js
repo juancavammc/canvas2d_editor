@@ -8,9 +8,7 @@ function CanvasEditor() {
     this.strokeColor = "#FF0000";
 }
 
-//TODO: drag por toda la pantalla
 //TODO: drag al monitor secundario descoloca la imagen
-//TODO: Recorrer array for tradicional
 //TODO: solucionar evento de mas cuando mouseup (llama a un mousemove de mas)
 //TODO: Sacar draw. Usuario tiene que llamar draw si hace un resize.
 CanvasEditor.prototype.create = function(options) {
@@ -57,7 +55,8 @@ CanvasEditor.prototype.create = function(options) {
 
     function draw() {
         that.ctx.clearRect(0, 0, that.ctx.canvas.width, that.ctx.canvas.height);
-        for (var i in that.entities) {
+        //for (var i in that.entities) {
+        for(var i = 0; i < that.entities.length; ++i) {
             if (that.entities[i]) {
                 that.ctx.save();
                 var entity = that.entities[i];
@@ -70,7 +69,7 @@ CanvasEditor.prototype.create = function(options) {
     }
 
     function drawSelectedStroke() {
-        console.log("draw: " + that.selectedEntity.x + "," + that.selectedEntity.y);
+        //console.log("draw: " + that.selectedEntity.x + "," + that.selectedEntity.y);
         that.ctx.save();
         that.ctx.strokeStyle = that.strokeColor;
         that.ctx.fillStyle = that.strokeColor;
@@ -103,7 +102,8 @@ CanvasEditor.prototype.create = function(options) {
     }
 
     function deleteSelectedEntity() {
-        for (var i in that.entities) {
+        //for (var i in that.entities) {
+        for(var i = 0; i < that.entities.length; ++i) {
             if (that.entities[i] === that.selectedEntity) {
                 that.selectedEntity = null;
                 that.entities[i] = null;
@@ -117,11 +117,12 @@ CanvasEditor.prototype.create = function(options) {
     }
 
     function promoteSelectedEntity() {
-        for (var i in that.entities) {
+        //for (var i in that.entities) {
+        for(var i = 0; i < that.entities.length; ++i) {
             if (that.entities[i] === that.selectedEntity) {
                 if (i < that.entities.length - 1) {
-                    var temp = that.entities[parseInt(i) + 1];
-                    that.entities[parseInt(i) + 1] = that.entities[i];
+                    var temp = that.entities[i+1];
+                    that.entities[i+1] = that.entities[i];
                     that.entities[i] = temp;
                     draw();
                     break;
@@ -131,11 +132,12 @@ CanvasEditor.prototype.create = function(options) {
     }
 
     function demoteSelectedEntity() {
-        for (var i in that.entities) {
+        //for (var i in that.entities) {
+        for(var i = 0; i < that.entities.length; ++i) {
             if (that.entities[i] === that.selectedEntity) {
                 if (i > 0) {
-                    var temp = that.entities[parseInt(i) - 1];
-                    that.entities[parseInt(i) - 1] = that.entities[i];
+                    var temp = that.entities[i-1];
+                    that.entities[i-1] = that.entities[i];
                     that.entities[i] = temp;
                     draw();
                     break;
@@ -144,14 +146,7 @@ CanvasEditor.prototype.create = function(options) {
         }
     }
 
-    function handle_dragover(event) {
-        event.stopPropagation();
-        event.preventDefault();
-    }
-
-    function handle_drop(event) {
-        event.stopPropagation();
-        event.preventDefault();
+    function createNewImages(event) {
         var files = event.dataTransfer.files;
 
         for (var i in files) {
@@ -179,20 +174,7 @@ CanvasEditor.prototype.create = function(options) {
         draw();
     }
 
-    function handle_mousemove(event) {
-        parseEvent(event);
-        event.stopPropagation();
-        event.preventDefault();
-        that.selectedEntity.x = event.x - offsetX;
-        that.selectedEntity.y = event.y - offsetY;
-
-        //console.log(Date.now(),"move: ", that.selectedEntity.x,",", that.selectedEntity.y);
-        draw();
-    }
-
-    function handle_mousedown(event) {
-        event.stopPropagation();
-        event.preventDefault();
+    function selectEntity(event) {
         that.selectedEntity = null;
         for (var i = that.entities.length - 1; i >= 0; i--) {
             var entity = that.entities[i];
@@ -208,10 +190,56 @@ CanvasEditor.prototype.create = function(options) {
                 window.addEventListener("mousemove", handle_mousemove, false);
                 window.addEventListener("mouseup", handle_mouseup, false);
                 that.selectedEntity = entity;
+                //console.log(event.x, that.selectedEntity.x, that.selectedEntity.width, offsetX);
                 break;
             }
         }
         draw();
+    }
+
+    function setNewPosition(event) {
+        //console.log(event.x, that.selectedEntity.x, that.selectedEntity.width, offsetX);
+        that.selectedEntity.x = event.x - offsetX;
+        that.selectedEntity.y = event.y - offsetY;
+        draw();
+    }
+
+    function keyPressed(event) {
+        //console.log(event.keyCode);
+        if (that.selectedEntity && event.keyCode === 46) { //DEL == 46
+            deleteSelectedEntity();
+        }
+        else if (that.selectedEntity && (event.keyCode === 107 || event.keyCode === 187)) { //+
+            promoteSelectedEntity();
+        }
+        else if (that.selectedEntity && (event.keyCode === 109 || event.keyCode === 189)) { //-
+            demoteSelectedEntity();
+        }
+    }
+
+    function handle_dragover(event) {
+        event.stopPropagation();
+        event.preventDefault();
+    }
+
+    function handle_drop(event) {
+        event.stopPropagation();
+        event.preventDefault();
+        createNewImages(event);
+    }
+
+    function handle_mousemove(event) {
+        event.stopPropagation();
+        event.preventDefault();
+        parseEvent(event);
+        setNewPosition(event);
+        //console.log(Date.now(),"move: ", that.selectedEntity.x,",", that.selectedEntity.y);
+    }
+
+    function handle_mousedown(event) {
+        event.stopPropagation();
+        event.preventDefault();
+        selectEntity(event);
     }
 
     function handle_mouseup(event) {
@@ -223,16 +251,7 @@ CanvasEditor.prototype.create = function(options) {
     }
 
     function handle_keypress(event) {
-        //console.log(event.keyCode);
-        if (that.selectedEntity && event.keyCode === 46) { //DEL == 46
-            deleteSelectedEntity();
-        }
-        else if (that.selectedEntity && (event.keyCode === 107 || event.keyCode === 187)) { //+
-            promoteSelectedEntity();
-        }
-        else if (that.selectedEntity && (event.keyCode === 109 || event.keyCode === 189)) { //-
-            demoteSelectedEntity();
-        }
+        keyPressed(event);
     }
 
     //TODO: Debería ir fuera de la clase, que se encargue el que crea el objeto
@@ -259,6 +278,7 @@ CanvasEditor.prototype.create = function(options) {
     that.ctx.canvas.addEventListener("mousedown", handle_mousedown, false);
 
 
+    //TODO: Cambiar nombre
     function parseEvent(event) {
         if(event.offsetX === undefined) {
             event.offsetX = event.layerX;
@@ -266,7 +286,6 @@ CanvasEditor.prototype.create = function(options) {
             event.x = event.clientX;
             event.y = event.clientY;
         }
-
     }
 };
 
