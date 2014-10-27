@@ -66,6 +66,7 @@ CanvasEditor.prototype.create = function(options) {
     }
 
     function drawSelectedStroke() {
+        console.log("draw: " + that.selectedEntity.x + "," + that.selectedEntity.y);
         that.ctx.save();
         that.ctx.strokeStyle = that.strokeColor;
         that.ctx.fillStyle = that.strokeColor;
@@ -176,8 +177,11 @@ CanvasEditor.prototype.create = function(options) {
 
     function handle_mousemove(event) {
         parseEvent(event);
-        that.selectedEntity.x = event.offsetX - offsetX;
-        that.selectedEntity.y = event.offsetY - offsetY;
+        //that.selectedEntity.x = event.offsetX - offsetX;
+        //that.selectedEntity.y = event.offsetY - offsetY;
+        that.selectedEntity.x = event.x - offsetX;
+        that.selectedEntity.y = event.y - offsetY;
+        console.log("move: " + that.selectedEntity.x + "," + that.selectedEntity.y);
         draw();
     }
 
@@ -190,11 +194,14 @@ CanvasEditor.prototype.create = function(options) {
             parseEvent(event);
             var x = event.offsetX;
             var y = event.offsetY;
-            offsetX = event.offsetX - entity.x;
-            offsetY = event.offsetY - entity.y;
+            //offsetX = event.offsetX - entity.x;
+            //offsetY = event.offsetY - entity.y;
+            offsetX = event.x - entity.x;
+            offsetY = event.y - entity.y;
 
             if (x > entity.x && y > entity.y && x < parseFloat(entity.x + entity.width) && y < parseFloat(entity.y + entity.height)) {
-                that.ctx.canvas.addEventListener("mousemove", handle_mousemove, false);
+                //that.ctx.canvas.addEventListener("mousemove", handle_mousemove, false);
+                window.addEventListener("mousemove", handle_mousemove, false);
                 that.selectedEntity = entity;
                 break;
             }
@@ -203,7 +210,9 @@ CanvasEditor.prototype.create = function(options) {
     }
 
     function handle_mouseup(event) {
-        that.ctx.canvas.removeEventListener("mousemove", handle_mousemove, false);
+        //that.ctx.canvas.removeEventListener("mousemove", handle_mousemove, false);
+        window.removeEventListener("mousemove", handle_mousemove, false);
+        console.log("up: " + that.selectedEntity.x + "," + that.selectedEntity.y);
     }
 
     function handle_keypress(event) {
@@ -242,7 +251,8 @@ CanvasEditor.prototype.create = function(options) {
     that.drop_zone.addEventListener("drop", handle_drop, false);
 
     that.ctx.canvas.addEventListener("mousedown", handle_mousedown, false);
-    that.ctx.canvas.addEventListener("mouseup", handle_mouseup, false);
+    //that.ctx.canvas.addEventListener("mouseup", handle_mouseup, false);
+    window.addEventListener("mouseup", handle_mouseup, false);
 
     function parseEvent(event) {
         if(event.offsetX === undefined) {
