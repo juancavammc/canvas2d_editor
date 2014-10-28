@@ -16,8 +16,10 @@
     function handle_window_resize(event) {
         editor1.ctx.canvas.width = drop_zone1.offsetWidth;
         editor1.ctx.canvas.height = drop_zone1.offsetHeight;
-        console.log(editor1.ctx.canvas.width, editor1.ctx.canvas.height);
+        editor2.ctx.canvas.width = editor_zone2.offsetWidth;
+        editor2.ctx.canvas.height = editor_zone2.offsetHeight;
         editor1.draw();
+        editor2.draw();
     }
     window.addEventListener("resize", handle_window_resize, false);
 
