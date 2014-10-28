@@ -371,20 +371,13 @@ CanvasEditor.prototype.create = function(options) {
         event.preventDefault();
     }
 
-    //window.addEventListener("keydown", handle_keypress, false);
-    //document.body.addEventListener("drop", stop_default_drop, false);
-    //that.drop_zone.addEventListener("dragover", handle_dragover, false);
-    //that.drop_zone.addEventListener("drop", handle_drop, false);
-    //that.ctx.canvas.addEventListener("mousedown", handle_mousedown, false);
-    //that.ctx.canvas.addEventListener("mousemove", handle_mousemove_move_notClicked, false);
-
     window.addEventListener("keydown", handle_keypress, false);
+    document.body.addEventListener("dragover", stop_default_drop, false);
     document.body.addEventListener("drop", stop_default_drop, false);
     that.drop_zone.addEventListener("dragover", handle_dragover, false);
     that.drop_zone.addEventListener("drop", handle_drop, false);
     that.ctx.canvas.addEventListener("mousedown", handle_mousedown, false);
     that.ctx.canvas.addEventListener("mousemove", handle_mousemove_move_notClicked, false);
-
 
     var lastX = 0;
     var lastY = 0;
