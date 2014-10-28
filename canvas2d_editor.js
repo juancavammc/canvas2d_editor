@@ -382,7 +382,7 @@ CanvasEditor.prototype.create = function(options) {
 
     var lastX = 0;
     var lastY = 0;
-    //TODO: Cambiar nombre
+
     function augmentEvent(event) {
         if(event.offsetX === undefined) {
             event.offsetX = event.layerX;
@@ -400,6 +400,7 @@ CanvasEditor.prototype.create = function(options) {
         var canvas = document.createElement('canvas');
         canvas.width = width;
         canvas.height = height;
+        console.log(canvas.width, canvas.height);
         return canvas;
     }
 };
