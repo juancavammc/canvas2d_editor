@@ -17,6 +17,9 @@ function CanvasEditor() {
 //TODO: renderizar
 //TODO: añadir, además de mousedown, mouseclick? (Para cambiar entre resize y rotate)
 //TODO: quitar fondo blanco de pngs
+
+//TODO: if drop_zone != canvas ---> canvas->drag->preventdefault
+//TODO: if click outside canvas ---> unselect
 CanvasEditor.prototype.create = function(options) {
     var that = this;
     options = options || {};
@@ -282,7 +285,6 @@ CanvasEditor.prototype.create = function(options) {
                 window.addEventListener("mousemove", handle_mousemove_move_clicked, false);
                 window.addEventListener("mouseup", handle_mouseup, false);
                 that.selectedEntity = entity;
-                //console.log(event.x, that.selectedEntity.x, that.selectedEntity.width, offsetX);
                 break;
             }
         }
@@ -295,7 +297,6 @@ CanvasEditor.prototype.create = function(options) {
     }
 
     function setNewPosition(event) {
-        //console.log(event.x, that.selectedEntity.x, that.selectedEntity.width, offsetX);
         that.translate(event.x - offsetX, event.y - offsetY);
     }
 
@@ -328,7 +329,6 @@ CanvasEditor.prototype.create = function(options) {
         event.preventDefault();
         augmentEvent(event);
         setNewPosition(event);
-        //console.log(Date.now(),"move: ", that.selectedEntity.x,",", that.selectedEntity.y);
     }
 
     function handle_mousemove_move_notClicked(event) {
@@ -343,7 +343,6 @@ CanvasEditor.prototype.create = function(options) {
         event.preventDefault();
         augmentEvent(event);
         resizeEntity(event);
-        //console.log(Date.now(),"move: ", that.selectedEntity.x,",", that.selectedEntity.y);
     }
 
     function handle_mousedown(event) {
@@ -360,7 +359,6 @@ CanvasEditor.prototype.create = function(options) {
         window.removeEventListener("mousemove", handle_mousemove_move_clicked, false);
         that.ctx.canvas.addEventListener("mousemove", handle_mousemove_move_notClicked, false);
         window.removeEventListener("mousemove", handle_mousemove_resize, false);
-        //if(that.selectedEntity) console.log(Date.now(),"up: " + that.selectedEntity.x + "," + that.selectedEntity.y);
     }
 
     function handle_keypress(event) {
@@ -368,9 +366,17 @@ CanvasEditor.prototype.create = function(options) {
     }
 
     function stop_default_drop(event) {
+        console.log("drop");
         event.stopPropagation();
         event.preventDefault();
     }
+
+    //window.addEventListener("keydown", handle_keypress, false);
+    //document.body.addEventListener("drop", stop_default_drop, false);
+    //that.drop_zone.addEventListener("dragover", handle_dragover, false);
+    //that.drop_zone.addEventListener("drop", handle_drop, false);
+    //that.ctx.canvas.addEventListener("mousedown", handle_mousedown, false);
+    //that.ctx.canvas.addEventListener("mousemove", handle_mousemove_move_notClicked, false);
 
     window.addEventListener("keydown", handle_keypress, false);
     document.body.addEventListener("drop", stop_default_drop, false);
@@ -400,7 +406,6 @@ CanvasEditor.prototype.create = function(options) {
         var canvas = document.createElement('canvas');
         canvas.width = width;
         canvas.height = height;
-        console.log(canvas.width, canvas.height);
         return canvas;
     }
 };
