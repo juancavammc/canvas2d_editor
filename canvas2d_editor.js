@@ -1,6 +1,5 @@
 'use strict';
 function CanvasEditor() {
-
     this.ctx = undefined;
     this.drop_zone = undefined;
     this.entities = [];
@@ -9,8 +8,15 @@ function CanvasEditor() {
     this.squaresSize = 4;
 }
 
-//TODO: drag al monitor secundario descoloca la imagen (sin reescalado PPP no pasa?
+//TODO: drag al monitor secundario descoloca la imagen (sin reescalado PPP no pasa?)
 //TODO: solucionar evento de mas cuando mouseup (llama a un mousemove de mas)
+//TODO: Mantener proporciones al reescalar
+//TODO: Rotaciones
+//TODO: invertir imagen
+//TODO: sticky
+//TODO: renderizar
+//TODO: añadir, además de mousedown, mouseclick? (Para cambiar entre resize y rotate)
+//TODO: quitr fondo blanco
 CanvasEditor.prototype.create = function(options) {
     var that = this;
     options = options || {};
@@ -60,7 +66,6 @@ CanvasEditor.prototype.create = function(options) {
     };
 
     function deleteSelectedEntity() {
-        //for (var i in that.entities) {
         for(var i = 0; i < that.entities.length; ++i) {
             if (that.entities[i] === that.selectedEntity) {
                 that.selectedEntity = null;
@@ -75,7 +80,6 @@ CanvasEditor.prototype.create = function(options) {
     }
 
     function promoteSelectedEntity() {
-        //for (var i in that.entities) {
         for(var i = 0; i < that.entities.length; ++i) {
             if (that.entities[i] === that.selectedEntity) {
                 if (i < that.entities.length - 1) {
@@ -90,7 +94,6 @@ CanvasEditor.prototype.create = function(options) {
     }
 
     function demoteSelectedEntity() {
-        //for (var i in that.entities) {
         for(var i = 0; i < that.entities.length; ++i) {
             if (that.entities[i] === that.selectedEntity) {
                 if (i > 0) {
@@ -133,100 +136,92 @@ CanvasEditor.prototype.create = function(options) {
     }
 
     function checkResizing(event) {
-        //up-left
         var x = event.offsetX;
         var y = event.offsetY;
         var originX = that.selectedEntity.x;
         var originY = that.selectedEntity.y;
         var w = that.selectedEntity.width;
         var h = that.selectedEntity.height;
-        var s = that.squaresSize;
+        var s = that.squaresSize+1;
         var resizing = false;
 
+        //up-left
         if(clickInside(x, y, originX-s, originY-s, s*2, s*2)) {
-            that.strokeColor = "#0000FF";
             originAnchor.x = false;
             originAnchor.y = false;
             originAnchor.width = true;
             originAnchor.height = true;
             resizing = true;
+            that.ctx.canvas.style.cursor = "nw-resize";
         }
         //up-right
         else if(clickInside(x, y, originX-s+w, originY-s, s*2, s*2)) {
-            that.strokeColor = "#0000FF";
             originAnchor.x = true;
             originAnchor.y = false;
             originAnchor.width = true;
             originAnchor.height = true;
             resizing = true;
+            that.ctx.canvas.style.cursor = "ne-resize";
         }
         //down-left
         else if(clickInside(x, y, originX-s, originY-s+h, s*2, s*2)) {
-            that.strokeColor = "#0000FF";
             originAnchor.x = false;
             originAnchor.y = true;
             originAnchor.width = true;
             originAnchor.height = true;
             resizing = true;
+            that.ctx.canvas.style.cursor = "sw-resize";
         }
         //down-right
         else if(clickInside(x, y, originX-s+w, originY-s+h, s*2, s*2)) {
-            that.strokeColor = "#0000FF";
             originAnchor.x = true;
             originAnchor.y = true;
             originAnchor.width = true;
             originAnchor.height = true;
             resizing = true;
+            that.ctx.canvas.style.cursor = "se-resize";
         }
         //up-center
-        if(clickInside(x, y, originX-s+(w/2), originY-s, s*2, s*2)) {
-            that.strokeColor = "#0000FF";
+        else if(clickInside(x, y, originX-s+(w/2), originY-s, s*2, s*2)) {
             originAnchor.x = true;
             originAnchor.y = false;
             originAnchor.width = false;
             originAnchor.height = true;
             resizing = true;
+            that.ctx.canvas.style.cursor = "n-resize";
         }
         //down-center
-        if(clickInside(x, y, originX-s+(w/2), originY-s+h, s*2, s*2)) {
-            that.strokeColor = "#0000FF";
+        else if(clickInside(x, y, originX-s+(w/2), originY-s+h, s*2, s*2)) {
             originAnchor.x = true;
             originAnchor.y = true;
             originAnchor.width = false;
             originAnchor.height = true;
             resizing = true;
+            that.ctx.canvas.style.cursor = "s-resize";
 
         }
         //center-left
-        if(clickInside(x, y, originX-s, originY-s+(h/2), s*2, s*2)) {
-            that.strokeColor = "#0000FF";
+        else if(clickInside(x, y, originX-s, originY-s+(h/2), s*2, s*2)) {
             originAnchor.x = false;
             originAnchor.y = true;
             originAnchor.width = true;
             originAnchor.height = false;
             resizing = true;
+            that.ctx.canvas.style.cursor = "e-resize";
         }
         //center-right
-        if(clickInside(x, y, originX-s+w, originY-s+(h/2), s*2, s*2)) {
-            that.strokeColor = "#0000FF";
+        else if(clickInside(x, y, originX-s+w, originY-s+(h/2), s*2, s*2)) {
             originAnchor.x = true;
             originAnchor.y = true;
             originAnchor.width = true;
             originAnchor.height = false;
             resizing = true;
+            that.ctx.canvas.style.cursor = "w-resize";
         }
-
-        if(resizing) {
-            window.addEventListener("mousemove", handle_mousemove_resize, false);
-            window.addEventListener("mouseup", handle_mouseup, false);
-            console.log(true);
-            return true;
+        else {
+            that.ctx.canvas.style.cursor = "default";
         }
-        else{
-            that.strokeColor = "#FF0000";
-            console.log("false");
-            return false;
-        }
+        return resizing;
     }
 
     function resizeEntity(event) {
@@ -254,12 +249,18 @@ CanvasEditor.prototype.create = function(options) {
     function selectEntity(event) {
         //Check if is resizing
         if(that.selectedEntity) {
-
             if(checkResizing(event)) {
+                that.strokeColor = "#0000FF";
+                window.addEventListener("mousemove", handle_mousemove_resize, false);
+                window.addEventListener("mouseup", handle_mouseup, false);
+                console.log(true);
                 that.draw();
                 return true;
             }
-            that.draw();
+            else{
+                that.strokeColor = "#FF0000";
+                console.log("false");
+            }
         }
 
         that.selectedEntity = null;
