@@ -377,10 +377,10 @@ CanvasEditor.prototype.create = function(options) {
             event.x = event.clientX;
             event.y = event.clientY;
         }
-        event.deltaX = event.offsetX - lastX;
-        event.deltaY = event.offsetY - lastY;
-        lastX = event.offsetX;
-        lastY = event.offsetY;
+        event.deltaX = event.x - lastX;
+        event.deltaY = event.y - lastY;
+        lastX = event.x;
+        lastY = event.y;
     }
 
     function createCanvas(width, height) {
