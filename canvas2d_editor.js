@@ -16,7 +16,7 @@ function CanvasEditor() {
 //TODO: sticky
 //TODO: renderizar
 //TODO: añadir, además de mousedown, mouseclick? (Para cambiar entre resize y rotate)
-//TODO: quitr fondo blanco
+//TODO: quitar fondo blanco de pngs
 CanvasEditor.prototype.create = function(options) {
     var that = this;
     options = options || {};
