@@ -9,9 +9,8 @@ function CanvasEditor() {
     this.squaresSize = 4;
 }
 
-//TODO: drag al monitor secundario descoloca la imagen
+//TODO: drag al monitor secundario descoloca la imagen (sin reescalado PPP no pasa?
 //TODO: solucionar evento de mas cuando mouseup (llama a un mousemove de mas)
-//TODO: Sacar draw. Usuario tiene que llamar draw si hace un resize.
 CanvasEditor.prototype.create = function(options) {
     var that = this;
     options = options || {};
@@ -218,7 +217,6 @@ CanvasEditor.prototype.create = function(options) {
         }
 
         if(resizing) {
-            /////////////HANDLER//////////////
             window.addEventListener("mousemove", handle_mousemove_resize, false);
             window.addEventListener("mouseup", handle_mouseup, false);
             console.log(true);
