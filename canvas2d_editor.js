@@ -1,16 +1,22 @@
 'use strict';
 function CanvasEditor() {
-
     this.ctx = undefined;
     this.drop_zone = undefined;
     this.entities = [];
     this.selectedEntity = null;
     this.strokeColor = "#FF0000";
+    this.squaresSize = 4;
 }
 
-//TODO: drag al monitor secundario descoloca la imagen
+//TODO: drag al monitor secundario descoloca la imagen (sin reescalado PPP no pasa?)
 //TODO: solucionar evento de mas cuando mouseup (llama a un mousemove de mas)
-//TODO: Sacar draw. Usuario tiene que llamar draw si hace un resize.
+//TODO: Mantener proporciones al reescalar
+//TODO: Rotaciones
+//TODO: invertir imagen
+//TODO: sticky
+//TODO: renderizar
+//TODO: añadir, además de mousedown, mouseclick? (Para cambiar entre resize y rotate)
+//TODO: quitar fondo blanco de pngs
 CanvasEditor.prototype.create = function(options) {
     var that = this;
     options = options || {};
@@ -52,9 +58,14 @@ CanvasEditor.prototype.create = function(options) {
 
     var offsetX = 0;
     var offsetY = 0;
+    var originAnchor = {
+        x: true,
+        y: true,
+        width: false,
+        height: false
+    };
 
     function deleteSelectedEntity() {
-        //for (var i in that.entities) {
         for(var i = 0; i < that.entities.length; ++i) {
             if (that.entities[i] === that.selectedEntity) {
                 that.selectedEntity = null;
@@ -69,7 +80,6 @@ CanvasEditor.prototype.create = function(options) {
     }
 
     function promoteSelectedEntity() {
-        //for (var i in that.entities) {
         for(var i = 0; i < that.entities.length; ++i) {
             if (that.entities[i] === that.selectedEntity) {
                 if (i < that.entities.length - 1) {
@@ -84,7 +94,6 @@ CanvasEditor.prototype.create = function(options) {
     }
 
     function demoteSelectedEntity() {
-        //for (var i in that.entities) {
         for(var i = 0; i < that.entities.length; ++i) {
             if (that.entities[i] === that.selectedEntity) {
                 if (i > 0) {
@@ -126,20 +135,151 @@ CanvasEditor.prototype.create = function(options) {
         that.draw();
     }
 
+    function checkCorners(event) {
+        var x = event.offsetX;
+        var y = event.offsetY;
+        var originX = that.selectedEntity.x;
+        var originY = that.selectedEntity.y;
+        var w = that.selectedEntity.width;
+        var h = that.selectedEntity.height;
+        var s = that.squaresSize+1;
+        var resizing = false;
+
+        //up-left
+        if(clickInside(x, y, originX-s, originY-s, s*2, s*2)) {
+            originAnchor.x = false;
+            originAnchor.y = false;
+            originAnchor.width = true;
+            originAnchor.height = true;
+            resizing = true;
+            that.ctx.canvas.style.cursor = "nw-resize";
+        }
+        //up-right
+        else if(clickInside(x, y, originX-s+w, originY-s, s*2, s*2)) {
+            originAnchor.x = true;
+            originAnchor.y = false;
+            originAnchor.width = true;
+            originAnchor.height = true;
+            resizing = true;
+            that.ctx.canvas.style.cursor = "ne-resize";
+        }
+        //down-left
+        else if(clickInside(x, y, originX-s, originY-s+h, s*2, s*2)) {
+            originAnchor.x = false;
+            originAnchor.y = true;
+            originAnchor.width = true;
+            originAnchor.height = true;
+            resizing = true;
+            that.ctx.canvas.style.cursor = "sw-resize";
+        }
+        //down-right
+        else if(clickInside(x, y, originX-s+w, originY-s+h, s*2, s*2)) {
+            originAnchor.x = true;
+            originAnchor.y = true;
+            originAnchor.width = true;
+            originAnchor.height = true;
+            resizing = true;
+            that.ctx.canvas.style.cursor = "se-resize";
+        }
+        //up-center
+        else if(clickInside(x, y, originX-s+(w/2), originY-s, s*2, s*2)) {
+            originAnchor.x = true;
+            originAnchor.y = false;
+            originAnchor.width = false;
+            originAnchor.height = true;
+            resizing = true;
+            that.ctx.canvas.style.cursor = "n-resize";
+        }
+        //down-center
+        else if(clickInside(x, y, originX-s+(w/2), originY-s+h, s*2, s*2)) {
+            originAnchor.x = true;
+            originAnchor.y = true;
+            originAnchor.width = false;
+            originAnchor.height = true;
+            resizing = true;
+            that.ctx.canvas.style.cursor = "s-resize";
+
+        }
+        //center-left
+        else if(clickInside(x, y, originX-s, originY-s+(h/2), s*2, s*2)) {
+            originAnchor.x = false;
+            originAnchor.y = true;
+            originAnchor.width = true;
+            originAnchor.height = false;
+            resizing = true;
+            that.ctx.canvas.style.cursor = "e-resize";
+        }
+        //center-right
+        else if(clickInside(x, y, originX-s+w, originY-s+(h/2), s*2, s*2)) {
+            originAnchor.x = true;
+            originAnchor.y = true;
+            originAnchor.width = true;
+            originAnchor.height = false;
+            resizing = true;
+            that.ctx.canvas.style.cursor = "w-resize";
+        }
+        else {
+            that.ctx.canvas.style.cursor = "default";
+        }
+        return resizing;
+    }
+
+    function resizeEntity(event) {
+        if(!originAnchor.x) {
+            if(originAnchor.width) {
+                that.selectedEntity.width -= event.deltaX;
+                if(that.selectedEntity.width <= 0) {
+                    that.selectedEntity.width = 1;
+                }
+                else that.selectedEntity.x += event.deltaX;
+            }
+        }
+        else {
+            if(originAnchor.width) that.selectedEntity.width += event.deltaX;
+        }
+        if(!originAnchor.y) {
+            if(originAnchor.height) {
+                that.selectedEntity.height -= event.deltaY;
+                if(that.selectedEntity.height <= 0) {
+                    that.selectedEntity.height = 1;
+                }
+                else that.selectedEntity.y += event.deltaY;
+            }
+        }
+        else {
+            if(originAnchor.height) that.selectedEntity.height += event.deltaY;
+        }
+        that.draw();
+    }
+
     function selectEntity(event) {
+        //Check if is resizing
+        if(that.selectedEntity) {
+            if(checkCorners(event)) {
+                that.strokeColor = "#0000FF";
+                window.addEventListener("mousemove", handle_mousemove_resize, false);
+                window.addEventListener("mouseup", handle_mouseup, false);
+                that.draw();
+                return true;
+            }
+            else{
+                that.strokeColor = "#FF0000";
+            }
+        }
+
+        //if not resizing, check if selecting
         that.selectedEntity = null;
         for (var i = that.entities.length - 1; i >= 0; i--) {
             var entity = that.entities[i];
             if (!entity) continue;
 
-            parseEvent(event);
             var x = event.offsetX;
             var y = event.offsetY;
             offsetX = event.x - entity.x;
             offsetY = event.y - entity.y;
 
-            if (x > entity.x && y > entity.y && x < (entity.x + entity.width) && y < (entity.y + entity.height)) {
-                window.addEventListener("mousemove", handle_mousemove, false);
+            if(clickInside(x, y, entity.x, entity.y, entity.width, entity.height)) {
+                window.addEventListener("mousemove", handle_mousemove_move_clicked, false);
                 window.addEventListener("mouseup", handle_mouseup, false);
                 that.selectedEntity = entity;
                 //console.log(event.x, that.selectedEntity.x, that.selectedEntity.width, offsetX);
@@ -149,11 +289,14 @@ CanvasEditor.prototype.create = function(options) {
         that.draw();
     }
 
+
+    function clickInside(x, y, originX, originY, width, height) {
+        return (x > originX && y > originY && x < (originX + width) && y < (originY + height));
+    }
+
     function setNewPosition(event) {
         //console.log(event.x, that.selectedEntity.x, that.selectedEntity.width, offsetX);
-        that.selectedEntity.x = event.x - offsetX;
-        that.selectedEntity.y = event.y - offsetY;
-        that.draw();
+        that.translate(event.x - offsetX, event.y - offsetY);
     }
 
     function keyPressed(event) {
@@ -180,25 +323,43 @@ CanvasEditor.prototype.create = function(options) {
         createNewImages(event);
     }
 
-    function handle_mousemove(event) {
+    function handle_mousemove_move_clicked(event) {
         event.stopPropagation();
         event.preventDefault();
-        parseEvent(event);
+        augmentEvent(event);
         setNewPosition(event);
+        //console.log(Date.now(),"move: ", that.selectedEntity.x,",", that.selectedEntity.y);
+    }
+
+    function handle_mousemove_move_notClicked(event) {
+        event.stopPropagation();
+        event.preventDefault();
+        augmentEvent(event);
+        if(that.selectedEntity) checkCorners(event);
+    }
+
+    function handle_mousemove_resize(event) {
+        event.stopPropagation();
+        event.preventDefault();
+        augmentEvent(event);
+        resizeEntity(event);
         //console.log(Date.now(),"move: ", that.selectedEntity.x,",", that.selectedEntity.y);
     }
 
     function handle_mousedown(event) {
         event.stopPropagation();
         event.preventDefault();
+        augmentEvent(event);
+        that.ctx.canvas.removeEventListener("mousemove", handle_mousemove_move_notClicked, false);
         selectEntity(event);
     }
 
     function handle_mouseup(event) {
         event.stopPropagation();
         event.preventDefault();
-        window.removeEventListener("mousemove", handle_mousemove, false);
-        window.removeEventListener("mouseup", handle_mousemove, false);
+        window.removeEventListener("mousemove", handle_mousemove_move_clicked, false);
+        that.ctx.canvas.addEventListener("mousemove", handle_mousemove_move_notClicked, false);
+        window.removeEventListener("mousemove", handle_mousemove_resize, false);
         //if(that.selectedEntity) console.log(Date.now(),"up: " + that.selectedEntity.x + "," + that.selectedEntity.y);
     }
 
@@ -216,15 +377,23 @@ CanvasEditor.prototype.create = function(options) {
     that.drop_zone.addEventListener("dragover", handle_dragover, false);
     that.drop_zone.addEventListener("drop", handle_drop, false);
     that.ctx.canvas.addEventListener("mousedown", handle_mousedown, false);
+    that.ctx.canvas.addEventListener("mousemove", handle_mousemove_move_notClicked, false);
 
+
+    var lastX = 0;
+    var lastY = 0;
     //TODO: Cambiar nombre
-    function parseEvent(event) {
+    function augmentEvent(event) {
         if(event.offsetX === undefined) {
             event.offsetX = event.layerX;
             event.offsetY = event.layerY;
             event.x = event.clientX;
             event.y = event.clientY;
         }
+        event.deltaX = event.x - lastX;
+        event.deltaY = event.y - lastY;
+        lastX = event.x;
+        lastY = event.y;
     }
 
     function createCanvas(width, height) {
@@ -260,7 +429,7 @@ CanvasEditor.prototype.drawSelectedStroke = function() {
     var y = entity.y;
     var w = entity.width;
     var h = entity.height
-    var size = 4;
+    var size = this.squaresSize;
 
     this.ctx.translate(x,y);
 
@@ -281,4 +450,20 @@ CanvasEditor.prototype.drawSelectedStroke = function() {
 
 CanvasEditor.prototype.fillSquare = function(x, y, halfsize) {
     this.ctx.fillRect(x-halfsize, y-halfsize, halfsize*2, halfsize*2);
+}
+
+CanvasEditor.prototype.resize = function(width, height) {
+    if(this.selectedEntity) {
+        this.selectedEntity.width = width;
+        this.selectedEntity.height = height;
+        this.draw();
+    }
+}
+
+CanvasEditor.prototype.translate = function(x, y) {
+    if(this.selectedEntity) {
+        this.selectedEntity.x = x;
+        this.selectedEntity.y = y;
+        this.draw();
+    }
 }
