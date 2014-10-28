@@ -55,19 +55,13 @@ body {
 }
 
 #drop_zone2 {
-     background-color: #4c4c4c;
+    background-color: #4c4c4c;
     float: bottom;
     width: 100%;
     height: 30%;
     margin: 0;
     padding: 0;
 }
-
-
-
-
-
-
 
 #toolbar {
     background-color: #3c3c3c;
