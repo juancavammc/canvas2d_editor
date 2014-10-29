@@ -118,7 +118,7 @@ CanvasEditor.prototype.create = function(options) {
             if (!(files[i] instanceof File)) continue;
             var file = files[i];
             if (file.type.substring(0, 6) !== "image/") {
-                console.log("Not an image."); //TODO: Throw error/message?
+                throw("File is not an image: " + file.type);
                 continue;
             }
             var reader = new FileReader();
@@ -126,7 +126,7 @@ CanvasEditor.prototype.create = function(options) {
                 var img = new Image();
                 img.src = this.result;
                 ///////////////
-                //TODO: Image on center
+                //TODO: Image on mouse position
                 ///////////////
 
                 img.addEventListener("load", function () {
@@ -415,7 +415,6 @@ CanvasEditor.prototype.draw = function() {
 }
 
 CanvasEditor.prototype.drawSelectedStroke = function() {
-    //console.log("draw: " + this.selectedEntity.x + "," + this.selectedEntity.y);
     this.ctx.save();
     this.ctx.strokeStyle = this.strokeColor;
     this.ctx.fillStyle = this.strokeColor;
