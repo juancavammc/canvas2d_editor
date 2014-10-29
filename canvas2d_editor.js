@@ -6,6 +6,7 @@ function CanvasEditor() {
     this.selectedEntity = null;
     this.strokeColor = "#FF0000";
     this.squaresSize = 4;
+    this.sizeLine = 16; //line to rotation circle
 }
 
 //TODO: drag al monitor secundario descoloca la imagen (sin reescalado PPP no pasa?)
@@ -442,6 +443,18 @@ CanvasEditor.prototype.drawSelectedStroke = function() {
     this.fillSquare(0,h/2,size);
     this.fillSquare(w/2,h,size);
     this.fillSquare(w,h/2,size);
+
+    this.ctx.beginPath();
+    this.ctx.moveTo(w/2, 0);
+    this.ctx.lineTo(w/2, -this.sizeLine);
+    this.ctx.stroke();
+    this.ctx.closePath();
+
+    this.ctx.beginPath();
+    this.ctx.arc(w/2, -this.sizeLine, size, 0, 2 * Math.PI);
+    this.ctx.fill();
+    this.ctx.stroke();
+
 
     this.ctx.restore();
 }
