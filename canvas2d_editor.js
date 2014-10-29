@@ -149,7 +149,7 @@ CanvasEditor.prototype.create = function(options) {
         var resizing = false;
 
         //up-left
-        if(clickInside(x, y, originX-s, originY-s, s*2, s*2)) {
+        if(pointerInside(x, y, originX-s, originY-s, s*2, s*2)) {
             originAnchor.x = false;
             originAnchor.y = false;
             originAnchor.width = true;
@@ -158,7 +158,7 @@ CanvasEditor.prototype.create = function(options) {
             that.ctx.canvas.style.cursor = "nw-resize";
         }
         //up-right
-        else if(clickInside(x, y, originX-s+w, originY-s, s*2, s*2)) {
+        else if(pointerInside(x, y, originX-s+w, originY-s, s*2, s*2)) {
             originAnchor.x = true;
             originAnchor.y = false;
             originAnchor.width = true;
@@ -167,7 +167,7 @@ CanvasEditor.prototype.create = function(options) {
             that.ctx.canvas.style.cursor = "ne-resize";
         }
         //down-left
-        else if(clickInside(x, y, originX-s, originY-s+h, s*2, s*2)) {
+        else if(pointerInside(x, y, originX-s, originY-s+h, s*2, s*2)) {
             originAnchor.x = false;
             originAnchor.y = true;
             originAnchor.width = true;
@@ -176,7 +176,7 @@ CanvasEditor.prototype.create = function(options) {
             that.ctx.canvas.style.cursor = "sw-resize";
         }
         //down-right
-        else if(clickInside(x, y, originX-s+w, originY-s+h, s*2, s*2)) {
+        else if(pointerInside(x, y, originX-s+w, originY-s+h, s*2, s*2)) {
             originAnchor.x = true;
             originAnchor.y = true;
             originAnchor.width = true;
@@ -185,7 +185,7 @@ CanvasEditor.prototype.create = function(options) {
             that.ctx.canvas.style.cursor = "se-resize";
         }
         //up-center
-        else if(clickInside(x, y, originX-s+(w/2), originY-s, s*2, s*2)) {
+        else if(pointerInside(x, y, originX-s+(w/2), originY-s, s*2, s*2)) {
             originAnchor.x = true;
             originAnchor.y = false;
             originAnchor.width = false;
@@ -194,7 +194,7 @@ CanvasEditor.prototype.create = function(options) {
             that.ctx.canvas.style.cursor = "n-resize";
         }
         //down-center
-        else if(clickInside(x, y, originX-s+(w/2), originY-s+h, s*2, s*2)) {
+        else if(pointerInside(x, y, originX-s+(w/2), originY-s+h, s*2, s*2)) {
             originAnchor.x = true;
             originAnchor.y = true;
             originAnchor.width = false;
@@ -204,7 +204,7 @@ CanvasEditor.prototype.create = function(options) {
 
         }
         //center-left
-        else if(clickInside(x, y, originX-s, originY-s+(h/2), s*2, s*2)) {
+        else if(pointerInside(x, y, originX-s, originY-s+(h/2), s*2, s*2)) {
             originAnchor.x = false;
             originAnchor.y = true;
             originAnchor.width = true;
@@ -213,7 +213,7 @@ CanvasEditor.prototype.create = function(options) {
             that.ctx.canvas.style.cursor = "e-resize";
         }
         //center-right
-        else if(clickInside(x, y, originX-s+w, originY-s+(h/2), s*2, s*2)) {
+        else if(pointerInside(x, y, originX-s+w, originY-s+(h/2), s*2, s*2)) {
             originAnchor.x = true;
             originAnchor.y = true;
             originAnchor.width = true;
@@ -281,7 +281,7 @@ CanvasEditor.prototype.create = function(options) {
             offsetX = event.x - entity.x;
             offsetY = event.y - entity.y;
 
-            if(clickInside(x, y, entity.x, entity.y, entity.width, entity.height)) {
+            if(pointerInside(x, y, entity.x, entity.y, entity.width, entity.height)) {
                 window.addEventListener("mousemove", handle_mousemove_move_clicked, false);
                 window.addEventListener("mouseup", handle_mouseup, false);
                 that.selectedEntity = entity;
@@ -292,7 +292,7 @@ CanvasEditor.prototype.create = function(options) {
     }
 
 
-    function clickInside(x, y, originX, originY, width, height) {
+    function pointerInside(x, y, originX, originY, width, height) {
         return (x > originX && y > originY && x < (originX + width) && y < (originY + height));
     }
 
@@ -300,7 +300,7 @@ CanvasEditor.prototype.create = function(options) {
         that.translate(event.x - offsetX, event.y - offsetY);
     }
 
-    function keyPressed(event) {
+    function keyDown(event) {
         //console.log(event.keyCode);
         if (that.selectedEntity && event.keyCode === 46) { //DEL == 46
             deleteSelectedEntity();
@@ -361,17 +361,16 @@ CanvasEditor.prototype.create = function(options) {
         window.removeEventListener("mousemove", handle_mousemove_resize, false);
     }
 
-    function handle_keypress(event) {
-        keyPressed(event);
+    function handle_keydown(event) {
+        keyDown(event);
     }
 
     function stop_default_drop(event) {
-        console.log("drop");
         event.stopPropagation();
         event.preventDefault();
     }
 
-    window.addEventListener("keydown", handle_keypress, false);
+    window.addEventListener("keydown", handle_keydown, false);
     document.body.addEventListener("dragover", stop_default_drop, false);
     document.body.addEventListener("drop", stop_default_drop, false);
     that.drop_zone.addEventListener("dragover", handle_dragover, false);
