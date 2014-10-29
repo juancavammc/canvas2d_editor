@@ -260,14 +260,10 @@ CanvasEditor.prototype.create = function(options) {
         //Check if is resizing
         if(that.selectedEntity) {
             if(checkCorners(event)) {
-                that.strokeColor = "#0000FF";
                 window.addEventListener("mousemove", handle_mousemove_resize, false);
                 window.addEventListener("mouseup", handle_mouseup, false);
                 that.draw();
                 return true;
-            }
-            else{
-                that.strokeColor = "#FF0000";
             }
         }
 
