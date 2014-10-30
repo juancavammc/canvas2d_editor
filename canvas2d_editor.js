@@ -130,7 +130,7 @@ CanvasEditor.prototype.create = function(options) {
                 ///////////////
 
                 img.addEventListener("load", function () {
-                    that.entities.push({image: img, x: 0, y: 0, width: img.width, height: img.height});
+                    that.entities.push({image: img, x: 0, y: 0, angle: 0, width: img.width, height: img.height});
                     that.draw();
                 }, false);
             };
@@ -298,7 +298,7 @@ CanvasEditor.prototype.create = function(options) {
     }
 
     function keyDown(event) {
-        //console.log(event.keyCode);
+        console.log(event.keyCode);
         if (that.selectedEntity && event.keyCode === 46) { //DEL == 46
             deleteSelectedEntity();
         }
@@ -307,6 +307,11 @@ CanvasEditor.prototype.create = function(options) {
         }
         else if (that.selectedEntity && (event.keyCode === 109 || event.keyCode === 189)) { //-
             demoteSelectedEntity();
+        }
+        //// TEST ////
+        else if (that.selectedEntity && (event.keyCode === 190)) { //.
+            that.selectedEntity.angle += Math.PI/180;
+            that.draw();
         }
     }
 
@@ -406,8 +411,9 @@ CanvasEditor.prototype.draw = function() {
         if (this.entities[i]) {
             this.ctx.save();
             var entity = this.entities[i];
-            this.ctx.translate(entity.x, entity.y);
-            this.ctx.drawImage(entity.image, 0, 0, entity.width, entity.height);
+            this.ctx.translate(entity.x+entity.width/2, entity.y+entity.height/2);
+            this.ctx.rotate(entity.angle);
+            this.ctx.drawImage(entity.image, -entity.width/2, -entity.height/2, entity.width, entity.height);
             this.ctx.restore();
         }
     }
@@ -425,28 +431,29 @@ CanvasEditor.prototype.drawSelectedStroke = function() {
     var h = entity.height
     var size = this.squaresSize;
 
-    this.ctx.translate(x,y);
+    this.ctx.translate(x+w/2,y+h/2);
+    this.ctx.rotate(entity.angle);
 
-    this.ctx.strokeRect(0,0,w,h);
+    this.ctx.strokeRect(-w/2,-h/2,w,h);
 
-    this.fillSquare(0,0,size);
-    this.fillSquare(w,0,size);
-    this.fillSquare(0,h,size);
-    this.fillSquare(w,h,size);
+    this.fillSquare(-w/2,-h/2,size);
+    this.fillSquare(w/2,-h/2,size);
+    this.fillSquare(-w/2,h/2,size);
+    this.fillSquare(w/2,h/2,size);
 
-    this.fillSquare(w/2,0,size);
+    this.fillSquare(0,-h/2,size);
+    this.fillSquare(-w/2,0,size);
     this.fillSquare(0,h/2,size);
-    this.fillSquare(w/2,h,size);
-    this.fillSquare(w,h/2,size);
+    this.fillSquare(w/2,0,size);
 
     this.ctx.beginPath();
-    this.ctx.moveTo(w/2, 0);
-    this.ctx.lineTo(w/2, -this.sizeLine);
+    this.ctx.moveTo(0, -h/2);
+    this.ctx.lineTo(0, -this.sizeLine-h/2);
     this.ctx.stroke();
     this.ctx.closePath();
 
     this.ctx.beginPath();
-    this.ctx.arc(w/2, -this.sizeLine, size, 0, 2 * Math.PI);
+    this.ctx.arc(0, -this.sizeLine-h/2, size, 0, 2 * Math.PI);
     this.ctx.fill();
     this.ctx.stroke();
 
@@ -471,5 +478,23 @@ CanvasEditor.prototype.translate = function(x, y) {
         this.selectedEntity.x = x;
         this.selectedEntity.y = y;
         this.draw();
+    }
+}
+
+CanvasEditor.prototype.rotateDEG = function(angle) {
+    if(this.selectedEntity) {
+        this.selectedEntity.angle = angle * Math.PI / 180;
+    }
+}
+
+CanvasEditor.prototype.rotateRAD = function(angle) {
+    if(this.selectedEntity) {
+        this.selectedEntity.angle = angle;
+    }
+}
+
+CanvasEditor.prototype.resetRotation = function() {
+    if(this.selectedEntity) {
+
     }
 }
