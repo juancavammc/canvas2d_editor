@@ -298,7 +298,7 @@ CanvasEditor.prototype.create = function(options) {
     }
 
     function keyDown(event) {
-        console.log(event.keyCode);
+        //console.log(event.keyCode);
         if (that.selectedEntity && event.keyCode === 46) { //DEL == 46
             deleteSelectedEntity();
         }
@@ -310,7 +310,8 @@ CanvasEditor.prototype.create = function(options) {
         }
         //// TEST ////
         else if (that.selectedEntity && (event.keyCode === 190)) { //.
-            that.selectedEntity.angle += Math.PI/180;
+            //that.selectedEntity.angle += Math.PI/180;
+            that.rotateDEG(1);
             that.draw();
         }
     }
@@ -483,18 +484,23 @@ CanvasEditor.prototype.translate = function(x, y) {
 
 CanvasEditor.prototype.rotateDEG = function(angle) {
     if(this.selectedEntity) {
-        this.selectedEntity.angle = angle * Math.PI / 180;
+        angle = angle * Math.PI / 180;
+        this.selectedEntity.angle += angle;
+        this.selectedEntity.angle = this.selectedEntity.angle % (Math.PI*2);
+        console.log(this.selectedEntity.angle)
     }
 }
 
 CanvasEditor.prototype.rotateRAD = function(angle) {
     if(this.selectedEntity) {
-        this.selectedEntity.angle = angle;
+        this.selectedEntity.angle += angle;
+        this.selectedEntity.angle = this.selectedEntity.angle % (Math.PI*2);
+
     }
 }
 
 CanvasEditor.prototype.resetRotation = function() {
     if(this.selectedEntity) {
-
+        this.selectedEntity.angle = 0;
     }
 }
