@@ -71,7 +71,8 @@ CanvasEditor.prototype.create = function(options) {
     };
 
     function deleteSelectedEntity() {
-        for(var i = 0; i < that.entities.length; ++i) {
+        var l = that.entities.length;
+        for(var i = 0; i < l; ++i) {
             if (that.entities[i] === that.selectedEntity) {
                 that.selectedEntity = null;
                 that.entities[i] = null;
@@ -85,7 +86,8 @@ CanvasEditor.prototype.create = function(options) {
     }
 
     function promoteSelectedEntity() {
-        for(var i = 0; i < that.entities.length; ++i) {
+        var l = that.entities.length;
+        for(var i = 0; i < l; ++i) {
             if (that.entities[i] === that.selectedEntity) {
                 if (i < that.entities.length - 1) {
                     var temp = that.entities[i+1];
@@ -99,7 +101,8 @@ CanvasEditor.prototype.create = function(options) {
     }
 
     function demoteSelectedEntity() {
-        for(var i = 0; i < that.entities.length; ++i) {
+        var l = that.entities.length;
+        for(var i = 0; i < l; ++i) {
             if (that.entities[i] === that.selectedEntity) {
                 if (i > 0) {
                     var temp = that.entities[i-1];
@@ -327,7 +330,6 @@ CanvasEditor.prototype.create = function(options) {
         }
         //// TEST ////
         else if (that.selectedEntity && (event.keyCode === 190)) { //.
-            //that.selectedEntity.angle += Math.PI/180;
             that.rotateDEG(1);
             that.draw();
         }
@@ -440,8 +442,8 @@ CanvasEditor.prototype.create = function(options) {
 
 CanvasEditor.prototype.draw = function() {
     this.ctx.clearRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height);
-    //for (var i in that.entities) {
-    for(var i = 0; i < this.entities.length; ++i) {
+    var l = this.entities.length;
+    for(var i = 0; i < l; ++i) {
         if (this.entities[i]) {
             this.ctx.save();
             var entity = this.entities[i];
