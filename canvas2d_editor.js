@@ -359,14 +359,14 @@ CanvasEditor.prototype.create = function(options) {
             that.rotateDEG(1);
             that.draw();
         }
-        else if(event.keyCode === 16 && !shiftPressed) {
+        else if(event.keyCode === 16 && !shiftPressed) { //shift
             shiftPressed = true;
             that.keepProportions = !that.keepProportions;
         }
     }
 
     function keyUp(event) {
-        if (event.keyCode === 16) { //DEL == 46
+        if (event.keyCode === 16) { //shift
             that.keepProportions = !that.keepProportions;
             shiftPressed = false;
         }
