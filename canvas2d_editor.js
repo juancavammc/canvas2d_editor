@@ -134,7 +134,7 @@ CanvasEditor.prototype.create = function(options) {
                 ///////////////
 
                 img.addEventListener("load", function () {
-                    that.entities.push({image: img, x: 0, y: 0, angle: 0, width: img.width, height: img.height});
+                    that.entities.push({image: img, x: event.offsetX, y: event.offsetY, angle: 0, width: img.width, height: img.height});
                     that.draw();
                 }, false);
             };
@@ -159,7 +159,7 @@ CanvasEditor.prototype.create = function(options) {
     function checkCorners(event) {
         var w = that.selectedEntity.width;
         var h = that.selectedEntity.height;
-        vec2.set(pos, that.selectedEntity.x+w/2, that.selectedEntity.y+h/2);
+        vec2.set(pos, that.selectedEntity.x, that.selectedEntity.y);
         vec2.set(mouse, event.offsetX, event.offsetY);
         transform(mat, inv, pos, mouse, that.selectedEntity.angle);
         var x = mouse[0];
@@ -176,7 +176,6 @@ CanvasEditor.prototype.create = function(options) {
             originAnchor.height = true;
             resizing = true;
             that.ctx.canvas.style.cursor = "nw-resize";
-            console.log("!!!!!");
         }
         //up-right
         else if(pointerInside(x, y, (w/2)-s, (-h/2)-s, s*2, s*2)) {
@@ -222,7 +221,6 @@ CanvasEditor.prototype.create = function(options) {
             originAnchor.height = true;
             resizing = true;
             that.ctx.canvas.style.cursor = "s-resize";
-
         }
         //center-left
         else if(pointerInside(x, y, (-w/2)-s, -s, s*2, s*2)) {
@@ -249,78 +247,44 @@ CanvasEditor.prototype.create = function(options) {
     }
 
     function resizeEntity(event) {
-
-        //var w = that.selectedEntity.width;
-        //var h = that.selectedEntity.height;
-        ////vec2.set(pos, that.selectedEntity.x+w/2, that.selectedEntity.y+h/2);
+        //mat3.identity(mat);
         //vec2.set(mouse, event.deltaX, event.deltaY);
-        ////transform(mat, inv, pos, mouse, that.selectedEntity.angle);
+        //mat3.rotate(mat, mat, that.selectedEntity.angle);
+        //mat3.invert(inv, mat);
+        //vec2.transformMat3(mouse, mouse, inv);
         //event.deltaX = mouse[0];
         //event.deltaY = mouse[1];
 
-
-        //var w = that.selectedEntity.width;
-        //var h = that.selectedEntity.height;
-        mat3.identity(mat);
-        vec2.set(mouse, event.deltaX, event.deltaY);
-        mat3.rotate(mat, mat, that.selectedEntity.angle);
-        mat3.invert(inv, mat);
-        vec2.transformMat3(mouse, mouse, inv);
-        event.deltaX = mouse[0];
-        event.deltaY = mouse[1];
-
-        var ox = 0;
-        var oy = 0;
-
+        //var ox = 0;
+        //var oy = 0;
+        var a = 1;
+        var b = 1;
+        if(!originAnchor.x) a = -1;
+        if(!originAnchor.y) b = -1;
 
         var aspect = that.selectedEntity.width/that.selectedEntity.height;
-        if(!originAnchor.x) {
-            if(originAnchor.width) {
-                that.selectedEntity.width -= event.deltaX;
-                if(that.selectedEntity.width <= 0) {
-                    that.selectedEntity.width = 1;
-                }
-                else ox = event.deltaX;
-            }
-        }
-        else {
-            if(originAnchor.width) that.selectedEntity.width += event.deltaX;
+        if(originAnchor.width) {
+            var width = event.deltaX*a;
+            that.selectedEntity.width += width;
+            if(!originAnchor.x) width=width*(-1);
+            that.selectedEntity.x += width/2;
         }
 
         if(originAnchor.height) {
             if(!that.keepProportions || !originAnchor.width) {
-                if (!originAnchor.y) {
-                    that.selectedEntity.height -= event.deltaY;
-                    if (that.selectedEntity.height <= 0) {
-                        that.selectedEntity.height = 1;
-                    }
-                    else oy = event.deltaY;
-                }
-                else {
-                    that.selectedEntity.height += event.deltaY;
-                }
+                var height = event.deltaY*b;
+                that.selectedEntity.height += height;
+                if(!originAnchor.y) height=height*(-1);
+                that.selectedEntity.y += height/2;
             }
             else {
-                if (!originAnchor.y) {
-                    var height = that.selectedEntity.width/aspect;
-                    var offset = that.selectedEntity.height - height;
-                    that.selectedEntity.height = height;
-                    oy= offset;
-                }
-                else {
-                    that.selectedEntity.height = that.selectedEntity.width/aspect;
-                }
+                var height = that.selectedEntity.width/aspect;
+                that.selectedEntity.height = height;
+                if(!originAnchor.y) height=height*(-1);
+                that.selectedEntity.y += height/2;
             }
         }
 
-        vec2.set(mouse, ox, oy);
-        vec2.transformMat3(mouse, mouse, inv);
-        ox = mouse[0];
-        oy = mouse[1];
-
-        console.log(ox, oy);
-        that.selectedEntity.x += ox;
-        that.selectedEntity.y += oy;
         that.draw();
     }
 
@@ -346,7 +310,7 @@ CanvasEditor.prototype.create = function(options) {
 
             var w = entity.width;
             var h = entity.height;
-            vec2.set(pos, entity.x+w/2, entity.y+h/2);
+            vec2.set(pos, entity.x, entity.y);
             vec2.set(mouse, event.offsetX, event.offsetY);
             transform(mat, inv, pos, mouse, entity.angle);
             var x = mouse[0];
@@ -502,7 +466,7 @@ CanvasEditor.prototype.draw = function() {
         if (this.entities[i]) {
             this.ctx.save();
             var entity = this.entities[i];
-            this.ctx.translate(entity.x+entity.width/2, entity.y+entity.height/2);
+            this.ctx.translate(entity.x, entity.y);
             this.ctx.rotate(entity.angle);
             this.ctx.drawImage(entity.image, -entity.width/2, -entity.height/2, entity.width, entity.height);
             this.ctx.restore();
@@ -522,7 +486,7 @@ CanvasEditor.prototype.drawSelectedStroke = function() {
     var h = entity.height
     var size = this.squaresSize;
 
-    this.ctx.translate(x+w/2,y+h/2);
+    this.ctx.translate(x,y);
     this.ctx.rotate(entity.angle);
 
     this.ctx.strokeRect(-w/2,-h/2,w,h);
