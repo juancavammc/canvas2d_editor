@@ -247,13 +247,13 @@ CanvasEditor.prototype.create = function(options) {
     }
 
     function resizeEntity(event) {
-        //mat3.identity(mat);
-        //vec2.set(mouse, event.deltaX, event.deltaY);
-        //mat3.rotate(mat, mat, that.selectedEntity.angle);
-        //mat3.invert(inv, mat);
-        //vec2.transformMat3(mouse, mouse, inv);
-        //event.deltaX = mouse[0];
-        //event.deltaY = mouse[1];
+        mat3.identity(mat);
+        vec2.set(mouse, event.deltaX, event.deltaY);
+        mat3.rotate(mat, mat, that.selectedEntity.angle);
+        mat3.invert(inv, mat);
+        vec2.transformMat3(mouse, mouse, inv);
+        event.deltaX = mouse[0];
+        event.deltaY = mouse[1];
 
         //var ox = 0;
         //var oy = 0;
@@ -262,29 +262,36 @@ CanvasEditor.prototype.create = function(options) {
         if(!originAnchor.x) a = -1;
         if(!originAnchor.y) b = -1;
 
+        var width = 0;
+        var height = 0;
         var aspect = that.selectedEntity.width/that.selectedEntity.height;
+
         if(originAnchor.width) {
-            var width = event.deltaX*a;
+            width = event.deltaX*a;
             that.selectedEntity.width += width;
-            if(!originAnchor.x) width=width*(-1);
-            that.selectedEntity.x += width/2;
+            width = width/2*a;
         }
 
         if(originAnchor.height) {
             if(!that.keepProportions || !originAnchor.width) {
-                var height = event.deltaY*b;
+                height = event.deltaY*b;
                 that.selectedEntity.height += height;
-                if(!originAnchor.y) height=height*(-1);
-                that.selectedEntity.y += height/2;
+                height = height/2*b;
             }
             else {
-                var height = that.selectedEntity.width/aspect;
+                height = that.selectedEntity.width/aspect;
                 that.selectedEntity.height = height;
-                if(!originAnchor.y) height=height*(-1);
-                that.selectedEntity.y += height/2;
+                height = width/aspect*a*b;
             }
         }
 
+        vec2.set(mouse, width, height);
+        vec2.transformMat3(mouse, mouse, inv);
+        width = mouse[0];
+        height = mouse[1];
+
+        that.selectedEntity.x += width;
+        that.selectedEntity.y += height;
         that.draw();
     }
 
