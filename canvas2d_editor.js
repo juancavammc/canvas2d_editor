@@ -17,7 +17,6 @@ function CanvasEditor() {
 //TODO: invertir imagen
 //TODO: sticky
 //TODO: renderizar
-//TODO: añadir, además de mousedown, mouseclick? (Para cambiar entre resize y rotate)
 //TODO: quitar fondo blanco de pngs
 
 //TODO: if drop_zone != canvas ---> canvas->drag->preventdefault
@@ -129,9 +128,6 @@ CanvasEditor.prototype.create = function(options) {
             reader.onloadend = function () {
                 var img = new Image();
                 img.src = this.result;
-                ///////////////
-                //TODO: Image on mouse position
-                ///////////////
 
                 img.addEventListener("load", function () {
                     that.entities.push({image: img, x: event.offsetX, y: event.offsetY, angle: 0, width: img.width, height: img.height});
