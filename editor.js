@@ -2,7 +2,7 @@
     var container = document.getElementById("drop_zone");
     var editor1 = new CanvasEditor();
 
-    //Canvas is also drop_zone
+    //Canvas is attached to drop_zone
     editor1.create({drop_zone: container, width: container.offsetWidth, height: container.offsetHeight});
     container.appendChild(editor1.ctx.canvas);
 
