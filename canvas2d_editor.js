@@ -143,18 +143,32 @@ CanvasEditor.prototype.create = function(options) {
         that.draw();
     }
 
+    function transform(mat, inv, pos, mouse, angle) {
+        mat3.identity(mat);
+        mat3.translate(mat, mat, pos);
+        mat3.rotate(mat, mat, angle);
+        mat3.invert(inv, mat);
+        vec2.transformMat3(mouse, mouse, inv);
+    }
+    var mat = mat3.create();
+    var inv = mat3.create();
+    var pos = vec2.create();
+    var mouse = vec2.create();
+
     function checkCorners(event) {
-        var x = event.offsetX;
-        var y = event.offsetY;
-        var originX = that.selectedEntity.x;
-        var originY = that.selectedEntity.y;
         var w = that.selectedEntity.width;
         var h = that.selectedEntity.height;
+        vec2.set(pos, that.selectedEntity.x+w/2, that.selectedEntity.y+h/2);
+        vec2.set(mouse, event.offsetX, event.offsetY);
+        transform(mat, inv, pos, mouse, that.selectedEntity.angle);
+        var x = mouse[0];
+        var y = mouse[1];
         var s = that.squaresSize+1;
+
         var resizing = false;
 
         //up-left
-        if(pointerInside(x, y, originX-s, originY-s, s*2, s*2)) {
+        if(pointerInside(x, y, (-w/2)-s, (-h/2)-s, s*2, s*2)) {
             originAnchor.x = false;
             originAnchor.y = false;
             originAnchor.width = true;
@@ -163,7 +177,7 @@ CanvasEditor.prototype.create = function(options) {
             that.ctx.canvas.style.cursor = "nw-resize";
         }
         //up-right
-        else if(pointerInside(x, y, originX-s+w, originY-s, s*2, s*2)) {
+        else if(pointerInside(x, y, (w/2)-s, (-h/2)-s, s*2, s*2)) {
             originAnchor.x = true;
             originAnchor.y = false;
             originAnchor.width = true;
@@ -172,7 +186,7 @@ CanvasEditor.prototype.create = function(options) {
             that.ctx.canvas.style.cursor = "ne-resize";
         }
         //down-left
-        else if(pointerInside(x, y, originX-s, originY-s+h, s*2, s*2)) {
+        else if(pointerInside(x, y, (-w/2)-s, (h/2)-s, s*2, s*2)) {
             originAnchor.x = false;
             originAnchor.y = true;
             originAnchor.width = true;
@@ -181,7 +195,7 @@ CanvasEditor.prototype.create = function(options) {
             that.ctx.canvas.style.cursor = "sw-resize";
         }
         //down-right
-        else if(pointerInside(x, y, originX-s+w, originY-s+h, s*2, s*2)) {
+        else if(pointerInside(x, y, (w/2)-s, (h/2)-s, s*2, s*2)) {
             originAnchor.x = true;
             originAnchor.y = true;
             originAnchor.width = true;
@@ -190,7 +204,7 @@ CanvasEditor.prototype.create = function(options) {
             that.ctx.canvas.style.cursor = "se-resize";
         }
         //up-center
-        else if(pointerInside(x, y, originX-s+(w/2), originY-s, s*2, s*2)) {
+        else if(pointerInside(x, y, -s, (-h/2)-s, s*2, s*2)) {
             originAnchor.x = true;
             originAnchor.y = false;
             originAnchor.width = false;
@@ -199,7 +213,7 @@ CanvasEditor.prototype.create = function(options) {
             that.ctx.canvas.style.cursor = "n-resize";
         }
         //down-center
-        else if(pointerInside(x, y, originX-s+(w/2), originY-s+h, s*2, s*2)) {
+        else if(pointerInside(x, y, -s, (h/2)-s, s*2, s*2)) {
             originAnchor.x = true;
             originAnchor.y = true;
             originAnchor.width = false;
@@ -209,7 +223,7 @@ CanvasEditor.prototype.create = function(options) {
 
         }
         //center-left
-        else if(pointerInside(x, y, originX-s, originY-s+(h/2), s*2, s*2)) {
+        else if(pointerInside(x, y, (-w/2)-s, -s, s*2, s*2)) {
             originAnchor.x = false;
             originAnchor.y = true;
             originAnchor.width = true;
@@ -218,7 +232,7 @@ CanvasEditor.prototype.create = function(options) {
             that.ctx.canvas.style.cursor = "e-resize";
         }
         //center-right
-        else if(pointerInside(x, y, originX-s+w, originY-s+(h/2), s*2, s*2)) {
+        else if(pointerInside(x, y, (w/2)-s, -s, s*2, s*2)) {
             originAnchor.x = true;
             originAnchor.y = true;
             originAnchor.width = true;
@@ -292,12 +306,24 @@ CanvasEditor.prototype.create = function(options) {
             var entity = that.entities[i];
             if (!entity) continue;
 
-            var x = event.offsetX;
-            var y = event.offsetY;
+            //var x = event.offsetX;
+            //var y = event.offsetY;
             offsetX = event.x - entity.x;
             offsetY = event.y - entity.y;
 
-            if(pointerInside(x, y, entity.x, entity.y, entity.width, entity.height)) {
+
+            var w = entity.width;
+            var h = entity.height;
+            vec2.set(pos, entity.x+w/2, entity.y+h/2);
+            vec2.set(mouse, event.offsetX, event.offsetY);
+            transform(mat, inv, pos, mouse, entity.angle);
+            var x = mouse[0];
+            var y = mouse[1];
+            //var s = that.squaresSize+1;
+
+
+
+            if(pointerInside(x, y, -w/2, -h/2, w, h)) {
                 window.addEventListener("mousemove", handle_mousemove_move_clicked, false);
                 window.addEventListener("mouseup", handle_mouseup, false);
                 that.selectedEntity = entity;
@@ -309,7 +335,7 @@ CanvasEditor.prototype.create = function(options) {
 
 
     function pointerInside(x, y, originX, originY, width, height) {
-        return (x > originX && y > originY && x < (originX + width) && y < (originY + height));
+        return (x >= originX && y >= originY && x <= (originX + width) && y <= (originY + height));
     }
 
     function setNewPosition(event) {
