@@ -7,10 +7,11 @@ function CanvasEditor() {
     this.strokeColor = "#FF0000";
     this.squaresSize = 4;
     this.sizeLine = 16; //line to rotation circle
+    this.keepProportions = false;
 }
 
 //TODO: drag al monitor secundario descoloca la imagen (sin reescalado PPP no pasa?)
-//TODO: solucionar evento de mas cuando mouseup (llama a un mousemove de mas)
+//TODO: solucionar evento de más cuando mouseup (llama a un mousemove de mas)
 //TODO: Mantener proporciones al reescalar
 //TODO: Rotaciones
 //TODO: invertir imagen
@@ -229,6 +230,7 @@ CanvasEditor.prototype.create = function(options) {
     }
 
     function resizeEntity(event) {
+        var aspect = that.selectedEntity.width/that.selectedEntity.height;
         if(!originAnchor.x) {
             if(originAnchor.width) {
                 that.selectedEntity.width -= event.deltaX;
@@ -241,17 +243,31 @@ CanvasEditor.prototype.create = function(options) {
         else {
             if(originAnchor.width) that.selectedEntity.width += event.deltaX;
         }
-        if(!originAnchor.y) {
-            if(originAnchor.height) {
-                that.selectedEntity.height -= event.deltaY;
-                if(that.selectedEntity.height <= 0) {
-                    that.selectedEntity.height = 1;
+
+        if(originAnchor.height) {
+            if(!that.keepProportions || !originAnchor.width) {
+                if (!originAnchor.y) {
+                    that.selectedEntity.height -= event.deltaY;
+                    if (that.selectedEntity.height <= 0) {
+                        that.selectedEntity.height = 1;
+                    }
+                    else that.selectedEntity.y += event.deltaY;
                 }
-                else that.selectedEntity.y += event.deltaY;
+                else {
+                    that.selectedEntity.height += event.deltaY;
+                }
             }
-        }
-        else {
-            if(originAnchor.height) that.selectedEntity.height += event.deltaY;
+            else {
+                if (!originAnchor.y) {
+                    var height = that.selectedEntity.width/aspect;
+                    var offset = that.selectedEntity.height - height;
+                    that.selectedEntity.height = height;
+                    that.selectedEntity.y += offset;
+                }
+                else {
+                    that.selectedEntity.height = that.selectedEntity.width/aspect;
+                }
+            }
         }
         that.draw();
     }
@@ -297,6 +313,7 @@ CanvasEditor.prototype.create = function(options) {
         that.translate(event.x - offsetX, event.y - offsetY);
     }
 
+    var shiftPressed = false;
     function keyDown(event) {
         //console.log(event.keyCode);
         if (that.selectedEntity && event.keyCode === 46) { //DEL == 46
@@ -313,6 +330,17 @@ CanvasEditor.prototype.create = function(options) {
             //that.selectedEntity.angle += Math.PI/180;
             that.rotateDEG(1);
             that.draw();
+        }
+        else if(event.keyCode === 16 && !shiftPressed) {
+            shiftPressed = true;
+            that.keepProportions = !that.keepProportions;
+        }
+    }
+
+    function keyUp(event) {
+        if (event.keyCode === 16) { //DEL == 46
+            that.keepProportions = !that.keepProportions;
+            shiftPressed = false;
         }
     }
 
@@ -368,12 +396,17 @@ CanvasEditor.prototype.create = function(options) {
         keyDown(event);
     }
 
+    function handle_keyup(event) {
+        keyUp(event);
+    }
+
     function stop_default_drop(event) {
         event.stopPropagation();
         event.preventDefault();
     }
 
     window.addEventListener("keydown", handle_keydown, false);
+    window.addEventListener("keyup", handle_keyup, false);
     document.body.addEventListener("dragover", stop_default_drop, false);
     document.body.addEventListener("drop", stop_default_drop, false);
     that.drop_zone.addEventListener("dragover", handle_dragover, false);
@@ -487,7 +520,6 @@ CanvasEditor.prototype.rotateDEG = function(angle) {
         angle = angle * Math.PI / 180;
         this.selectedEntity.angle += angle;
         this.selectedEntity.angle = this.selectedEntity.angle % (Math.PI*2);
-        console.log(this.selectedEntity.angle)
     }
 }
 
