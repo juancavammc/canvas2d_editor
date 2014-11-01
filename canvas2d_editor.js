@@ -66,9 +66,20 @@ CanvasEditor.prototype.create = function(options) {
 
     that.ctx = canvas.getContext("2d");
 
+    //variables used during the execution
+    //offsets from window to canvas
     var offsetX = 0;
     var offsetY = 0;
-    var originAnchor = {
+
+    //last position of the mouse
+    var lastX = 0;
+    var lastY = 0;
+
+    //if shift key is pressed or not
+    var shiftPressed = false;
+
+    //tells you what corner is anchored while resizing. Also if its resizing width, height or both
+    var anchor = {
         x: true,
         y: true,
         width: false,
@@ -155,14 +166,6 @@ CanvasEditor.prototype.create = function(options) {
         that.draw();
     }
 
-    /*function transform(mat, inv, pos, mouse, angle) {
-        mat3.identity(mat);
-        mat3.translate(mat, mat, pos);
-        mat3.rotate(mat, mat, angle);
-        mat3.invert(inv, mat);
-        vec2.transformMat3(mouse, mouse, inv);
-    }*/
-
     function checkCorners(event) {
         var w = that.selectedEntity.width;
         var h = that.selectedEntity.height;
@@ -177,73 +180,73 @@ CanvasEditor.prototype.create = function(options) {
 
         //up-left
         if(pointerInside(x, y, (-w/2)-s, (-h/2)-s, s*2, s*2)) {
-            originAnchor.x = false;
-            originAnchor.y = false;
-            originAnchor.width = true;
-            originAnchor.height = true;
+            anchor.x = false;
+            anchor.y = false;
+            anchor.width = true;
+            anchor.height = true;
             resizing = true;
             that.ctx.canvas.style.cursor = "nw-resize";
         }
         //up-right
         else if(pointerInside(x, y, (w/2)-s, (-h/2)-s, s*2, s*2)) {
-            originAnchor.x = true;
-            originAnchor.y = false;
-            originAnchor.width = true;
-            originAnchor.height = true;
+            anchor.x = true;
+            anchor.y = false;
+            anchor.width = true;
+            anchor.height = true;
             resizing = true;
             that.ctx.canvas.style.cursor = "ne-resize";
         }
         //down-left
         else if(pointerInside(x, y, (-w/2)-s, (h/2)-s, s*2, s*2)) {
-            originAnchor.x = false;
-            originAnchor.y = true;
-            originAnchor.width = true;
-            originAnchor.height = true;
+            anchor.x = false;
+            anchor.y = true;
+            anchor.width = true;
+            anchor.height = true;
             resizing = true;
             that.ctx.canvas.style.cursor = "sw-resize";
         }
         //down-right
         else if(pointerInside(x, y, (w/2)-s, (h/2)-s, s*2, s*2)) {
-            originAnchor.x = true;
-            originAnchor.y = true;
-            originAnchor.width = true;
-            originAnchor.height = true;
+            anchor.x = true;
+            anchor.y = true;
+            anchor.width = true;
+            anchor.height = true;
             resizing = true;
             that.ctx.canvas.style.cursor = "se-resize";
         }
         //up-center
         else if(pointerInside(x, y, -s, (-h/2)-s, s*2, s*2)) {
-            originAnchor.x = true;
-            originAnchor.y = false;
-            originAnchor.width = false;
-            originAnchor.height = true;
+            anchor.x = true;
+            anchor.y = false;
+            anchor.width = false;
+            anchor.height = true;
             resizing = true;
             that.ctx.canvas.style.cursor = "n-resize";
         }
         //down-center
         else if(pointerInside(x, y, -s, (h/2)-s, s*2, s*2)) {
-            originAnchor.x = true;
-            originAnchor.y = true;
-            originAnchor.width = false;
-            originAnchor.height = true;
+            anchor.x = true;
+            anchor.y = true;
+            anchor.width = false;
+            anchor.height = true;
             resizing = true;
             that.ctx.canvas.style.cursor = "s-resize";
         }
         //center-left
         else if(pointerInside(x, y, (-w/2)-s, -s, s*2, s*2)) {
-            originAnchor.x = false;
-            originAnchor.y = true;
-            originAnchor.width = true;
-            originAnchor.height = false;
+            anchor.x = false;
+            anchor.y = true;
+            anchor.width = true;
+            anchor.height = false;
             resizing = true;
             that.ctx.canvas.style.cursor = "e-resize";
         }
         //center-right
         else if(pointerInside(x, y, (w/2)-s, -s, s*2, s*2)) {
-            originAnchor.x = true;
-            originAnchor.y = true;
-            originAnchor.width = true;
-            originAnchor.height = false;
+            anchor.x = true;
+            anchor.y = true;
+            anchor.width = true;
+            anchor.height = false;
             resizing = true;
             that.ctx.canvas.style.cursor = "w-resize";
         }
@@ -263,21 +266,21 @@ CanvasEditor.prototype.create = function(options) {
 
         var a = 1;
         var b = 1;
-        if(!originAnchor.x) a = -1;
-        if(!originAnchor.y) b = -1;
+        if(!anchor.x) a = -1;
+        if(!anchor.y) b = -1;
 
         var width = 0;
         var height = 0;
         var aspect = that.selectedEntity.width/that.selectedEntity.height;
 
-        if(originAnchor.width) {
+        if(anchor.width) {
             width = event.deltaX*a;
             that.selectedEntity.width += width;
             width = width/2*a;
         }
 
-        if(originAnchor.height) {
-            if(!that.keepProportions || !originAnchor.width) {
+        if(anchor.height) {
+            if(!that.keepProportions || !anchor.width) {
                 height = event.deltaY*b;
                 that.selectedEntity.height += height;
                 height = height/2*b;
@@ -347,7 +350,6 @@ CanvasEditor.prototype.create = function(options) {
         that.translate(event.x - offsetX, event.y - offsetY);
     }
 
-    var shiftPressed = false;
     function keyDown(event) {
         //console.log(event.keyCode);
         if (that.selectedEntity && event.keyCode === 46) { //DEL == 46
@@ -447,9 +449,6 @@ CanvasEditor.prototype.create = function(options) {
     that.ctx.canvas.addEventListener("mousedown", handle_mousedown, false);
     that.ctx.canvas.addEventListener("mousemove", handle_mousemove_move_notClicked, false);
 
-    var lastX = 0;
-    var lastY = 0;
-
     function augmentEvent(event) {
         if(event.offsetX === undefined) {
             event.offsetX = event.layerX;
@@ -495,7 +494,7 @@ CanvasEditor.prototype.drawSelectedStroke = function() {
     var x = entity.x;
     var y = entity.y;
     var w = entity.width;
-    var h = entity.height
+    var h = entity.height;
     var size = this.squaresSize;
 
     this.ctx.translate(x,y);
