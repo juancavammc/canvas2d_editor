@@ -331,6 +331,7 @@ CanvasEditor.prototype.create = function(options) {
             var x = vec_tmp[0];
             var y = vec_tmp[1];
 
+            console.log(event.offsetX, event.offsetY, x, y);
             if(pointerInside(x, y, -w/2, -h/2, w, h)) {
                 window.addEventListener("mousemove", handle_mousemove_move_clicked, false);
                 window.addEventListener("mouseup", handle_mouseup, false);
@@ -373,6 +374,7 @@ CanvasEditor.prototype.create = function(options) {
     }
 
     function keyUp(event) {
+        //// TEST ////
         if (event.keyCode === 16) { //shift
             that.keepProportions = !that.keepProportions;
             shiftPressed = false;
@@ -382,11 +384,13 @@ CanvasEditor.prototype.create = function(options) {
     function handle_dragover(event) {
         event.stopPropagation();
         event.preventDefault();
+        augmentEvent(event);
     }
 
     function handle_drop(event) {
         event.stopPropagation();
         event.preventDefault();
+        augmentEvent(event);
         createNewImages(event);
     }
 
@@ -422,6 +426,7 @@ CanvasEditor.prototype.create = function(options) {
     function handle_mouseup(event) {
         event.stopPropagation();
         event.preventDefault();
+        augmentEvent(event);
         window.removeEventListener("mousemove", handle_mousemove_move_clicked, false);
         that.ctx.canvas.addEventListener("mousemove", handle_mousemove_move_notClicked, false);
         window.removeEventListener("mousemove", handle_mousemove_resize, false);
