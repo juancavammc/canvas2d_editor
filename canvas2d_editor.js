@@ -1,4 +1,9 @@
 'use strict';
+
+var identity = mat3.create();
+var mat_tmp = mat3.create();
+var vec_tmp = vec2.create();
+
 function CanvasEditor() {
     this.ctx = undefined;
     this.drop_zone = undefined;
@@ -18,6 +23,7 @@ function CanvasEditor() {
 //TODO: sticky
 //TODO: renderizar
 //TODO: quitar fondo blanco de pngs
+//TODO: límite de entities?
 
 //TODO: if drop_zone != canvas ---> canvas->drag->preventdefault
 //TODO: if click outside canvas ---> unselect
@@ -60,9 +66,20 @@ CanvasEditor.prototype.create = function(options) {
 
     that.ctx = canvas.getContext("2d");
 
+    //variables used during the execution
+    //offsets from window to canvas
     var offsetX = 0;
     var offsetY = 0;
-    var originAnchor = {
+
+    //last position of the mouse
+    var lastX = 0;
+    var lastY = 0;
+
+    //if shift key is pressed or not
+    var shiftPressed = false;
+
+    //tells you what corner is anchored while resizing. Also if its resizing width, height or both
+    var anchor = {
         x: true,
         y: true,
         width: false,
@@ -130,7 +147,17 @@ CanvasEditor.prototype.create = function(options) {
                 img.src = this.result;
 
                 img.addEventListener("load", function () {
-                    that.entities.push({image: img, x: event.offsetX, y: event.offsetY, angle: 0, width: img.width, height: img.height});
+                    var pos = vec2.fromValues(event.offsetX, event.offsetY);
+                    var mat_trans = mat3.create();
+                    mat3.translate(mat_trans, mat_trans, pos);
+                    var mat_rot = mat3.create();
+                    var model = mat3.clone(mat_trans);
+                    that.entities.push({image: img, x: event.offsetX, y: event.offsetY, width: img.width, height: img.height, angle: 0,
+                        position: pos,
+                        translation: mat_trans,
+                        rotation: mat_rot,
+                        model: model
+                    });
                     that.draw();
                 }, false);
             };
@@ -139,100 +166,87 @@ CanvasEditor.prototype.create = function(options) {
         that.draw();
     }
 
-    function transform(mat, inv, pos, mouse, angle) {
-        mat3.identity(mat);
-        mat3.translate(mat, mat, pos);
-        mat3.rotate(mat, mat, angle);
-        mat3.invert(inv, mat);
-        vec2.transformMat3(mouse, mouse, inv);
-    }
-
-    var mat = mat3.create();
-    var inv = mat3.create();
-    var pos = vec2.create();
-    var mouse = vec2.create();
-
     function checkCorners(event) {
         var w = that.selectedEntity.width;
         var h = that.selectedEntity.height;
-        vec2.set(pos, that.selectedEntity.x, that.selectedEntity.y);
-        vec2.set(mouse, event.offsetX, event.offsetY);
-        transform(mat, inv, pos, mouse, that.selectedEntity.angle);
-        var x = mouse[0];
-        var y = mouse[1];
-        var s = that.squaresSize+1;
+        mat3.invert(mat_tmp, that.selectedEntity.model);
+        vec2.set(vec_tmp, event.offsetX, event.offsetY);
+        vec2.transformMat3(vec_tmp, vec_tmp, mat_tmp);
+        var x = vec_tmp[0];
+        var y = vec_tmp[1];
 
+        var s = that.squaresSize+1;
         var resizing = false;
 
         //up-left
         if(pointerInside(x, y, (-w/2)-s, (-h/2)-s, s*2, s*2)) {
-            originAnchor.x = false;
-            originAnchor.y = false;
-            originAnchor.width = true;
-            originAnchor.height = true;
+            anchor.x = false;
+            anchor.y = false;
+            anchor.width = true;
+            anchor.height = true;
             resizing = true;
             that.ctx.canvas.style.cursor = "nw-resize";
         }
         //up-right
         else if(pointerInside(x, y, (w/2)-s, (-h/2)-s, s*2, s*2)) {
-            originAnchor.x = true;
-            originAnchor.y = false;
-            originAnchor.width = true;
-            originAnchor.height = true;
+            anchor.x = true;
+            anchor.y = false;
+            anchor.width = true;
+            anchor.height = true;
             resizing = true;
             that.ctx.canvas.style.cursor = "ne-resize";
         }
         //down-left
         else if(pointerInside(x, y, (-w/2)-s, (h/2)-s, s*2, s*2)) {
-            originAnchor.x = false;
-            originAnchor.y = true;
-            originAnchor.width = true;
-            originAnchor.height = true;
+            anchor.x = false;
+            anchor.y = true;
+            anchor.width = true;
+            anchor.height = true;
             resizing = true;
             that.ctx.canvas.style.cursor = "sw-resize";
         }
         //down-right
         else if(pointerInside(x, y, (w/2)-s, (h/2)-s, s*2, s*2)) {
-            originAnchor.x = true;
-            originAnchor.y = true;
-            originAnchor.width = true;
-            originAnchor.height = true;
+            anchor.x = true;
+            anchor.y = true;
+            anchor.width = true;
+            anchor.height = true;
             resizing = true;
             that.ctx.canvas.style.cursor = "se-resize";
         }
         //up-center
         else if(pointerInside(x, y, -s, (-h/2)-s, s*2, s*2)) {
-            originAnchor.x = true;
-            originAnchor.y = false;
-            originAnchor.width = false;
-            originAnchor.height = true;
+            anchor.x = true;
+            anchor.y = false;
+            anchor.width = false;
+            anchor.height = true;
             resizing = true;
             that.ctx.canvas.style.cursor = "n-resize";
         }
         //down-center
         else if(pointerInside(x, y, -s, (h/2)-s, s*2, s*2)) {
-            originAnchor.x = true;
-            originAnchor.y = true;
-            originAnchor.width = false;
-            originAnchor.height = true;
+            anchor.x = true;
+            anchor.y = true;
+            anchor.width = false;
+            anchor.height = true;
             resizing = true;
             that.ctx.canvas.style.cursor = "s-resize";
         }
         //center-left
         else if(pointerInside(x, y, (-w/2)-s, -s, s*2, s*2)) {
-            originAnchor.x = false;
-            originAnchor.y = true;
-            originAnchor.width = true;
-            originAnchor.height = false;
+            anchor.x = false;
+            anchor.y = true;
+            anchor.width = true;
+            anchor.height = false;
             resizing = true;
             that.ctx.canvas.style.cursor = "e-resize";
         }
         //center-right
         else if(pointerInside(x, y, (w/2)-s, -s, s*2, s*2)) {
-            originAnchor.x = true;
-            originAnchor.y = true;
-            originAnchor.width = true;
-            originAnchor.height = false;
+            anchor.x = true;
+            anchor.y = true;
+            anchor.width = true;
+            anchor.height = false;
             resizing = true;
             that.ctx.canvas.style.cursor = "w-resize";
         }
@@ -242,53 +256,88 @@ CanvasEditor.prototype.create = function(options) {
         return resizing;
     }
 
-    function resizeEntity(event) {
-        mat3.identity(mat);
-        vec2.set(mouse, event.deltaX, event.deltaY);
-        mat3.rotate(mat, mat, that.selectedEntity.angle);
-        mat3.invert(inv, mat);
-        vec2.transformMat3(mouse, mouse, inv);
-        event.deltaX = mouse[0];
-        event.deltaY = mouse[1];
+    function sign(num) { return num > 0 ? 1 : num < 0 ? -1 : 1; }
 
-        //var ox = 0;
-        //var oy = 0;
+    function resizeEntity(event) {
+        mat3.invert(mat_tmp, that.selectedEntity.rotation);
+        vec2.set(vec_tmp, event.deltaX, event.deltaY);
+        vec2.transformMat3(vec_tmp, vec_tmp, mat_tmp);
+
+        event.deltaX = vec_tmp[0];
+        event.deltaY = vec_tmp[1];
+
         var a = 1;
         var b = 1;
-        if(!originAnchor.x) a = -1;
-        if(!originAnchor.y) b = -1;
+        if(!anchor.x) a = -1;
+        if(!anchor.y) b = -1;
 
         var width = 0;
         var height = 0;
         var aspect = that.selectedEntity.width/that.selectedEntity.height;
 
-        if(originAnchor.width) {
+        var min = 2;
+        var oldWidth = that.selectedEntity.width;
+        var oldHeight = that.selectedEntity.height;
+
+        if(anchor.width) {
             width = event.deltaX*a;
             that.selectedEntity.width += width;
             width = width/2*a;
+            if(!that.selectedEntity.width) {
+                console.log("a");
+            }
+            if(Math.abs(that.selectedEntity.width) < min) {
+                that.selectedEntity.width = -min*sign(that.selectedEntity.width);
+                width = (that.selectedEntity.width - oldWidth)/2*a;
+            }
         }
 
-        if(originAnchor.height) {
-            if(!that.keepProportions || !originAnchor.width) {
+        if(anchor.height) {
+            if(!that.keepProportions || !anchor.width) {
                 height = event.deltaY*b;
                 that.selectedEntity.height += height;
                 height = height/2*b;
+                if(Math.abs(that.selectedEntity.height) < min) {
+                    that.selectedEntity.height = -min*sign(that.selectedEntity.height);
+                    height = (that.selectedEntity.height - oldHeight)/2*b;
+                }
             }
             else {
                 height = that.selectedEntity.width/aspect;
                 that.selectedEntity.height = height;
                 height = (width/aspect)*a*b;
+                if(Math.abs(that.selectedEntity.height) < min) {
+                    that.selectedEntity.height = -min*sign(that.selectedEntity.height);
+                    height = (that.selectedEntity.height - oldHeight)/2*b;
+                    width =  that.selectedEntity.height*aspect;
+                    that.selectedEntity.width = width;
+                    width = (height*aspect)*a*b;
+                }
             }
         }
 
-        vec2.set(mouse, width, height);
-        vec2.transformMat3(mouse, mouse, mat);
-        width = mouse[0];
-        height = mouse[1];
+        vec2.set(vec_tmp, width, height);
+        vec2.transformMat3(vec_tmp, vec_tmp, that.selectedEntity.rotation);
+        width = vec_tmp[0];
+        height = vec_tmp[1];
 
         that.selectedEntity.x += width;
         that.selectedEntity.y += height;
+        that.update_matrices(that.selectedEntity);
+        //if(!that.selectedEntity.width ||!that.selectedEntity.height)
+        console.log(that.selectedEntity.width, that.selectedEntity.height);
+        //if(!that.selectedEntity.width) that.selectedEntity.width = 0;
+        //if(!that.selectedEntity.height) that.selectedEntity.height = 0;
         that.draw();
+    }
+
+    function fixResize(entity) {
+        if(entity) {
+            if (entity.width < 0) entity.width = -entity.width;
+            if (entity.height < 0) entity.height = -entity.height;
+            //that.update_matrices(entity);
+            that.draw();
+        }
     }
 
     function selectEntity(event) {
@@ -313,11 +362,11 @@ CanvasEditor.prototype.create = function(options) {
 
             var w = entity.width;
             var h = entity.height;
-            vec2.set(pos, entity.x, entity.y);
-            vec2.set(mouse, event.offsetX, event.offsetY);
-            transform(mat, inv, pos, mouse, entity.angle);
-            var x = mouse[0];
-            var y = mouse[1];
+            mat3.invert(mat_tmp, entity.model);
+            vec2.set(vec_tmp, event.offsetX, event.offsetY);
+            vec2.transformMat3(vec_tmp, vec_tmp, mat_tmp);
+            var x = vec_tmp[0];
+            var y = vec_tmp[1];
 
             if(pointerInside(x, y, -w/2, -h/2, w, h)) {
                 window.addEventListener("mousemove", handle_mousemove_move_clicked, false);
@@ -338,7 +387,6 @@ CanvasEditor.prototype.create = function(options) {
         that.translate(event.x - offsetX, event.y - offsetY);
     }
 
-    var shiftPressed = false;
     function keyDown(event) {
         //console.log(event.keyCode);
         if (that.selectedEntity && event.keyCode === 46) { //DEL == 46
@@ -350,18 +398,19 @@ CanvasEditor.prototype.create = function(options) {
         else if (that.selectedEntity && (event.keyCode === 109 || event.keyCode === 189)) { //-
             demoteSelectedEntity();
         }
+        else if(event.keyCode === 16 && !shiftPressed) { //shift
+            shiftPressed = true;
+            that.keepProportions = !that.keepProportions;
+        }
         //// TEST ////
         else if (that.selectedEntity && (event.keyCode === 190)) { //.
             that.rotateDEG(1);
             that.draw();
         }
-        else if(event.keyCode === 16 && !shiftPressed) { //shift
-            shiftPressed = true;
-            that.keepProportions = !that.keepProportions;
-        }
     }
 
     function keyUp(event) {
+        //// TEST ////
         if (event.keyCode === 16) { //shift
             that.keepProportions = !that.keepProportions;
             shiftPressed = false;
@@ -371,11 +420,13 @@ CanvasEditor.prototype.create = function(options) {
     function handle_dragover(event) {
         event.stopPropagation();
         event.preventDefault();
+        augmentEvent(event);
     }
 
     function handle_drop(event) {
         event.stopPropagation();
         event.preventDefault();
+        augmentEvent(event);
         createNewImages(event);
     }
 
@@ -404,6 +455,7 @@ CanvasEditor.prototype.create = function(options) {
         event.stopPropagation();
         event.preventDefault();
         augmentEvent(event);
+        augmentEvent(event);
         that.ctx.canvas.removeEventListener("mousemove", handle_mousemove_move_notClicked, false);
         selectEntity(event);
     }
@@ -411,6 +463,8 @@ CanvasEditor.prototype.create = function(options) {
     function handle_mouseup(event) {
         event.stopPropagation();
         event.preventDefault();
+        augmentEvent(event);
+        fixResize(that.selectedEntity);
         window.removeEventListener("mousemove", handle_mousemove_move_clicked, false);
         that.ctx.canvas.addEventListener("mousemove", handle_mousemove_move_notClicked, false);
         window.removeEventListener("mousemove", handle_mousemove_resize, false);
@@ -437,9 +491,6 @@ CanvasEditor.prototype.create = function(options) {
     that.drop_zone.addEventListener("drop", handle_drop, false);
     that.ctx.canvas.addEventListener("mousedown", handle_mousedown, false);
     that.ctx.canvas.addEventListener("mousemove", handle_mousemove_move_notClicked, false);
-
-    var lastX = 0;
-    var lastY = 0;
 
     function augmentEvent(event) {
         if(event.offsetX === undefined) {
@@ -471,7 +522,7 @@ CanvasEditor.prototype.draw = function() {
             var entity = this.entities[i];
             this.ctx.translate(entity.x, entity.y);
             this.ctx.rotate(entity.angle);
-            this.ctx.drawImage(entity.image, -entity.width/2, -entity.height/2, entity.width, entity.height);
+            this.ctx.drawImage(entity.image, -Math.abs(entity.width)/2, -Math.abs(entity.height)/2, Math.abs(entity.width), Math.abs(entity.height));
             this.ctx.restore();
         }
     }
@@ -486,7 +537,7 @@ CanvasEditor.prototype.drawSelectedStroke = function() {
     var x = entity.x;
     var y = entity.y;
     var w = entity.width;
-    var h = entity.height
+    var h = entity.height;
     var size = this.squaresSize;
 
     this.ctx.translate(x,y);
@@ -535,6 +586,7 @@ CanvasEditor.prototype.translate = function(x, y) {
     if(this.selectedEntity) {
         this.selectedEntity.x = x;
         this.selectedEntity.y = y;
+        this.update_matrices(this.selectedEntity);
         this.draw();
     }
 }
@@ -544,6 +596,7 @@ CanvasEditor.prototype.rotateDEG = function(angle) {
         angle = angle * Math.PI / 180;
         this.selectedEntity.angle += angle;
         this.selectedEntity.angle = this.selectedEntity.angle % (Math.PI*2);
+        this.update_matrices(this.selectedEntity);
     }
 }
 
@@ -551,12 +604,20 @@ CanvasEditor.prototype.rotateRAD = function(angle) {
     if(this.selectedEntity) {
         this.selectedEntity.angle += angle;
         this.selectedEntity.angle = this.selectedEntity.angle % (Math.PI*2);
-
+        this.update_matrices(this.selectedEntity);
     }
 }
 
 CanvasEditor.prototype.resetRotation = function() {
     if(this.selectedEntity) {
         this.selectedEntity.angle = 0;
+        this.update_matrices(this.selectedEntity);
     }
+}
+
+CanvasEditor.prototype.update_matrices = function(e) {
+    vec2.set(e.position, e.x, e.y);
+    mat3.translate(e.translation, identity, e.position);
+    mat3.rotate(e.rotation, identity, e.angle);
+    mat3.multiply(e.model, e.translation, e.rotation);
 }
