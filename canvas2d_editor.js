@@ -1,4 +1,9 @@
 'use strict';
+
+var identity = mat3.create();
+var mat_tmp = mat3.create();
+var vec_tmp = vec2.create();
+
 function CanvasEditor() {
     this.ctx = undefined;
     this.drop_zone = undefined;
@@ -18,6 +23,7 @@ function CanvasEditor() {
 //TODO: sticky
 //TODO: renderizar
 //TODO: quitar fondo blanco de pngs
+//TODO: límite de entities?
 
 //TODO: if drop_zone != canvas ---> canvas->drag->preventdefault
 //TODO: if click outside canvas ---> unselect
@@ -130,7 +136,17 @@ CanvasEditor.prototype.create = function(options) {
                 img.src = this.result;
 
                 img.addEventListener("load", function () {
-                    that.entities.push({image: img, x: event.offsetX, y: event.offsetY, angle: 0, width: img.width, height: img.height});
+                    var pos = vec2.fromValues(event.offsetX, event.offsetY);
+                    var mat_trans = mat3.create();
+                    mat3.translate(mat_trans, mat_trans, pos);
+                    var mat_rot = mat3.create();
+                    var model = mat3.clone(mat_trans);
+                    that.entities.push({image: img, x: event.offsetX, y: event.offsetY, width: img.width, height: img.height, angle: 0,
+                        position: pos,
+                        translation: mat_trans,
+                        rotation: mat_rot,
+                        model: model
+                    });
                     that.draw();
                 }, false);
             };
@@ -139,29 +155,24 @@ CanvasEditor.prototype.create = function(options) {
         that.draw();
     }
 
-    function transform(mat, inv, pos, mouse, angle) {
+    /*function transform(mat, inv, pos, mouse, angle) {
         mat3.identity(mat);
         mat3.translate(mat, mat, pos);
         mat3.rotate(mat, mat, angle);
         mat3.invert(inv, mat);
         vec2.transformMat3(mouse, mouse, inv);
-    }
-
-    var mat = mat3.create();
-    var inv = mat3.create();
-    var pos = vec2.create();
-    var mouse = vec2.create();
+    }*/
 
     function checkCorners(event) {
         var w = that.selectedEntity.width;
         var h = that.selectedEntity.height;
-        vec2.set(pos, that.selectedEntity.x, that.selectedEntity.y);
-        vec2.set(mouse, event.offsetX, event.offsetY);
-        transform(mat, inv, pos, mouse, that.selectedEntity.angle);
-        var x = mouse[0];
-        var y = mouse[1];
-        var s = that.squaresSize+1;
+        mat3.invert(mat_tmp, that.selectedEntity.model);
+        vec2.set(vec_tmp, event.offsetX, event.offsetY);
+        vec2.transformMat3(vec_tmp, vec_tmp, mat_tmp);
+        var x = vec_tmp[0];
+        var y = vec_tmp[1];
 
+        var s = that.squaresSize+1;
         var resizing = false;
 
         //up-left
@@ -243,16 +254,13 @@ CanvasEditor.prototype.create = function(options) {
     }
 
     function resizeEntity(event) {
-        mat3.identity(mat);
-        vec2.set(mouse, event.deltaX, event.deltaY);
-        mat3.rotate(mat, mat, that.selectedEntity.angle);
-        mat3.invert(inv, mat);
-        vec2.transformMat3(mouse, mouse, inv);
-        event.deltaX = mouse[0];
-        event.deltaY = mouse[1];
+        mat3.invert(mat_tmp, that.selectedEntity.rotation);
+        vec2.set(vec_tmp, event.deltaX, event.deltaY);
+        vec2.transformMat3(vec_tmp, vec_tmp, mat_tmp);
 
-        //var ox = 0;
-        //var oy = 0;
+        event.deltaX = vec_tmp[0];
+        event.deltaY = vec_tmp[1];
+
         var a = 1;
         var b = 1;
         if(!originAnchor.x) a = -1;
@@ -281,13 +289,14 @@ CanvasEditor.prototype.create = function(options) {
             }
         }
 
-        vec2.set(mouse, width, height);
-        vec2.transformMat3(mouse, mouse, mat);
-        width = mouse[0];
-        height = mouse[1];
+        vec2.set(vec_tmp, width, height);
+        vec2.transformMat3(vec_tmp, vec_tmp, that.selectedEntity.rotation);
+        width = vec_tmp[0];
+        height = vec_tmp[1];
 
         that.selectedEntity.x += width;
         that.selectedEntity.y += height;
+        that.update_matrices(that.selectedEntity);
         that.draw();
     }
 
@@ -313,11 +322,11 @@ CanvasEditor.prototype.create = function(options) {
 
             var w = entity.width;
             var h = entity.height;
-            vec2.set(pos, entity.x, entity.y);
-            vec2.set(mouse, event.offsetX, event.offsetY);
-            transform(mat, inv, pos, mouse, entity.angle);
-            var x = mouse[0];
-            var y = mouse[1];
+            mat3.invert(mat_tmp, entity.model);
+            vec2.set(vec_tmp, event.offsetX, event.offsetY);
+            vec2.transformMat3(vec_tmp, vec_tmp, mat_tmp);
+            var x = vec_tmp[0];
+            var y = vec_tmp[1];
 
             if(pointerInside(x, y, -w/2, -h/2, w, h)) {
                 window.addEventListener("mousemove", handle_mousemove_move_clicked, false);
@@ -535,6 +544,7 @@ CanvasEditor.prototype.translate = function(x, y) {
     if(this.selectedEntity) {
         this.selectedEntity.x = x;
         this.selectedEntity.y = y;
+        this.update_matrices(this.selectedEntity);
         this.draw();
     }
 }
@@ -544,6 +554,7 @@ CanvasEditor.prototype.rotateDEG = function(angle) {
         angle = angle * Math.PI / 180;
         this.selectedEntity.angle += angle;
         this.selectedEntity.angle = this.selectedEntity.angle % (Math.PI*2);
+        this.update_matrices(this.selectedEntity);
     }
 }
 
@@ -551,12 +562,20 @@ CanvasEditor.prototype.rotateRAD = function(angle) {
     if(this.selectedEntity) {
         this.selectedEntity.angle += angle;
         this.selectedEntity.angle = this.selectedEntity.angle % (Math.PI*2);
-
+        this.update_matrices(this.selectedEntity);
     }
 }
 
 CanvasEditor.prototype.resetRotation = function() {
     if(this.selectedEntity) {
         this.selectedEntity.angle = 0;
+        this.update_matrices(this.selectedEntity);
     }
+}
+
+CanvasEditor.prototype.update_matrices = function(e) {
+    vec2.set(e.position, e.x, e.y);
+    mat3.translate(e.translation, identity, e.position);
+    mat3.rotate(e.rotation, identity, e.angle);
+    mat3.multiply(e.model, e.translation, e.rotation);
 }
