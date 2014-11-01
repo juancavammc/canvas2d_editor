@@ -266,10 +266,10 @@ CanvasEditor.prototype.create = function(options) {
         event.deltaX = vec_tmp[0];
         event.deltaY = vec_tmp[1];
 
-        var a = 1;
-        var b = 1;
-        if(!anchor.x) a = -1;
-        if(!anchor.y) b = -1;
+        if(anchor.x) var a = 1;
+        else var a = -1;
+        if(anchor.y) var b = 1;
+        else var b = -1;
 
         var width = 0;
         var height = 0;
@@ -283,9 +283,6 @@ CanvasEditor.prototype.create = function(options) {
             width = event.deltaX*a;
             that.selectedEntity.width += width;
             width = width/2*a;
-            if(!that.selectedEntity.width) {
-                console.log("a");
-            }
             if(Math.abs(that.selectedEntity.width) < min) {
                 that.selectedEntity.width = -min*sign(that.selectedEntity.width);
                 width = (that.selectedEntity.width - oldWidth)/2*a;
@@ -324,10 +321,6 @@ CanvasEditor.prototype.create = function(options) {
         that.selectedEntity.x += width;
         that.selectedEntity.y += height;
         that.update_matrices(that.selectedEntity);
-        //if(!that.selectedEntity.width ||!that.selectedEntity.height)
-        console.log(that.selectedEntity.width, that.selectedEntity.height);
-        //if(!that.selectedEntity.width) that.selectedEntity.width = 0;
-        //if(!that.selectedEntity.height) that.selectedEntity.height = 0;
         that.draw();
     }
 
@@ -335,7 +328,6 @@ CanvasEditor.prototype.create = function(options) {
         if(entity) {
             if (entity.width < 0) entity.width = -entity.width;
             if (entity.height < 0) entity.height = -entity.height;
-            //that.update_matrices(entity);
             that.draw();
         }
     }
