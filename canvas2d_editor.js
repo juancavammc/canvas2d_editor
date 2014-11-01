@@ -303,6 +303,15 @@ CanvasEditor.prototype.create = function(options) {
         that.draw();
     }
 
+    function fixResize(entity) {
+        if(entity) {
+            if (entity.width < 0) entity.width = -entity.width;
+            if (entity.height < 0) entity.height = -entity.height;
+            //that.update_matrices(entity);
+            that.draw();
+        }
+    }
+
     function selectEntity(event) {
         //Check if is resizing
         if(that.selectedEntity) {
@@ -331,7 +340,6 @@ CanvasEditor.prototype.create = function(options) {
             var x = vec_tmp[0];
             var y = vec_tmp[1];
 
-            console.log(event.offsetX, event.offsetY, x, y);
             if(pointerInside(x, y, -w/2, -h/2, w, h)) {
                 window.addEventListener("mousemove", handle_mousemove_move_clicked, false);
                 window.addEventListener("mouseup", handle_mouseup, false);
@@ -362,14 +370,14 @@ CanvasEditor.prototype.create = function(options) {
         else if (that.selectedEntity && (event.keyCode === 109 || event.keyCode === 189)) { //-
             demoteSelectedEntity();
         }
+        else if(event.keyCode === 16 && !shiftPressed) { //shift
+            shiftPressed = true;
+            that.keepProportions = !that.keepProportions;
+        }
         //// TEST ////
         else if (that.selectedEntity && (event.keyCode === 190)) { //.
             that.rotateDEG(1);
             that.draw();
-        }
-        else if(event.keyCode === 16 && !shiftPressed) { //shift
-            shiftPressed = true;
-            that.keepProportions = !that.keepProportions;
         }
     }
 
@@ -419,6 +427,7 @@ CanvasEditor.prototype.create = function(options) {
         event.stopPropagation();
         event.preventDefault();
         augmentEvent(event);
+        augmentEvent(event);
         that.ctx.canvas.removeEventListener("mousemove", handle_mousemove_move_notClicked, false);
         selectEntity(event);
     }
@@ -427,6 +436,7 @@ CanvasEditor.prototype.create = function(options) {
         event.stopPropagation();
         event.preventDefault();
         augmentEvent(event);
+        fixResize(that.selectedEntity);
         window.removeEventListener("mousemove", handle_mousemove_move_clicked, false);
         that.ctx.canvas.addEventListener("mousemove", handle_mousemove_move_notClicked, false);
         window.removeEventListener("mousemove", handle_mousemove_resize, false);
