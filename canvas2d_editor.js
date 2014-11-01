@@ -277,12 +277,12 @@ CanvasEditor.prototype.create = function(options) {
             else {
                 height = that.selectedEntity.width/aspect;
                 that.selectedEntity.height = height;
-                height = width/aspect*a*b;
+                height = (width/aspect)*a*b;
             }
         }
 
         vec2.set(mouse, width, height);
-        vec2.transformMat3(mouse, mouse, inv);
+        vec2.transformMat3(mouse, mouse, mat);
         width = mouse[0];
         height = mouse[1];
 
