@@ -256,6 +256,8 @@ CanvasEditor.prototype.create = function(options) {
         return resizing;
     }
 
+    function sign(num) { return num > 0 ? 1 : num < 0 ? -1 : 1; }
+
     function resizeEntity(event) {
         mat3.invert(mat_tmp, that.selectedEntity.rotation);
         vec2.set(vec_tmp, event.deltaX, event.deltaY);
@@ -273,10 +275,21 @@ CanvasEditor.prototype.create = function(options) {
         var height = 0;
         var aspect = that.selectedEntity.width/that.selectedEntity.height;
 
+        var min = 2;
+        var oldWidth = that.selectedEntity.width;
+        var oldHeight = that.selectedEntity.height;
+
         if(anchor.width) {
             width = event.deltaX*a;
             that.selectedEntity.width += width;
             width = width/2*a;
+            if(!that.selectedEntity.width) {
+                console.log("a");
+            }
+            if(Math.abs(that.selectedEntity.width) < min) {
+                that.selectedEntity.width = -min*sign(that.selectedEntity.width);
+                width = (that.selectedEntity.width - oldWidth)/2*a;
+            }
         }
 
         if(anchor.height) {
@@ -284,11 +297,22 @@ CanvasEditor.prototype.create = function(options) {
                 height = event.deltaY*b;
                 that.selectedEntity.height += height;
                 height = height/2*b;
+                if(Math.abs(that.selectedEntity.height) < min) {
+                    that.selectedEntity.height = -min*sign(that.selectedEntity.height);
+                    height = (that.selectedEntity.height - oldHeight)/2*b;
+                }
             }
             else {
                 height = that.selectedEntity.width/aspect;
                 that.selectedEntity.height = height;
                 height = (width/aspect)*a*b;
+                if(Math.abs(that.selectedEntity.height) < min) {
+                    that.selectedEntity.height = -min*sign(that.selectedEntity.height);
+                    height = (that.selectedEntity.height - oldHeight)/2*b;
+                    width =  that.selectedEntity.height*aspect;
+                    that.selectedEntity.width = width;
+                    width = (height*aspect)*a*b;
+                }
             }
         }
 
@@ -300,6 +324,10 @@ CanvasEditor.prototype.create = function(options) {
         that.selectedEntity.x += width;
         that.selectedEntity.y += height;
         that.update_matrices(that.selectedEntity);
+        //if(!that.selectedEntity.width ||!that.selectedEntity.height)
+        console.log(that.selectedEntity.width, that.selectedEntity.height);
+        //if(!that.selectedEntity.width) that.selectedEntity.width = 0;
+        //if(!that.selectedEntity.height) that.selectedEntity.height = 0;
         that.draw();
     }
 
@@ -494,7 +522,7 @@ CanvasEditor.prototype.draw = function() {
             var entity = this.entities[i];
             this.ctx.translate(entity.x, entity.y);
             this.ctx.rotate(entity.angle);
-            this.ctx.drawImage(entity.image, -entity.width/2, -entity.height/2, entity.width, entity.height);
+            this.ctx.drawImage(entity.image, -Math.abs(entity.width)/2, -Math.abs(entity.height)/2, Math.abs(entity.width), Math.abs(entity.height));
             this.ctx.restore();
         }
     }
