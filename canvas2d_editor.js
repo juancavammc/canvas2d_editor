@@ -3,7 +3,8 @@
 
     var identity = mat3.create();
     var mat_tmp = mat3.create();
-    var vec_tmp = vec2.create();
+    var vec_tmp1 = vec2.create();
+    var vec_tmp2 = vec2.create();
 
     function CanvasEditor() {
         this.ctx = undefined;
@@ -77,6 +78,7 @@
         var shiftPressed = false;
 
         //tells you what corner is anchored while resizing. Also if its resizing width, height or both
+        //TODO: Bitmask
         var anchor = {
             x: true,
             y: true,
@@ -172,17 +174,19 @@
             that.draw();
         }
 
+        //TODO: Change cursors accordint to the angle
         function checkCorners(event) {
             var w = that.selectedEntity.width;
             var h = that.selectedEntity.height;
             mat3.invert(mat_tmp, that.selectedEntity.model);
-            vec2.set(vec_tmp, event.offsetX, event.offsetY);
-            vec2.transformMat3(vec_tmp, vec_tmp, mat_tmp);
-            var x = vec_tmp[0];
-            var y = vec_tmp[1];
+            vec2.set(vec_tmp1, event.offsetX, event.offsetY);
+            vec2.transformMat3(vec_tmp1, vec_tmp1, mat_tmp);
+            var x = vec_tmp1[0];
+            var y = vec_tmp1[1];
 
             var s = that.squaresSize + 1;
 
+            //TODO: switch-case
             //up-left
             if (pointerInside(x, y, (-w / 2) - s, (-h / 2) - s, s * 2, s * 2)) {
                 anchor.x = false;
@@ -280,11 +284,11 @@
 
         function resizeEntity(event) {
             mat3.invert(mat_tmp, that.selectedEntity.rotation);
-            vec2.set(vec_tmp, event.deltaX, event.deltaY);
-            vec2.transformMat3(vec_tmp, vec_tmp, mat_tmp);
+            vec2.set(vec_tmp1, event.deltaX, event.deltaY);
+            vec2.transformMat3(vec_tmp1, vec_tmp1, mat_tmp);
 
-            event.deltaX = vec_tmp[0];
-            event.deltaY = vec_tmp[1];
+            event.deltaX = vec_tmp1[0];
+            event.deltaY = vec_tmp1[1];
 
             var a;
             var b;
@@ -335,10 +339,10 @@
                 }
             }
 
-            vec2.set(vec_tmp, width, height);
-            vec2.transformMat3(vec_tmp, vec_tmp, that.selectedEntity.rotation);
-            width = vec_tmp[0];
-            height = vec_tmp[1];
+            vec2.set(vec_tmp1, width, height);
+            vec2.transformMat3(vec_tmp1, vec_tmp1, that.selectedEntity.rotation);
+            width = vec_tmp1[0];
+            height = vec_tmp1[1];
 
             that.selectedEntity.x += width;
             that.selectedEntity.y += height;
@@ -355,35 +359,33 @@
         }
 
         function rotateEntity(event) {
-            vec2.set(vec_tmp, event.x - offsetX, event.y - offsetY);
-            vec2.subtract(vec_tmp, vec_tmp, that.selectedEntity.position);
-            vec2.normalize(vec_tmp, vec_tmp);
-            var angle = vec2.computeSignedAngle(vec_tmp, v_origin);
-            vec2.copy(v_origin, vec_tmp);
+            vec2.set(vec_tmp1, event.x - offsetX, event.y - offsetY);
+            vec2.subtract(vec_tmp1, vec_tmp1, that.selectedEntity.position);
+            vec2.normalize(vec_tmp1, vec_tmp1);
+            var angle = vec2.computeSignedAngle(vec_tmp1, vec_tmp2);
+            vec2.copy(vec_tmp2, vec_tmp1);
             that.rotateRAD(angle);
             that.draw();
         }
-
-        var v_origin = vec2.create();
 
         function selectEntity(event) {
             //Check if is resizing
             if (that.selectedEntity) {
                 checkCorners(event);
                 if (anchor.resizing) {
-                    window.addEventListener("mousemove", handle_mousemove_resize, false);
-                    window.addEventListener("mouseup", handle_mouseup, false);
+                    _global.addEventListener("mousemove", handle_mousemove_resize, false);
+                    _global.addEventListener("mouseup", handle_mouseup, false);
                     that.draw();
                     return true;
                 }
                 else if (anchor.rotating) {
                     offsetX = event.x - event.offsetX;
                     offsetY = event.y - event.offsetY;
-                    vec2.set(v_origin, event.x - offsetX, event.y - offsetY);
-                    vec2.subtract(v_origin, v_origin, that.selectedEntity.position);
-                    vec2.normalize(v_origin, v_origin);
-                    window.addEventListener("mousemove", handle_mousemove_rotate, false);
-                    window.addEventListener("mouseup", handle_mouseup, false);
+                    vec2.set(vec_tmp2, event.x - offsetX, event.y - offsetY);
+                    vec2.subtract(vec_tmp2, vec_tmp2, that.selectedEntity.position);
+                    vec2.normalize(vec_tmp2, vec_tmp2);
+                    _global.addEventListener("mousemove", handle_mousemove_rotate, false);
+                    _global.addEventListener("mouseup", handle_mouseup, false);
                     that.draw();
                     return true;
                 }
@@ -401,14 +403,14 @@
                 var w = entity.width;
                 var h = entity.height;
                 mat3.invert(mat_tmp, entity.model);
-                vec2.set(vec_tmp, event.offsetX, event.offsetY);
-                vec2.transformMat3(vec_tmp, vec_tmp, mat_tmp);
-                var x = vec_tmp[0];
-                var y = vec_tmp[1];
+                vec2.set(vec_tmp1, event.offsetX, event.offsetY);
+                vec2.transformMat3(vec_tmp1, vec_tmp1, mat_tmp);
+                var x = vec_tmp1[0];
+                var y = vec_tmp1[1];
 
                 if (pointerInside(x, y, -w / 2, -h / 2, w, h)) {
-                    window.addEventListener("mousemove", handle_mousemove_move_clicked, false);
-                    window.addEventListener("mouseup", handle_mouseup, false);
+                    _global.addEventListener("mousemove", handle_mousemove_move_clicked, false);
+                    _global.addEventListener("mouseup", handle_mouseup, false);
                     that.selectedEntity = entity;
                     break;
                 }
@@ -426,6 +428,7 @@
         }
 
         function keyDown(event) {
+            //TODO: switch-case
             //console.log(event.keyCode);
             if (that.selectedEntity && event.keyCode === 46) { //DEL == 46
                 deleteSelectedEntity();
@@ -443,6 +446,10 @@
             //// TEST ////
             else if (that.selectedEntity && (event.keyCode === 190)) { //.
                 that.rotateDEG(1);
+                that.draw();
+            }
+            else if (that.selectedEntity && (event.keyCode === 188)) { //.
+                that.rotateDEG(-1);
                 that.draw();
             }
         }
@@ -510,10 +517,10 @@
             event.preventDefault();
             augmentEvent(event);
             fixResize(that.selectedEntity);
-            window.removeEventListener("mousemove", handle_mousemove_move_clicked, false);
+            _global.removeEventListener("mousemove", handle_mousemove_move_clicked, false);
             that.ctx.canvas.addEventListener("mousemove", handle_mousemove_move_notClicked, false);
-            window.removeEventListener("mousemove", handle_mousemove_resize, false);
-            window.removeEventListener("mousemove", handle_mousemove_rotate, false);
+            _global.removeEventListener("mousemove", handle_mousemove_resize, false);
+            _global.removeEventListener("mousemove", handle_mousemove_rotate, false);
         }
 
         function handle_keydown(event) {
@@ -529,8 +536,8 @@
             event.preventDefault();
         }
 
-        window.addEventListener("keydown", handle_keydown, false);
-        window.addEventListener("keyup", handle_keyup, false);
+        _global.addEventListener("keydown", handle_keydown, false);
+        _global.addEventListener("keyup", handle_keyup, false);
         document.body.addEventListener("dragover", stop_default_drop, false);
         document.body.addEventListener("drop", stop_default_drop, false);
         that.drop_zone.addEventListener("dragover", handle_dragover, false);
