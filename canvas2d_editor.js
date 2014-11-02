@@ -1,5 +1,6 @@
-'use strict';
 (function(_global) {
+    "use strict";
+
     var identity = mat3.create();
     var mat_tmp = mat3.create();
     var vec_tmp = vec2.create();
@@ -49,7 +50,7 @@
         if (options.canvas) {
             if (typeof(options.canvas) == "string") {
                 canvas = document.getElementById(options.canvas);
-                canvas.width = that.drop_zone.offsetWidth; //TODO: Firefox?
+                canvas.width = that.drop_zone.offsetWidth;
                 canvas.height = that.drop_zone.offsetHeight;
                 if (!canvas) throw("Canvas element not found: " + options.canvas );
             }
@@ -137,7 +138,7 @@
                 if (!(files[i] instanceof File)) continue;
                 var file = files[i];
                 if (file.type.substring(0, 6) !== "image/") {
-                    throw("File is not an image: " + file.type);
+                    console.log("File is not an image: " + file.type);
                     continue;
                 }
                 var reader = new FileReader();
@@ -285,10 +286,12 @@
             event.deltaX = vec_tmp[0];
             event.deltaY = vec_tmp[1];
 
-            if (anchor.x) var a = 1;
-            else var a = -1;
-            if (anchor.y) var b = 1;
-            else var b = -1;
+            var a;
+            var b;
+            if (anchor.x) a = 1;
+            else a = -1;
+            if (anchor.y) b = 1;
+            else b = -1;
 
             var width = 0;
             var height = 0;
@@ -570,7 +573,7 @@
             }
         }
         if (this.selectedEntity) this.drawSelectedStroke();
-    }
+    };
 
     CanvasEditor.prototype.drawSelectedStroke = function () {
         this.ctx.save();
@@ -611,11 +614,11 @@
 
 
         this.ctx.restore();
-    }
+    };
 
     CanvasEditor.prototype.fillSquare = function (x, y, halfsize) {
         this.ctx.fillRect(x - halfsize, y - halfsize, halfsize * 2, halfsize * 2);
-    }
+    };
 
     CanvasEditor.prototype.resize = function (width, height) {
         if (this.selectedEntity) {
@@ -623,7 +626,7 @@
             this.selectedEntity.height = height;
             this.draw();
         }
-    }
+    };
 
     CanvasEditor.prototype.translate = function (x, y) {
         if (this.selectedEntity) {
@@ -632,7 +635,7 @@
             this.update_matrices(this.selectedEntity);
             this.draw();
         }
-    }
+    };
 
     CanvasEditor.prototype.rotateDEG = function (angle) {
         if (this.selectedEntity) {
@@ -641,7 +644,7 @@
             this.selectedEntity.angle = this.selectedEntity.angle % (Math.PI * 2);
             this.update_matrices(this.selectedEntity);
         }
-    }
+    };
 
     CanvasEditor.prototype.rotateRAD = function (angle) {
         if (this.selectedEntity) {
@@ -649,26 +652,26 @@
             this.selectedEntity.angle = this.selectedEntity.angle % (Math.PI * 2);
             this.update_matrices(this.selectedEntity);
         }
-    }
+    };
 
     CanvasEditor.prototype.resetRotation = function () {
         if (this.selectedEntity) {
             this.selectedEntity.angle = 0;
             this.update_matrices(this.selectedEntity);
         }
-    }
+    };
 
     CanvasEditor.prototype.update_matrices = function (e) {
         vec2.set(e.position, e.x, e.y);
         mat3.translate(e.translation, identity, e.position);
         mat3.rotate(e.rotation, identity, e.angle);
         mat3.multiply(e.model, e.translation, e.rotation);
-    }
+    };
 
-//signed angles
+    //signed angles
     vec2.perpdot = function (a, b) {
         return a[1] * b[0] + -a[0] * b[1];
-    }
+    };
 
     vec2.computeSignedAngle = function (a, b) {
         return Math.atan2(vec2.perpdot(a, b), vec2.dot(a, b));
