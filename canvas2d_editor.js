@@ -260,7 +260,6 @@ CanvasEditor.prototype.create = function(options) {
             that.ctx.canvas.style.cursor = "w-resize";
         }
         else if(pointerInside(x, y, -s, (-h/2)-s-that.sizeLine, s*2, s*2)) {
-            //console.log("miau");
             anchor.resizing = false;
             anchor.rotating = true;
         }
