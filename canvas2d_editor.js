@@ -424,7 +424,7 @@
         }
 
         function setNewPosition(event) {
-            that.translate(event.x - offsetX, event.y - offsetY);
+            that.moveTo(event.x - offsetX, event.y - offsetY);
         }
 
         function keyDown(event) {
@@ -446,11 +446,18 @@
             //// TEST ////
             else if (that.selectedEntity && (event.keyCode === 190)) { //.
                 that.rotateDEG(1);
-                that.draw();
             }
-            else if (that.selectedEntity && (event.keyCode === 188)) { //.
-                that.rotateDEG(-1);
-                that.draw();
+            else if (that.selectedEntity && (event.keyCode === 37)) { //.
+                that.translate(-1,0);
+            }
+            else if (that.selectedEntity && (event.keyCode === 39)) { //.
+                that.translate(1,0);
+            }
+            else if (that.selectedEntity && (event.keyCode === 38)) { //.
+                that.translate(0,-1);
+            }
+            else if (that.selectedEntity && (event.keyCode === 40)) { //.
+                that.translate(0,1);
             }
         }
 
@@ -635,10 +642,19 @@
         }
     };
 
-    CanvasEditor.prototype.translate = function (x, y) {
+    CanvasEditor.prototype.moveTo = function (x, y) {
         if (this.selectedEntity) {
             this.selectedEntity.x = x;
             this.selectedEntity.y = y;
+            this.update_matrices(this.selectedEntity);
+            this.draw();
+        }
+    };
+
+    CanvasEditor.prototype.translate = function (x, y) {
+        if(this.selectedEntity) {
+            this.selectedEntity.x += x;
+            this.selectedEntity.y += y;
             this.update_matrices(this.selectedEntity);
             this.draw();
         }
@@ -650,6 +666,7 @@
             this.selectedEntity.angle += angle;
             this.selectedEntity.angle = this.selectedEntity.angle % (Math.PI * 2);
             this.update_matrices(this.selectedEntity);
+            this.draw();
         }
     };
 
@@ -658,6 +675,7 @@
             this.selectedEntity.angle += angle;
             this.selectedEntity.angle = this.selectedEntity.angle % (Math.PI * 2);
             this.update_matrices(this.selectedEntity);
+            this.draw();
         }
     };
 
@@ -665,6 +683,7 @@
         if (this.selectedEntity) {
             this.selectedEntity.angle = 0;
             this.update_matrices(this.selectedEntity);
+            this.draw();
         }
     };
 
