@@ -83,7 +83,9 @@ CanvasEditor.prototype.create = function(options) {
         x: true,
         y: true,
         width: false,
-        height: false
+        height: false,
+        resizing: false,
+        rotating: false
     };
 
     function deleteSelectedEntity() {
@@ -176,7 +178,6 @@ CanvasEditor.prototype.create = function(options) {
         var y = vec_tmp[1];
 
         var s = that.squaresSize+1;
-        var resizing = false;
 
         //up-left
         if(pointerInside(x, y, (-w/2)-s, (-h/2)-s, s*2, s*2)) {
@@ -184,7 +185,8 @@ CanvasEditor.prototype.create = function(options) {
             anchor.y = false;
             anchor.width = true;
             anchor.height = true;
-            resizing = true;
+            anchor.resizing = true;
+            anchor.rotating = false;
             that.ctx.canvas.style.cursor = "nw-resize";
         }
         //up-right
@@ -193,7 +195,8 @@ CanvasEditor.prototype.create = function(options) {
             anchor.y = false;
             anchor.width = true;
             anchor.height = true;
-            resizing = true;
+            anchor.resizing = true;
+            anchor.rotating = false;
             that.ctx.canvas.style.cursor = "ne-resize";
         }
         //down-left
@@ -202,7 +205,8 @@ CanvasEditor.prototype.create = function(options) {
             anchor.y = true;
             anchor.width = true;
             anchor.height = true;
-            resizing = true;
+            anchor.resizing = true;
+            anchor.rotating = false;
             that.ctx.canvas.style.cursor = "sw-resize";
         }
         //down-right
@@ -211,7 +215,8 @@ CanvasEditor.prototype.create = function(options) {
             anchor.y = true;
             anchor.width = true;
             anchor.height = true;
-            resizing = true;
+            anchor.resizing = true;
+            anchor.rotating = false;
             that.ctx.canvas.style.cursor = "se-resize";
         }
         //up-center
@@ -220,7 +225,8 @@ CanvasEditor.prototype.create = function(options) {
             anchor.y = false;
             anchor.width = false;
             anchor.height = true;
-            resizing = true;
+            anchor.resizing = true;
+            anchor.rotating = false;
             that.ctx.canvas.style.cursor = "n-resize";
         }
         //down-center
@@ -229,7 +235,8 @@ CanvasEditor.prototype.create = function(options) {
             anchor.y = true;
             anchor.width = false;
             anchor.height = true;
-            resizing = true;
+            anchor.resizing = true;
+            anchor.rotating = false;
             that.ctx.canvas.style.cursor = "s-resize";
         }
         //center-left
@@ -238,7 +245,8 @@ CanvasEditor.prototype.create = function(options) {
             anchor.y = true;
             anchor.width = true;
             anchor.height = false;
-            resizing = true;
+            anchor.resizing = true;
+            anchor.rotating = false;
             that.ctx.canvas.style.cursor = "e-resize";
         }
         //center-right
@@ -247,13 +255,20 @@ CanvasEditor.prototype.create = function(options) {
             anchor.y = true;
             anchor.width = true;
             anchor.height = false;
-            resizing = true;
+            anchor.resizing = true;
+            anchor.rotating = false;
             that.ctx.canvas.style.cursor = "w-resize";
+        }
+        else if(pointerInside(x, y, -s, (-h/2)-s-that.sizeLine, s*2, s*2)) {
+            //console.log("miau");
+            anchor.resizing = false;
+            anchor.rotating = true;
         }
         else {
             that.ctx.canvas.style.cursor = "default";
+            anchor.resizing = false;
+            anchor.rotating = false;
         }
-        return resizing;
     }
 
     function sign(num) { return num > 0 ? 1 : num < 0 ? -1 : 1; }
@@ -332,11 +347,35 @@ CanvasEditor.prototype.create = function(options) {
         }
     }
 
+    function rotateEntity(event)  {
+        vec2.set(vec_tmp, event.x - offsetX, event.y - offsetY);
+        vec2.subtract(vec_tmp, vec_tmp, that.selectedEntity.position);
+        vec2.normalize(vec_tmp, vec_tmp);
+        var angle = vec2.computeSignedAngle(vec_tmp, v_origin);
+        vec2.copy(v_origin, vec_tmp);
+        that.rotateRAD(angle);
+        that.draw();
+    }
+
+    var v_origin = vec2.create();
+
     function selectEntity(event) {
         //Check if is resizing
         if(that.selectedEntity) {
-            if(checkCorners(event)) {
+            checkCorners(event);
+            if(anchor.resizing) {
                 window.addEventListener("mousemove", handle_mousemove_resize, false);
+                window.addEventListener("mouseup", handle_mouseup, false);
+                that.draw();
+                return true;
+            }
+            else if(anchor.rotating) {
+                offsetX = event.x - event.offsetX;
+                offsetY = event.y - event.offsetY;
+                vec2.set(v_origin, event.x - offsetX, event.y - offsetY);
+                vec2.subtract(v_origin, v_origin, that.selectedEntity.position);
+                vec2.normalize(v_origin, v_origin);
+                window.addEventListener("mousemove", handle_mousemove_rotate, false);
                 window.addEventListener("mouseup", handle_mouseup, false);
                 that.draw();
                 return true;
@@ -443,6 +482,13 @@ CanvasEditor.prototype.create = function(options) {
         resizeEntity(event);
     }
 
+    function handle_mousemove_rotate(event) {
+        event.stopPropagation();
+        event.preventDefault();
+        augmentEvent(event);
+        rotateEntity(event);
+    }
+
     function handle_mousedown(event) {
         event.stopPropagation();
         event.preventDefault();
@@ -460,6 +506,7 @@ CanvasEditor.prototype.create = function(options) {
         window.removeEventListener("mousemove", handle_mousemove_move_clicked, false);
         that.ctx.canvas.addEventListener("mousemove", handle_mousemove_move_notClicked, false);
         window.removeEventListener("mousemove", handle_mousemove_resize, false);
+        window.removeEventListener("mousemove", handle_mousemove_rotate, false);
     }
 
     function handle_keydown(event) {
@@ -612,4 +659,15 @@ CanvasEditor.prototype.update_matrices = function(e) {
     mat3.translate(e.translation, identity, e.position);
     mat3.rotate(e.rotation, identity, e.angle);
     mat3.multiply(e.model, e.translation, e.rotation);
+}
+
+//signed angles
+vec2.perpdot = function(a,b)
+{
+    return a[1] * b[0] + -a[0] * b[1];
+}
+
+vec2.computeSignedAngle = function( a, b )
+{
+    return Math.atan2( vec2.perpdot(a,b), vec2.dot(a,b) );
 }
