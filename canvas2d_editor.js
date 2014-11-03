@@ -1,3 +1,7 @@
+/**
+ * Created by Ricardo Navarro (rcnavarro7@gmail.com)
+ */
+
 (function(_global) {
     "use strict";
 
@@ -123,7 +127,7 @@
 
         that.ctx = canvas.getContext("2d");
 
-        function _selectEntity(event) {
+        function _mouseDown(event) {
             //Check if is resizing
             if (that.selectedEntity) {
                 that._checkCorners(event);
@@ -220,7 +224,7 @@
             _augmentEvent(event);
             _augmentEvent(event);
             that.ctx.canvas.removeEventListener("mousemove", handle_mousemove_move_notClicked, false);
-            _selectEntity(event);
+            _mouseDown(event);
         }
 
         function handle_mouseup(event) {
@@ -420,10 +424,10 @@
                 this.ctx.restore();
             }
         }
-        if (this.selectedEntity) this.drawSelectedStroke();
+        if (this.selectedEntity) this._drawSelectedStroke();
     };
 
-    CanvasEditor.prototype.drawSelectedStroke = function () {
+    CanvasEditor.prototype._drawSelectedStroke = function () {
         this.ctx.save();
         var entity = this.selectedEntity;
         this.ctx.strokeStyle = entity.strokeColor;
@@ -439,15 +443,15 @@
 
         this.ctx.strokeRect(-w / 2, -h / 2, w, h);
 
-        this.fillSquare(-w / 2, -h / 2, size);
-        this.fillSquare(w / 2, -h / 2, size);
-        this.fillSquare(-w / 2, h / 2, size);
-        this.fillSquare(w / 2, h / 2, size);
+        this._fillSquare(-w / 2, -h / 2, size);
+        this._fillSquare(w / 2, -h / 2, size);
+        this._fillSquare(-w / 2, h / 2, size);
+        this._fillSquare(w / 2, h / 2, size);
 
-        this.fillSquare(0, -h / 2, size);
-        this.fillSquare(-w / 2, 0, size);
-        this.fillSquare(0, h / 2, size);
-        this.fillSquare(w / 2, 0, size);
+        this._fillSquare(0, -h / 2, size);
+        this._fillSquare(-w / 2, 0, size);
+        this._fillSquare(0, h / 2, size);
+        this._fillSquare(w / 2, 0, size);
 
         this.ctx.beginPath();
         this.ctx.moveTo(0, -h / 2);
@@ -463,7 +467,7 @@
         this.ctx.restore();
     };
 
-    CanvasEditor.prototype.fillSquare = function (x, y, halfsize) {
+    CanvasEditor.prototype._fillSquare = function (x, y, halfsize) {
         this.ctx.fillRect(x - halfsize, y - halfsize, halfsize * 2, halfsize * 2);
     };
 
@@ -479,7 +483,7 @@
         if (this.selectedEntity) {
             this.selectedEntity.x = x;
             this.selectedEntity.y = y;
-            this.update_matrices(this.selectedEntity);
+            this._updateMatrices(this.selectedEntity);
             this.draw();
         }
     };
@@ -488,7 +492,7 @@
         if(this.selectedEntity) {
             this.selectedEntity.x += x;
             this.selectedEntity.y += y;
-            this.update_matrices(this.selectedEntity);
+            this._updateMatrices(this.selectedEntity);
             this.draw();
         }
     };
@@ -498,7 +502,7 @@
             angle = angle * Math.PI / 180;
             this.selectedEntity.angle += angle;
             this.selectedEntity.angle = this.selectedEntity.angle % (Math.PI * 2);
-            this.update_matrices(this.selectedEntity);
+            this._updateMatrices(this.selectedEntity);
             this.draw();
         }
     };
@@ -507,7 +511,7 @@
         if (this.selectedEntity) {
             this.selectedEntity.angle += angle;
             this.selectedEntity.angle = this.selectedEntity.angle % (Math.PI * 2);
-            this.update_matrices(this.selectedEntity);
+            this._updateMatrices(this.selectedEntity);
             this.draw();
         }
     };
@@ -515,12 +519,12 @@
     CanvasEditor.prototype.resetRotation = function () {
         if (this.selectedEntity) {
             this.selectedEntity.angle = 0;
-            this.update_matrices(this.selectedEntity);
+            this._updateMatrices(this.selectedEntity);
             this.draw();
         }
     };
 
-    CanvasEditor.prototype.update_matrices = function (e) {
+    CanvasEditor.prototype._updateMatrices = function (e) {
         vec2.set(e.position, e.x, e.y);
         mat3.translate(e.translation, identity, e.position);
         mat3.rotate(e.rotation, identity, e.angle);
@@ -804,7 +808,7 @@
 
         this.selectedEntity.x += width;
         this.selectedEntity.y += height;
-        this.update_matrices(this.selectedEntity);
+        this._updateMatrices(this.selectedEntity);
         this.draw();
     };
 
@@ -833,45 +837,53 @@
     CanvasEditor.prototype._keyDown = function(event) {
         //TODO: switch-case
         //console.log(event.keyCode);
-        if (this.selectedEntity && event.keyCode === 46) { //DEL == 46
-            this._deleteSelectedEntity();
-        }
-        else if (this.selectedEntity && (event.keyCode === 107 || event.keyCode === 187)) { //+
-            this._promoteSelectedEntity();
-        }
-        else if (this.selectedEntity && (event.keyCode === 109 || event.keyCode === 189)) { //-
-            this._demoteSelectedEntity();
-        }
-        else if (event.keyCode === 16 && !shiftPressed) { //shift
-            shiftPressed = true;
-            this.keepProportions = !this.keepProportions;
-        }
-        //// TEST ////
-        else if (this.selectedEntity && (event.keyCode === 190)) { //.
-            this.rotateDEG(1);
-        }
-        else if (this.selectedEntity && (event.keyCode === 37)) { //.
-            this.translate(-1,0);
-        }
-        else if (this.selectedEntity && (event.keyCode === 39)) { //.
-            this.translate(1,0);
-        }
-        else if (this.selectedEntity && (event.keyCode === 38)) { //.
-            this.translate(0,-1);
-        }
-        else if (this.selectedEntity && (event.keyCode === 40)) { //.
-            this.translate(0,1);
-        }
-        else if (event.keyCode === 13) {
-            this.addZone();
+        switch(event.keyCode) {
+            case 46: //DEL
+                if (this.selectedEntity) this._deleteSelectedEntity();
+                break;
+            case 107: //+
+            case 187:
+                if (this.selectedEntity) this._promoteSelectedEntity();
+                break;
+            case 109: //-
+            case 189:
+                if (this.selectedEntity) this._demoteSelectedEntity();
+                break;
+            case 16: //shift
+                if (!shiftPressed) { //shift
+                    shiftPressed = true;
+                    this.keepProportions = !this.keepProportions;
+                }
+                break;
+            //// TEST ////
+            case 190: //.
+                if (this.selectedEntity) this.rotateDEG(1);
+                break;
+            case 37: //,
+                if (this.selectedEntity) this.translate(-1,0);
+                break;
+            case 39:
+                if (this.selectedEntity) this.translate(1,0);
+                break;
+            case 38:
+                if (this.selectedEntity) this.translate(0,-1);
+                break;
+            case 40:
+                if (this.selectedEntity) this.translate(0,1);
+                break;
+            case 13:
+                this.addZone();
+                break;
         }
     };
 
     CanvasEditor.prototype._keyUp = function(event) {
         //// TEST ////
-        if (event.keyCode === 16) { //shift
-            this.keepProportions = !this.keepProportions;
-            shiftPressed = false;
+        switch(event.keyCode) {
+            case 16:
+                this.keepProportions = !this.keepProportions;
+                shiftPressed = false;
+                break;
         }
     };
 
