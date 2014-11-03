@@ -710,7 +710,6 @@
         mat3.translate(mat_trans, mat_trans, pos);
         var mat_rot = mat3.create();
         var model = mat3.clone(mat_trans);
-        console.log(pos);
         this.entities.push({
             image: null,
             x: pos[0],
