@@ -87,7 +87,7 @@
 
     //TODO: if drop_zone != canvas ---> canvas->drag->preventdefault
     //TODO: if click outside canvas ---> unselect
-    CanvasEditor.prototype.create = function (options) {
+    CanvasEditor.prototype.createEditor = function (options) {
         var that = this;
         options = options || {};
         var canvas = null;
@@ -258,6 +258,149 @@
 
     };
 
+    CanvasEditor.prototype.createZoneEditor = function (options) {
+        var that = this;
+        options = options || {};
+        var canvas = null;
+
+        //Canvas
+        if (options.canvas) {
+            if (typeof(options.canvas) == "string") {
+                canvas = document.getElementById(options.canvas);
+                canvas.width = that.drop_zone.offsetWidth;
+                canvas.height = that.drop_zone.offsetHeight;
+                if (!canvas) throw("Canvas element not found: " + options.canvas );
+            }
+            else {
+                canvas = options.canvas;
+            }
+        }
+        else {
+            canvas = _createCanvas(options.width || 800, options.height || 600); //TODO
+        }
+
+        that.ctx = canvas.getContext("2d");
+
+        function _selectEntity(event) {
+            //Check if is resizing
+            if (that.selectedEntity) {
+                that._checkCorners(event);
+                if (anchor.resizing) {
+                    _global.addEventListener("mousemove", handle_mousemove_resize, false);
+                    _global.addEventListener("mouseup", handle_mouseup, false);
+                    that.draw();
+                    return true;
+                }
+                else if (anchor.rotating) {
+                    offsetX = event.x - event.offsetX;
+                    offsetY = event.y - event.offsetY;
+                    vec2.set(vec_tmp2, event.x - offsetX, event.y - offsetY);
+                    vec2.subtract(vec_tmp2, vec_tmp2, that.selectedEntity.position);
+                    vec2.normalize(vec_tmp2, vec_tmp2);
+                    _global.addEventListener("mousemove", handle_mousemove_rotate, false);
+                    _global.addEventListener("mouseup", handle_mouseup, false);
+                    that.draw();
+                    return true;
+                }
+            }
+
+            //if not resizing, check if selecting
+            that.selectedEntity = null;
+            for (var i = that.entities.length - 1; i >= 0; i--) {
+                var entity = that.entities[i];
+                if (!entity) continue;
+
+                offsetX = event.x - entity.x;
+                offsetY = event.y - entity.y;
+
+                var w = entity.width;
+                var h = entity.height;
+                mat3.invert(mat_tmp, entity.model);
+                vec2.set(vec_tmp1, event.offsetX, event.offsetY);
+                vec2.transformMat3(vec_tmp1, vec_tmp1, mat_tmp);
+                var x = vec_tmp1[0];
+                var y = vec_tmp1[1];
+
+                if (pointerInside(x, y, -w / 2, -h / 2, w, h)) {
+                    _global.addEventListener("mousemove", handle_mousemove_move_clicked, false);
+                    _global.addEventListener("mouseup", handle_mouseup, false);
+                    that.selectedEntity = entity;
+                    break;
+                }
+            }
+            that.draw();
+        }
+
+        function handle_mousemove_move_clicked(event) {
+            event.stopPropagation();
+            event.preventDefault();
+            _augmentEvent(event);
+            that._setNewPosition(event);
+        }
+
+        function handle_mousemove_move_notClicked(event) {
+            event.stopPropagation();
+            event.preventDefault();
+            _augmentEvent(event);
+            if (that.selectedEntity) that._checkCorners(event);
+        }
+
+        function handle_mousemove_resize(event) {
+            event.stopPropagation();
+            event.preventDefault();
+            _augmentEvent(event);
+            that._resizeEntity(event);
+        }
+
+        function handle_mousemove_rotate(event) {
+            event.stopPropagation();
+            event.preventDefault();
+            _augmentEvent(event);
+            that._rotateEntity(event);
+        }
+
+        function handle_mousedown(event) {
+            event.stopPropagation();
+            event.preventDefault();
+            _augmentEvent(event);
+            _augmentEvent(event);
+            that.ctx.canvas.removeEventListener("mousemove", handle_mousemove_move_notClicked, false);
+            _selectEntity(event);
+        }
+
+        function handle_mouseup(event) {
+            event.stopPropagation();
+            event.preventDefault();
+            _augmentEvent(event);
+            that._fixResize(that.selectedEntity);
+            _global.removeEventListener("mousemove", handle_mousemove_move_clicked, false);
+            that.ctx.canvas.addEventListener("mousemove", handle_mousemove_move_notClicked, false);
+            _global.removeEventListener("mousemove", handle_mousemove_resize, false);
+            _global.removeEventListener("mousemove", handle_mousemove_rotate, false);
+        }
+
+        function handle_keydown(event) {
+            that._keyDown(event);
+        }
+
+        function handle_keyup(event) {
+            that._keyUp(event);
+        }
+
+        function stop_default_drop(event) {
+            event.stopPropagation();
+            event.preventDefault();
+        }
+
+        _global.addEventListener("keydown", handle_keydown, false);
+        _global.addEventListener("keyup", handle_keyup, false);
+        document.body.addEventListener("dragover", stop_default_drop, false);
+        document.body.addEventListener("drop", stop_default_drop, false);
+        that.ctx.canvas.addEventListener("mousedown", handle_mousedown, false);
+        that.ctx.canvas.addEventListener("mousemove", handle_mousemove_move_notClicked, false);
+
+    };
+
     CanvasEditor.prototype.draw = function () {
         this.ctx.clearRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height);
         var l = this.entities.length;
@@ -316,7 +459,6 @@
         this.ctx.arc(0, -this.sizeLine - h / 2, size, 0, 2 * Math.PI);
         this.ctx.fill();
         this.ctx.stroke();
-
 
         this.ctx.restore();
     };
