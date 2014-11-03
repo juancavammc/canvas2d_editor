@@ -19,6 +19,10 @@
 
     _global.CanvasEditor = CanvasEditor;
 
+    var colors = ['aqua', 'black', 'blue', 'fuchsia', 'gray', 'green',
+        'lime', 'maroon', 'navy', 'olive', 'orange', 'purple', 'red',
+        'silver', 'teal', 'white', 'yellow'];
+
     //TODO: drag al monitor secundario descoloca la imagen (sin reescalado PPP no pasa?)
     //TODO: solucionar evento de más cuando mouseup (llama a un mousemove de mas)
     //TODO: invertir imagen
@@ -717,14 +721,14 @@
             width: 100,
             height: 60,
             angle: 0,
-            strokeColor: "#00FF00",
+            strokeColor: colors[Math.floor(Math.random()*colors.length)],
             position: pos,
             translation: mat_trans,
             rotation: mat_rot,
             model: model
         });
         this.draw();
-    }
+    };
 
     //signed angles
     vec2.perpdot = function (a, b) {
