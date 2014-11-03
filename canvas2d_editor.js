@@ -454,7 +454,7 @@
 
     CanvasEditor.prototype._createNewImages = function(event) {
         var files = event.dataTransfer.files;
-
+        var that = this;
         for (var i in files) {
             if (!(files[i] instanceof File)) continue;
             var file = files[i];
@@ -462,7 +462,6 @@
                 console.log("File is not an image: " + file.type);
                 continue;
             }
-            var that = this;
             var reader = new FileReader();
             reader.onloadend = function () {
                 var img = new Image();
