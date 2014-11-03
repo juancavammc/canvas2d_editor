@@ -3,7 +3,7 @@
     var editor1 = new CanvasEditor();
 
     //Canvas is attached to drop_zone
-    editor1.create({drop_zone: container, width: container.offsetWidth, height: container.offsetHeight});
+    editor1.createEditor({drop_zone: container, width: container.offsetWidth, height: container.offsetHeight});
     container.appendChild(editor1.ctx.canvas);
 
     function handle_window_resize(event) {
