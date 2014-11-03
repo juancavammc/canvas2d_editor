@@ -161,6 +161,7 @@
                             width: img.width,
                             height: img.height,
                             angle: 0,
+                            strokeColor: that.strokeColor,
                             position: pos,
                             translation: mat_trans,
                             rotation: mat_rot,
@@ -459,6 +460,9 @@
             else if (that.selectedEntity && (event.keyCode === 40)) { //.
                 that.translate(0,1);
             }
+            else if (event.keyCode === 13) {
+                that.addZone();
+            }
         }
 
         function keyUp(event) {
@@ -582,7 +586,13 @@
                 var entity = this.entities[i];
                 this.ctx.translate(entity.x, entity.y);
                 this.ctx.rotate(entity.angle);
-                this.ctx.drawImage(entity.image, -Math.abs(entity.width) / 2, -Math.abs(entity.height) / 2, Math.abs(entity.width), Math.abs(entity.height));
+                if(entity.image) {
+                    this.ctx.drawImage(entity.image, -Math.abs(entity.width) / 2, -Math.abs(entity.height) / 2, Math.abs(entity.width), Math.abs(entity.height));
+                }
+                else {
+                    this.ctx.strokeStyle = entity.strokeColor;
+                    this.ctx.strokeRect(-Math.abs(entity.width) / 2, -Math.abs(entity.height) / 2, Math.abs(entity.width), Math.abs(entity.height));
+                }
                 this.ctx.restore();
             }
         }
@@ -591,9 +601,9 @@
 
     CanvasEditor.prototype.drawSelectedStroke = function () {
         this.ctx.save();
-        this.ctx.strokeStyle = this.strokeColor;
-        this.ctx.fillStyle = this.strokeColor;
         var entity = this.selectedEntity;
+        this.ctx.strokeStyle = entity.strokeColor;
+        this.ctx.fillStyle = entity.strokeColor;
         var x = entity.x;
         var y = entity.y;
         var w = entity.width;
@@ -693,6 +703,29 @@
         mat3.rotate(e.rotation, identity, e.angle);
         mat3.multiply(e.model, e.translation, e.rotation);
     };
+
+    CanvasEditor.prototype.addZone = function() {
+        var pos = vec2.fromValues(this.ctx.canvas.width/2, this.ctx.canvas.height/2);
+        var mat_trans = mat3.create();
+        mat3.translate(mat_trans, mat_trans, pos);
+        var mat_rot = mat3.create();
+        var model = mat3.clone(mat_trans);
+        console.log(pos);
+        this.entities.push({
+            image: null,
+            x: pos[0],
+            y: pos[1],
+            width: 100,
+            height: 60,
+            angle: 0,
+            strokeColor: "#00FF00",
+            position: pos,
+            translation: mat_trans,
+            rotation: mat_rot,
+            model: model
+        });
+        this.draw();
+    }
 
     //signed angles
     vec2.perpdot = function (a, b) {
