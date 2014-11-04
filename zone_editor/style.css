@@ -55,7 +55,7 @@ body {
 
 #canvas_zone {
     padding: 0;
-    background-color: #3c3c3c;
+    background-color: white;
     height: 100%;
     margin-right: 300px;
     #float: left;

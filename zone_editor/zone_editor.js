@@ -9,7 +9,7 @@
     var zone_editor = new CanvasEditor();
 
     //Canvas is attached to drop_zone
-    zone_editor.createZoneEditor({width: canvas_zone.offsetWidth, height: canvas_zone.offsetHeight});
+    zone_editor.createZoneEditor({tools_zone: tools_zone, width: canvas_zone.offsetWidth, height: canvas_zone.offsetHeight});
     canvas_zone.appendChild(zone_editor.ctx.canvas);
 
     function handle_window_resize(event) {

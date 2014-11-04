@@ -37,13 +37,13 @@
     //Class CanvasEditor
     function CanvasEditor() {
         this.ctx = undefined;
-        this.drop_zone = undefined;
+        //this.drop_zone = undefined;
         this.entities = [];
         this.selectedEntity = null;
         this.strokeColor = "#FF0000";
         this.squaresSize = 4;
         this.sizeLine = 16; //line to rotation circle
-        this.keepProportions = false;
+        this.keepProportions = true;
     }
 
     _global.CanvasEditor = CanvasEditor;
@@ -266,6 +266,20 @@
         var that = this;
         options = options || {};
         var canvas = null;
+
+        //Tools zone
+        if (options.tools_zone) {
+            if (typeof(options.tools_zone) == "string") {
+                that.tools_zone = document.getElementById(options.tools_zone);
+                if (!that.tools_zone) throw("Drop zone element not found: " + options.tools_zone );
+            }
+            else {
+                that.tools_zone = options.tools_zone;
+            }
+        }
+        else {
+            throw("Tools zone element not found: " + options.tools_zone);
+        }
 
         //Canvas
         if (options.canvas) {
