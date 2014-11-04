@@ -13,8 +13,8 @@
     canvas_zone.appendChild(zone_editor.ctx.canvas);
 
     function handle_window_resize(event) {
-        zone_editor.ctx.canvas.width = zone_editor.offsetWidth;
-        zone_editor.ctx.canvas.height = zone_editor.offsetHeight;
+        zone_editor.ctx.canvas.width = canvas_zone.offsetWidth;
+        zone_editor.ctx.canvas.height = canvas_zone.offsetHeight;
         zone_editor.draw();
     }
     window.addEventListener("resize", handle_window_resize, false);
