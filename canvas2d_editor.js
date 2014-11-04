@@ -37,13 +37,14 @@
     //Class CanvasEditor
     function CanvasEditor() {
         this.ctx = undefined;
-        this.drop_zone = undefined;
+        //this.drop_zone = undefined;
         this.entities = [];
         this.selectedEntity = null;
         this.strokeColor = "#FF0000";
         this.squaresSize = 4;
         this.sizeLine = 16; //line to rotation circle
-        this.keepProportions = false;
+        this.keepProportions = true;
+        this.minimumSize = 2;
     }
 
     _global.CanvasEditor = CanvasEditor;
@@ -91,6 +92,8 @@
 
     //TODO: if drop_zone != canvas ---> canvas->drag->preventdefault
     //TODO: if click outside canvas ---> unselect
+
+    //TODO: Añadir restricción para que una vez creado un img_editor/zone_editor no se pueda crear otro con la misma instancia
     CanvasEditor.prototype.createEditor = function (options) {
         var that = this;
         options = options || {};
@@ -262,10 +265,26 @@
 
     };
 
+
+    //TODO: al apretar un boton llamar setInterval
     CanvasEditor.prototype.createZoneEditor = function (options) {
         var that = this;
         options = options || {};
         var canvas = null;
+
+        //Tools zone
+        if (options.tools_zone) {
+            if (typeof(options.tools_zone) == "string") {
+                that.tools_zone = document.getElementById(options.tools_zone);
+                if (!that.tools_zone) throw("Drop zone element not found: " + options.tools_zone );
+            }
+            else {
+                that.tools_zone = options.tools_zone;
+            }
+        }
+        else {
+            throw("Tools zone element not found: " + options.tools_zone);
+        }
 
         //Canvas
         if (options.canvas) {
@@ -285,6 +304,45 @@
 
         that.ctx = canvas.getContext("2d");
 
+        that.current_img_id = null;
+
+        //Get all buttons
+        var button_addZone = document.getElementById("editor_addZone");
+        var button_move = document.getElementById("editor_move");
+        var button_scale = document.getElementById("editor_scale");
+        var button_rotate = document.getElementById("editor_rotate");
+        var button_move_left = document.getElementById("editor_move_left");
+        var button_move_right = document.getElementById("editor_move_right");
+        var button_move_up = document.getElementById("editor_move_up");
+        var button_move_down = document.getElementById("editor_move_down");
+        var button_scale_v_shrink = document.getElementById("editor_scale_v_shrink");
+        var button_scale_v_expand = document.getElementById("editor_scale_v_expand");
+        var button_scale_h_shrink = document.getElementById("editor_scale_h_shrink");
+        var button_scale_h_expand = document.getElementById("editor_scale_h_expand");
+        var button_rotate_left = document.getElementById("editor_rotate_left");
+        var button_rotate_right = document.getElementById("editor_rotate_right");
+        var button_deleteZone = document.getElementById("editor_remove_zone");
+        var button_save = document.getElementById("editor_save");
+
+        //var buttons = [];
+        //buttons['addZone'] = document.getElementById("editor_addZone");
+        //buttons['move'] = document.getElementById("editor_move");
+        //buttons['scale'] = document.getElementById("editor_scale");
+        //buttons['rotate'] = document.getElementById("editor_rotate");
+        //buttons['move_left'] = document.getElementById("editor_move_left");
+        //buttons['move_right'] = document.getElementById("editor_move_right");
+        //buttons['move_up'] = document.getElementById("editor_move_up");
+        //buttons['move_down'] = document.getElementById("editor_move_down");
+        //buttons['scale_v_shrink'] = document.getElementById("editor_scale_v_shrink");
+        //buttons['scale_v_expand'] = document.getElementById("editor_scale_v_expand");
+        //buttons['scale_h_shrink'] = document.getElementById("editor_scale_h_shrink");
+        //buttons['scale_h_expand'] = document.getElementById("editor_scale_h_expand");
+        //buttons['rotate_left'] = document.getElementById("editor_rotate_left");
+        //buttons['rotate_right'] = document.getElementById("editor_rotate_right");
+        //buttons['deleteZone'] = document.getElementById("editor_remove_zone");
+        //buttons['save'] = document.getElementById("editor_save");
+
+        //START
         function _selectEntity(event) {
             //Check if is resizing
             if (that.selectedEntity) {
@@ -335,6 +393,74 @@
             that.draw();
         }
 
+        //button handlers
+        function handle_button_click_addZone(event) {
+            that.addZone();
+        }
+
+        function handle_button_click_deleteZone(event) {
+           that._deleteSelectedEntity();
+        }
+
+        function handle_button_click_move_left(event) {
+            if (that.selectedEntity) that.translate(-1,0);
+        }
+
+        function handle_button_click_move_right(event) {
+            if (that.selectedEntity) that.translate(1,0);
+        }
+
+        function handle_button_click_move_up(event) {
+            if (that.selectedEntity) that.translate(0,-1);
+        }
+
+        function handle_button_click_move_down(event) {
+            if (that.selectedEntity) that.translate(0,1);
+        }
+
+        function handle_button_click_scale_v_shrink(event) {
+            if (that.selectedEntity) that.resizeStep(0,-2);
+        }
+
+        function handle_button_click_scale_v_expand(event) {
+            if (that.selectedEntity) that.resizeStep(0,2);
+        }
+
+        function handle_button_click_scale_h_shrink(event) {
+            if (that.selectedEntity) that.resizeStep(-2,0);
+        }
+
+        function handle_button_click_scale_h_expand(event) {
+            if (that.selectedEntity) that.resizeStep(2,0);
+        }
+
+        function handle_button_click_rotate_left(event) {
+            if (that.selectedEntity) that.rotateDEG(-1);
+        }
+
+        function handle_button_click_rotate_right(event) {
+            if (that.selectedEntity) that.rotateDEG(1);
+        }
+
+        button_addZone.addEventListener("click", handle_button_click_addZone, false);
+        //button_move
+        //button_scale
+        //button_rotate
+        button_move_left.addEventListener("click", handle_button_click_move_left, false);
+        button_move_right.addEventListener("click", handle_button_click_move_right, false);
+        button_move_up.addEventListener("click", handle_button_click_move_up, false);
+        button_move_down.addEventListener("click", handle_button_click_move_down, false);
+        button_scale_v_shrink.addEventListener("click", handle_button_click_scale_v_shrink, false);
+        button_scale_v_expand.addEventListener("click", handle_button_click_scale_v_expand, false);
+        button_scale_h_shrink.addEventListener("click", handle_button_click_scale_h_shrink, false);
+        button_scale_h_expand.addEventListener("click", handle_button_click_scale_h_expand, false);
+        button_rotate_left.addEventListener("click", handle_button_click_rotate_left, false);
+        button_rotate_right.addEventListener("click", handle_button_click_rotate_right, false);
+        button_deleteZone.addEventListener("click", handle_button_click_deleteZone, false);
+        //button_save.addEventListener("click", , false);
+
+
+        //other handlers
         function handle_mousemove_move_clicked(event) {
             event.stopPropagation();
             event.preventDefault();
@@ -398,8 +524,8 @@
 
         _global.addEventListener("keydown", handle_keydown, false);
         _global.addEventListener("keyup", handle_keyup, false);
-        document.body.addEventListener("dragover", stop_default_drop, false);
-        document.body.addEventListener("drop", stop_default_drop, false);
+        document.body.addEventListener("dragover", stop_default_drop, false); //TODO: remove?
+        document.body.addEventListener("drop", stop_default_drop, false); //TODO: remove?
         that.ctx.canvas.addEventListener("mousedown", handle_mousedown, false);
         that.ctx.canvas.addEventListener("mousemove", handle_mousemove_move_notClicked, false);
 
@@ -475,6 +601,16 @@
         if (this.selectedEntity) {
             this.selectedEntity.width = width;
             this.selectedEntity.height = height;
+            this.draw();
+        }
+    };
+
+    CanvasEditor.prototype.resizeStep = function(width, height) {
+        if (this.selectedEntity) {
+            this.selectedEntity.width += width;
+            this.selectedEntity.height += height;
+            if (this.selectedEntity.width < this.minimumSize) this.selectedEntity.width = this.minimumSize;
+            if (this.selectedEntity.height < this.minimumSize) this.selectedEntity.height = this.minimumSize;
             this.draw();
         }
     };
@@ -621,7 +757,7 @@
                     var model = mat3.clone(mat_trans);
                     that.entities.push({
                         image: img,
-                        x: event.offsetX,
+                        x: event.offsetX, //TODO: drop in center (drop_zone != canvas)
                         y: event.offsetY,
                         width: img.width,
                         height: img.height,
@@ -763,7 +899,7 @@
         var height = 0;
         var aspect = this.selectedEntity.width / this.selectedEntity.height;
 
-        var min = 2;
+        var min = this.minimumSize;
         var oldWidth = this.selectedEntity.width;
         var oldHeight = this.selectedEntity.height;
 
@@ -859,7 +995,10 @@
             case 190: //.
                 if (this.selectedEntity) this.rotateDEG(1);
                 break;
-            case 37: //,
+            case 188:
+                if (this.selectedEntity) this.rotateDEG(-1);
+                break;
+            case 37: //
                 if (this.selectedEntity) this.translate(-1,0);
                 break;
             case 39:

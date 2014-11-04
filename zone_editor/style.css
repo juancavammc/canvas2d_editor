@@ -19,12 +19,46 @@ body {
     height: 100%;
 }
 #wrap {
-    background-color: #3c3c3c;
+    #background-color: #3c3c3c;
     position: absolute;
     top: 50px;
     left: 50px;
     right: 50px;
     bottom: 50px;
+}
+
+#img_zone {
+    background-color: #3c3c3c;
+    width: 250px;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    float: left;
+    overflow-y: scroll;
+}
+
+#editor_zone {
+    height: 100%;
+    margin-left: 260px;
+    padding: 0;
+    #float: right;
+}
+
+#tools_zone {
+    background-color: #6f6f6f;
+    height: 100%;
+    width: 300px;
+    float: right;
+    margin: 0;
+    padding: 0;
+}
+
+#canvas_zone {
+    padding: 0;
+    background-color: white;
+    height: 100%;
+    margin-right: 300px;
+    #float: left;
 }
 
 #toolbar {
