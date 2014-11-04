@@ -398,6 +398,9 @@
             }
             else {
                 div_editor_mainButtons.style.display = "none";
+                div_editor_moveButtons.style.display = "none";
+                div_editor_scaleButtons.style.display = "none";
+                div_editor_rotateButtons.style.display = "none";
                 div_editor_removeButton.style.display = "none";
             }
         }
