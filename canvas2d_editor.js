@@ -621,7 +621,7 @@
                     var model = mat3.clone(mat_trans);
                     that.entities.push({
                         image: img,
-                        x: event.offsetX,
+                        x: event.offsetX, //TODO: drop in center (drop_zone != canvas)
                         y: event.offsetY,
                         width: img.width,
                         height: img.height,
