@@ -324,23 +324,20 @@
         var button_deleteZone = document.getElementById("editor_remove_zone");
         var button_save = document.getElementById("editor_save");
 
-        //var buttons = [];
-        //buttons['addZone'] = document.getElementById("editor_addZone");
-        //buttons['move'] = document.getElementById("editor_move");
-        //buttons['scale'] = document.getElementById("editor_scale");
-        //buttons['rotate'] = document.getElementById("editor_rotate");
-        //buttons['move_left'] = document.getElementById("editor_move_left");
-        //buttons['move_right'] = document.getElementById("editor_move_right");
-        //buttons['move_up'] = document.getElementById("editor_move_up");
-        //buttons['move_down'] = document.getElementById("editor_move_down");
-        //buttons['scale_v_shrink'] = document.getElementById("editor_scale_v_shrink");
-        //buttons['scale_v_expand'] = document.getElementById("editor_scale_v_expand");
-        //buttons['scale_h_shrink'] = document.getElementById("editor_scale_h_shrink");
-        //buttons['scale_h_expand'] = document.getElementById("editor_scale_h_expand");
-        //buttons['rotate_left'] = document.getElementById("editor_rotate_left");
-        //buttons['rotate_right'] = document.getElementById("editor_rotate_right");
-        //buttons['deleteZone'] = document.getElementById("editor_remove_zone");
-        //buttons['save'] = document.getElementById("editor_save");
+        var div_editor_addzone = document.getElementById("div_editor_addzone");
+        var div_editor_mainButtons =  document.getElementById("div_editor_mainButtons");
+        var div_editor_moveButtons =  document.getElementById("div_editor_moveButtons");
+        var div_editor_scaleButtons =  document.getElementById("div_editor_scaleButtons");
+        var div_editor_rotateButtons =  document.getElementById("div_editor_rotateButtons");
+        var div_editor_removeButton =  document.getElementById("div_editor_removeButton");
+        var div_editor_saveButton =  document.getElementById("div_editor_saveButton");
+
+        div_editor_mainButtons.style.display = "none";
+        div_editor_moveButtons.style.display = "none";
+        div_editor_scaleButtons.style.display = "none";
+        div_editor_rotateButtons.style.display = "none";
+        div_editor_removeButton.style.display = "none";
+        //div_editor_saveButton.style.display = "none";
 
         //START
         function _selectEntity(event) {
@@ -390,12 +387,44 @@
                     break;
                 }
             }
+            manageDivs();
             that.draw();
+        }
+
+        function manageDivs() {
+            if(that.selectedEntity) {
+                div_editor_mainButtons.style.display = "block";
+                div_editor_removeButton.style.display = "block";
+            }
+            else {
+                div_editor_mainButtons.style.display = "none";
+                div_editor_removeButton.style.display = "none";
+            }
         }
 
         //button handlers
         function handle_button_click_addZone(event) {
-            that.addZone();
+            that.selectedEntity = that.addZone();
+            manageDivs();
+            that.draw();
+        }
+
+        function handle_button_click_move(event) {
+            div_editor_moveButtons.style.display = "block";
+            div_editor_scaleButtons.style.display = "none";
+            div_editor_rotateButtons.style.display = "none";
+        }
+
+        function handle_button_click_scale(event) {
+            div_editor_moveButtons.style.display = "none";
+            div_editor_scaleButtons.style.display = "block";
+            div_editor_rotateButtons.style.display = "none";
+        }
+
+        function handle_button_click_rotate(event) {
+            div_editor_moveButtons.style.display = "none";
+            div_editor_scaleButtons.style.display = "none";
+            div_editor_rotateButtons.style.display = "block";
         }
 
         function handle_button_click_deleteZone(event) {
@@ -443,9 +472,9 @@
         }
 
         button_addZone.addEventListener("click", handle_button_click_addZone, false);
-        //button_move
-        //button_scale
-        //button_rotate
+        button_move.addEventListener("click", handle_button_click_move, false);
+        button_scale.addEventListener("click", handle_button_click_scale, false);
+        button_rotate.addEventListener("click", handle_button_click_rotate, false);
         button_move_left.addEventListener("click", handle_button_click_move_left, false);
         button_move_right.addEventListener("click", handle_button_click_move_right, false);
         button_move_up.addEventListener("click", handle_button_click_move_up, false);
@@ -673,20 +702,22 @@
         mat3.translate(mat_trans, mat_trans, pos);
         var mat_rot = mat3.create();
         var model = mat3.clone(mat_trans);
-        this.entities.push({
+        var entity = {
             image: null,
             x: pos[0],
             y: pos[1],
-            width: 100,
-            height: 60,
+            width: 200,
+            height: 200,
             angle: 0,
             strokeColor: colors[Math.floor(Math.random()*colors.length)],
             position: pos,
             translation: mat_trans,
             rotation: mat_rot,
             model: model
-        });
+        }
+        this.entities.push(entity);
         this.draw();
+        return entity;
     };
 
     CanvasEditor.prototype._deleteSelectedEntity = function() {
@@ -1009,9 +1040,6 @@
                 break;
             case 40:
                 if (this.selectedEntity) this.translate(0,1);
-                break;
-            case 13:
-                this.addZone();
                 break;
         }
     };
