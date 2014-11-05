@@ -1,13 +1,13 @@
 [
   {
 	"id" : 0,
-	"url" : "http://localhost/assets/shirt1.jpg",
+	"url" : "assets/shirt1.jpg",
 	"zone" : []
   },
 
   {
   "id" : 1,
-  "url" : "http://localhost/assets/shirt2.jpg",
+  "url" : "assets/shirt2.jpg",
   "zone" :
       [
         { "id" : 0, "config" : "{'x':300,'y':200,'width':100,'height':60,'angle':0}" },
