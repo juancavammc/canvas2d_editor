@@ -405,73 +405,77 @@
         }
 
         //button handlers
-        function handle_button_click_addZone(event) {
+        function handle_button_click_addZone() {
             that.selectedEntity = that.addZone();
             manageDivs();
             that.draw();
         }
 
-        function handle_button_click_move(event) {
+        function handle_button_click_move() {
             div_editor_moveButtons.style.display = "block";
             div_editor_scaleButtons.style.display = "none";
             div_editor_rotateButtons.style.display = "none";
         }
 
-        function handle_button_click_scale(event) {
+        function handle_button_click_scale() {
             div_editor_moveButtons.style.display = "none";
             div_editor_scaleButtons.style.display = "block";
             div_editor_rotateButtons.style.display = "none";
         }
 
-        function handle_button_click_rotate(event) {
+        function handle_button_click_rotate() {
             div_editor_moveButtons.style.display = "none";
             div_editor_scaleButtons.style.display = "none";
             div_editor_rotateButtons.style.display = "block";
         }
 
-        function handle_button_click_deleteZone(event) {
+        function handle_button_click_deleteZone() {
             that._deleteSelectedEntity();
             manageDivs();
         }
 
-        function handle_button_click_move_left(event) {
+        function handle_button_click_move_left() {
             if (that.selectedEntity) that.translate(-that.pixels_move,0);
         }
 
-        function handle_button_click_move_right(event) {
+        function handle_button_click_move_right() {
             if (that.selectedEntity) that.translate(that.pixels_move,0);
         }
 
-        function handle_button_click_move_up(event) {
+        function handle_button_click_move_up() {
             if (that.selectedEntity) that.translate(0,-that.pixels_move);
         }
 
-        function handle_button_click_move_down(event) {
+        function handle_button_click_move_down() {
             if (that.selectedEntity) that.translate(0,that.pixels_move);
         }
 
-        function handle_button_click_scale_v_shrink(event) {
+        function handle_button_click_scale_v_shrink() {
             if (that.selectedEntity) that.resizeStep(0,-that.pixels_scale);
         }
 
-        function handle_button_click_scale_v_expand(event) {
+        function handle_button_click_scale_v_expand() {
             if (that.selectedEntity) that.resizeStep(0,that.pixels_scale);
         }
 
-        function handle_button_click_scale_h_shrink(event) {
+        function handle_button_click_scale_h_shrink() {
             if (that.selectedEntity) that.resizeStep(-that.pixels_scale,0);
         }
 
-        function handle_button_click_scale_h_expand(event) {
+        function handle_button_click_scale_h_expand() {
             if (that.selectedEntity) that.resizeStep(that.pixels_scale,0);
         }
 
-        function handle_button_click_rotate_left(event) {
+        function handle_button_click_rotate_left() {
             if (that.selectedEntity) that.rotateDEG(-that.degrees_rotate);
         }
 
-        function handle_button_click_rotate_right(event) {
+        function handle_button_click_rotate_right() {
             if (that.selectedEntity) that.rotateDEG(that.degrees_rotate);
+        }
+
+        function handle_button_click_save() {
+
         }
 
         button_addZone.addEventListener("click", handle_button_click_addZone, false);
@@ -489,7 +493,7 @@
         button_rotate_left.addEventListener("click", handle_button_click_rotate_left, false);
         button_rotate_right.addEventListener("click", handle_button_click_rotate_right, false);
         button_deleteZone.addEventListener("click", handle_button_click_deleteZone, false);
-        //button_save.addEventListener("click", , false);
+        button_save.addEventListener("click", handle_button_click_save, false);
 
 
         //other handlers
@@ -564,6 +568,7 @@
 
     CanvasEditor.prototype.draw = function () {
         this.ctx.clearRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height);
+
         var l = this.entities.length;
         for (var i = 0; i < l; ++i) {
             if (this.entities[i]) {
