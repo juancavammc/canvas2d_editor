@@ -40,18 +40,23 @@
         //this.drop_zone = undefined;
         this.entities = [];
         this.selectedEntity = null;
+
+        this.keepProportions = true;
+        this.stickyAngles = true;
+        this.angleSteps = 15;
+
+        //selection stroke properties
         this.strokeColor = "#FF0000";
         this.squaresSize = 4;
         this.sizeLine = 16; //line to rotation circle
-        this.keepProportions = true;
-        this.minimumSize = 2;
+        this.minimumSize = 2; //minimum (width/height) of an entityh
+        this.lineWidth = 2;
+        this.color_list = ['aqua', 'black', 'blue', 'fuchsia', 'gray', 'green',
+            'lime', 'maroon', 'navy', 'olive', 'orange', 'purple', 'red',
+            'silver', 'teal', 'white', 'yellow'];
     }
 
     _global.CanvasEditor = CanvasEditor;
-
-    var colors = ['aqua', 'black', 'blue', 'fuchsia', 'gray', 'green',
-        'lime', 'maroon', 'navy', 'olive', 'orange', 'purple', 'red',
-        'silver', 'teal', 'white', 'yellow'];
 
 
     function sign(num) {
@@ -142,6 +147,7 @@
                     return true;
                 }
                 else if (anchor.rotating) {
+                    tempAngle = that.selectedEntity.angle;
                     offsetX = event.x - event.offsetX;
                     offsetY = event.y - event.offsetY;
                     vec2.set(vec_tmp2, event.x - offsetX, event.y - offsetY);
@@ -338,6 +344,7 @@
                     return true;
                 }
                 else if (anchor.rotating) {
+                    tempAngle = that.selectedEntity.angle;
                     offsetX = event.x - event.offsetX;
                     offsetY = event.y - event.offsetY;
                     vec2.set(vec_tmp2, event.x - offsetX, event.y - offsetY);
@@ -418,7 +425,8 @@
         }
 
         function handle_button_click_deleteZone(event) {
-           that._deleteSelectedEntity();
+            that._deleteSelectedEntity();
+            manageDivs();
         }
 
         function handle_button_click_move_left(event) {
@@ -576,6 +584,7 @@
         var entity = this.selectedEntity;
         this.ctx.strokeStyle = entity.strokeColor;
         this.ctx.fillStyle = entity.strokeColor;
+        this.ctx.lineWidth = this.lineWidth;
         var x = entity.x;
         var y = entity.y;
         var w = entity.width;
@@ -678,11 +687,11 @@
         }
     };
 
-    CanvasEditor.prototype._updateMatrices = function (e) {
-        vec2.set(e.position, e.x, e.y);
-        mat3.translate(e.translation, identity, e.position);
-        mat3.rotate(e.rotation, identity, e.angle);
-        mat3.multiply(e.model, e.translation, e.rotation);
+    CanvasEditor.prototype._updateMatrices = function (entity) {
+        vec2.set(entity.position, entity.x, entity.y);
+        mat3.translate(entity.translation, identity, entity.position);
+        mat3.rotate(entity.rotation, identity, entity.angle);
+        mat3.multiply(entity.model, entity.translation, entity.rotation);
     };
 
     CanvasEditor.prototype.addZone = function() {
@@ -698,7 +707,7 @@
             width: 200,
             height: 200,
             angle: 0,
-            strokeColor: colors[Math.floor(Math.random()*colors.length)],
+            strokeColor: this.color_list[Math.floor(Math.random()*this.color_list.length)],
             position: pos,
             translation: mat_trans,
             rotation: mat_rot,
@@ -976,14 +985,25 @@
         }
     };
 
+    var tempAngle = 0;
     CanvasEditor.prototype._rotateEntity = function(event) {
         vec2.set(vec_tmp1, event.x - offsetX, event.y - offsetY);
         vec2.subtract(vec_tmp1, vec_tmp1, this.selectedEntity.position);
         vec2.normalize(vec_tmp1, vec_tmp1);
         var angle = vec2.computeSignedAngle(vec_tmp1, vec_tmp2);
         vec2.copy(vec_tmp2, vec_tmp1);
-        this.rotateRAD(angle);
-        this.draw();
+        tempAngle += angle;
+
+        if(this.stickyAngles) {
+            angle = parseInt((tempAngle*(180/Math.PI))/this.angleSteps) * this.angleSteps;
+            console.log(angle);
+            this.resetRotation();
+            this.rotateDEG(angle);
+        }
+        else {
+            this.rotateRAD(angle);
+            this.draw();
+        }
     };
 
     CanvasEditor.prototype._setNewPosition = function(event) {
@@ -1009,6 +1029,7 @@
                 if (!shiftPressed) { //shift
                     shiftPressed = true;
                     this.keepProportions = !this.keepProportions;
+                    this.stickyAngles = !this.stickyAngles;
                 }
                 break;
             //// TEST ////
@@ -1038,6 +1059,7 @@
         switch(event.keyCode) {
             case 16:
                 this.keepProportions = !this.keepProportions;
+                this.stickyAngles = !this.stickyAngles;
                 shiftPressed = false;
                 break;
         }
