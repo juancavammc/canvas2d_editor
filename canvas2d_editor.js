@@ -43,7 +43,12 @@
 
         this.keepProportions = true;
         this.stickyAngles = true;
-        this.angleSteps = 15;
+        this.StickyAnglesSteps = 15;
+
+        //how many pixels/degrees you move with buttons
+        this.pixels_move = 3;
+        this.pixels_scale = 4;
+        this.degrees_rotate = 2;
 
         //selection stroke properties
         this.strokeColor = "#FF0000";
@@ -430,43 +435,43 @@
         }
 
         function handle_button_click_move_left(event) {
-            if (that.selectedEntity) that.translate(-1,0);
+            if (that.selectedEntity) that.translate(-that.pixels_move,0);
         }
 
         function handle_button_click_move_right(event) {
-            if (that.selectedEntity) that.translate(1,0);
+            if (that.selectedEntity) that.translate(that.pixels_move,0);
         }
 
         function handle_button_click_move_up(event) {
-            if (that.selectedEntity) that.translate(0,-1);
+            if (that.selectedEntity) that.translate(0,-that.pixels_move);
         }
 
         function handle_button_click_move_down(event) {
-            if (that.selectedEntity) that.translate(0,1);
+            if (that.selectedEntity) that.translate(0,that.pixels_move);
         }
 
         function handle_button_click_scale_v_shrink(event) {
-            if (that.selectedEntity) that.resizeStep(0,-2);
+            if (that.selectedEntity) that.resizeStep(0,-that.pixels_scale);
         }
 
         function handle_button_click_scale_v_expand(event) {
-            if (that.selectedEntity) that.resizeStep(0,2);
+            if (that.selectedEntity) that.resizeStep(0,that.pixels_scale);
         }
 
         function handle_button_click_scale_h_shrink(event) {
-            if (that.selectedEntity) that.resizeStep(-2,0);
+            if (that.selectedEntity) that.resizeStep(-that.pixels_scale,0);
         }
 
         function handle_button_click_scale_h_expand(event) {
-            if (that.selectedEntity) that.resizeStep(2,0);
+            if (that.selectedEntity) that.resizeStep(that.pixels_scale,0);
         }
 
         function handle_button_click_rotate_left(event) {
-            if (that.selectedEntity) that.rotateDEG(-1);
+            if (that.selectedEntity) that.rotateDEG(-that.degrees_rotate);
         }
 
         function handle_button_click_rotate_right(event) {
-            if (that.selectedEntity) that.rotateDEG(1);
+            if (that.selectedEntity) that.rotateDEG(that.degrees_rotate);
         }
 
         button_addZone.addEventListener("click", handle_button_click_addZone, false);
@@ -712,7 +717,7 @@
             translation: mat_trans,
             rotation: mat_rot,
             model: model
-        }
+        };
         this.entities.push(entity);
         this.draw();
         return entity;
@@ -995,8 +1000,8 @@
         tempAngle += angle;
 
         if(this.stickyAngles) {
-            angle = parseInt((tempAngle*(180/Math.PI))/this.angleSteps) * this.angleSteps;
-            console.log(angle);
+            if(!tempAngle) angle = 0;
+            else angle = parseInt((tempAngle*(180/Math.PI))/this.StickyAnglesSteps) * this.StickyAnglesSteps;
             this.resetRotation();
             this.rotateDEG(angle);
         }
