@@ -128,6 +128,7 @@
             canvas = _createCanvas(options.width || 800, options.height || 600); //TODO
         }
 
+        canvas.style.position = "relative";
         that.ctx = canvas.getContext("2d");
 
         function _mouseDown(event) {
@@ -225,7 +226,6 @@
             event.stopPropagation();
             event.preventDefault();
             _augmentEvent(event);
-            _augmentEvent(event);
             that.ctx.canvas.removeEventListener("mousemove", handle_mousemove_move_notClicked, false);
             _mouseDown(event);
         }
@@ -272,20 +272,6 @@
         options = options || {};
         var canvas = null;
 
-        //Tools zone
-        if (options.tools_zone) {
-            if (typeof(options.tools_zone) == "string") {
-                that.tools_zone = document.getElementById(options.tools_zone);
-                if (!that.tools_zone) throw("Drop zone element not found: " + options.tools_zone );
-            }
-            else {
-                that.tools_zone = options.tools_zone;
-            }
-        }
-        else {
-            throw("Tools zone element not found: " + options.tools_zone);
-        }
-
         //Canvas
         if (options.canvas) {
             if (typeof(options.canvas) == "string") {
@@ -302,6 +288,7 @@
             canvas = _createCanvas(options.width || 800, options.height || 600); //TODO
         }
 
+        canvas.style.position = "relative";
         that.ctx = canvas.getContext("2d");
 
         that.current_img_id = null;
@@ -524,7 +511,6 @@
         function handle_mousedown(event) {
             event.stopPropagation();
             event.preventDefault();
-            _augmentEvent(event);
             _augmentEvent(event);
             that.ctx.canvas.removeEventListener("mousemove", handle_mousemove_move_notClicked, false);
             _selectEntity(event);
