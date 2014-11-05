@@ -717,7 +717,7 @@
             translation: mat_trans,
             rotation: mat_rot,
             model: model
-        }
+        };
         this.entities.push(entity);
         this.draw();
         return entity;
