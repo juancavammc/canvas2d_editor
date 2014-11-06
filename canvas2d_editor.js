@@ -304,6 +304,52 @@
 
         that.current_img_id = null;
 
+        ////TEST
+        var img_test = new Image();
+        that.entityTest = {};
+        img_test.src = "assets/shirt2.jpg";
+        function test() {
+            var pos = vec2.fromValues(that.ctx.canvas.width/2, that.ctx.canvas.height/2);
+            var mat_trans = mat3.create();
+            mat3.translate(mat_trans, mat_trans, pos);
+            var mat_rot = mat3.create();
+            var model = mat3.clone(mat_trans);
+            that.entityTest = {
+                image: img_test,
+                x: pos[0], //TODO: drop in center (drop_zone != canvas)
+                y: pos[1],
+                width: 500,
+                height: 500,
+                angle: 0,
+                strokeColor: that.strokeColor,
+                position: pos,
+                translation: mat_trans,
+                rotation: mat_rot,
+                model: model
+            };
+        }
+        test();
+        img_test.addEventListener("load", function () {
+            that.update_test();
+        }, false);
+
+        that.update_test = function() {
+            var aspect = that.entityTest.width/that.entityTest.height;
+            //that.entityTest.width = that.ctx.canvas.width;
+            //that.entityTest.height = that.ctx.canvas.width/aspect;
+            that.entityTest.height = that.ctx.canvas.height;
+            that.entityTest.width = that.ctx.canvas.height*aspect;
+            if(that.entityTest.width > that.ctx.canvas.width) {
+                that.entityTest.width = that.ctx.canvas.width;
+                that.entityTest.height = that.ctx.canvas.width/aspect;
+            }
+            that.entityTest.x = that.ctx.canvas.width/2;
+            that.entityTest.y = that.ctx.canvas.height/2;
+            that._updateMatrices(that.entityTest);
+            that.draw();
+        }
+        ////
+
         //Get all buttons
         var button_addZone = document.getElementById("editor_addZone");
         var button_move = document.getElementById("editor_move");
@@ -563,11 +609,16 @@
         document.body.addEventListener("drop", stop_default_drop, false); //TODO: remove?
         that.ctx.canvas.addEventListener("mousedown", handle_mousedown, false);
         that.ctx.canvas.addEventListener("mousemove", handle_mousemove_move_notClicked, false);
-
     };
 
     CanvasEditor.prototype.draw = function () {
         this.ctx.clearRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height);
+        if(this.entityTest) {
+            this.ctx.save();
+            this.ctx.translate(this.entityTest.x, this.entityTest.y);
+            this.ctx.drawImage(this.entityTest.image, -Math.abs(this.entityTest.width) / 2, -Math.abs(this.entityTest.height) / 2, Math.abs(this.entityTest.width), Math.abs(this.entityTest.height));
+            this.ctx.restore();
+        }
 
         var l = this.entities.length;
         for (var i = 0; i < l; ++i) {
@@ -580,6 +631,7 @@
                     this.ctx.drawImage(entity.image, -Math.abs(entity.width) / 2, -Math.abs(entity.height) / 2, Math.abs(entity.width), Math.abs(entity.height));
                 }
                 else {
+                    this.ctx.lineWidth = this.lineWidth;
                     this.ctx.strokeStyle = entity.strokeColor;
                     this.ctx.strokeRect(-Math.abs(entity.width) / 2, -Math.abs(entity.height) / 2, Math.abs(entity.width), Math.abs(entity.height));
                 }
@@ -594,7 +646,7 @@
         var entity = this.selectedEntity;
         this.ctx.strokeStyle = entity.strokeColor;
         this.ctx.fillStyle = entity.strokeColor;
-        this.ctx.lineWidth = this.lineWidth;
+        this.ctx.lineWidth = this.lineWidth*1.5;
         var x = entity.x;
         var y = entity.y;
         var w = entity.width;

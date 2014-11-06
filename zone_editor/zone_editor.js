@@ -15,8 +15,8 @@
     function handle_window_resize(event) {
         zone_editor.ctx.canvas.width = canvas_zone.offsetWidth;
         zone_editor.ctx.canvas.height = canvas_zone.offsetHeight;
+        zone_editor.update_test();
         zone_editor.draw();
     }
     window.addEventListener("resize", handle_window_resize, false);
-
 })();
