@@ -56,9 +56,25 @@
         this.sizeLine = 16; //line to rotation circle
         this.minimumSize = 2; //minimum (width/height) of an entityh
         this.lineWidth = 2;
-        this.color_list = ['aqua', 'black', 'blue', 'fuchsia', 'gray', 'green',
-            'lime', 'maroon', 'navy', 'olive', 'orange', 'purple', 'red',
-            'silver', 'teal', 'white', 'yellow'];
+        this.color_list = [
+            'aqua',
+            'black',
+            'blue',
+            'fuchsia',
+            //'gray',
+            //'green',
+            //'lime',
+            'maroon',
+            'navy',
+            'olive',
+            //'orange',
+            'purple',
+            'red',
+            //'silver',
+            'teal',
+            //'yellow',
+            'white'
+        ];
     }
 
     _global.CanvasEditor = CanvasEditor;
@@ -333,15 +349,14 @@
             that.update_test();
         }, false);
 
+        var asp = 0;
         that.update_test = function() {
-            var aspect = that.entityTest.width/that.entityTest.height;
-            //that.entityTest.width = that.ctx.canvas.width;
-            //that.entityTest.height = that.ctx.canvas.width/aspect;
+            asp = that.entityTest.width/that.entityTest.height;
             that.entityTest.height = that.ctx.canvas.height;
-            that.entityTest.width = that.ctx.canvas.height*aspect;
+            that.entityTest.width = that.ctx.canvas.height*asp;
             if(that.entityTest.width > that.ctx.canvas.width) {
                 that.entityTest.width = that.ctx.canvas.width;
-                that.entityTest.height = that.ctx.canvas.width/aspect;
+                that.entityTest.height = that.ctx.canvas.width/asp;
             }
             that.entityTest.x = that.ctx.canvas.width/2;
             that.entityTest.y = that.ctx.canvas.height/2;
