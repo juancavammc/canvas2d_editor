@@ -42,13 +42,13 @@
         this.selectedEntity = null;
 
         this.keepProportions = true;
-        this.stickyAngles = true;
+        this.stickyAngles = false;
         this.StickyAnglesSteps = 15;
 
         //how many pixels/degrees you move with buttons
         this.pixels_move = 3;
         this.pixels_scale = 4;
-        this.degrees_rotate = 2;
+        this.degrees_rotate = 5;
 
         //selection stroke properties
         this.strokeColor = "#FF0000";
@@ -557,6 +557,33 @@
         button_save.addEventListener("mousedown", handle_button_click_save, false);
 
 
+        //JSON
+        //json-->javascript
+        function configureJSON(json) {
+            console.log(json);
+            that.json_content = json;
+
+        }
+
+        //javascript-->json
+        function serializeJSON() {
+
+        }
+
+        function loadProduct(id) {
+            var xmlhttp = new XMLHttpRequest();
+            var url = "assets/test.json";
+
+            xmlhttp.onreadystatechange = function() {
+                if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
+                    var json = JSON.parse(xmlhttp.responseText);
+                    configureJSON(json);
+                }
+            };
+            xmlhttp.open("GET", url, true);
+            xmlhttp.send();
+        }
+
         //other handlers
         function handle_mousemove_move_clicked(event) {
             event.stopPropagation();
@@ -624,6 +651,8 @@
         document.body.addEventListener("drop", stop_default_drop, false); //TODO: remove?
         that.ctx.canvas.addEventListener("mousedown", handle_mousedown, false);
         that.ctx.canvas.addEventListener("mousemove", handle_mousemove_move_notClicked, false);
+
+        loadProduct(1);
     };
 
     CanvasEditor.prototype.draw = function () {
@@ -1128,6 +1157,9 @@
             case 40:
                 if (this.selectedEntity) this.translate(0,1);
                 break;
+            //case 13:
+            //    this.loadProduct(1);
+            //    break;
         }
     };
 
@@ -1149,9 +1181,5 @@
 
     vec2.computeSignedAngle = function (a, b) {
         return Math.atan2(vec2.perpdot(a, b), vec2.dot(a, b));
-    };
-
-    CanvasEditor.prototype.loadProduct = function(id) {
-
     };
 }(window));
