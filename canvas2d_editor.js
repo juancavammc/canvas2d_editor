@@ -539,22 +539,22 @@
 
         }
 
-        button_addZone.addEventListener("click", handle_button_click_addZone, false);
-        button_move.addEventListener("click", handle_button_click_move, false);
-        button_scale.addEventListener("click", handle_button_click_scale, false);
-        button_rotate.addEventListener("click", handle_button_click_rotate, false);
-        button_move_left.addEventListener("click", handle_button_click_move_left, false);
-        button_move_right.addEventListener("click", handle_button_click_move_right, false);
-        button_move_up.addEventListener("click", handle_button_click_move_up, false);
-        button_move_down.addEventListener("click", handle_button_click_move_down, false);
-        button_scale_v_shrink.addEventListener("click", handle_button_click_scale_v_shrink, false);
-        button_scale_v_expand.addEventListener("click", handle_button_click_scale_v_expand, false);
-        button_scale_h_shrink.addEventListener("click", handle_button_click_scale_h_shrink, false);
-        button_scale_h_expand.addEventListener("click", handle_button_click_scale_h_expand, false);
-        button_rotate_left.addEventListener("click", handle_button_click_rotate_left, false);
-        button_rotate_right.addEventListener("click", handle_button_click_rotate_right, false);
-        button_deleteZone.addEventListener("click", handle_button_click_deleteZone, false);
-        button_save.addEventListener("click", handle_button_click_save, false);
+        button_addZone.addEventListener("mousedown", handle_button_click_addZone, false);
+        button_move.addEventListener("mousedown", handle_button_click_move, false);
+        button_scale.addEventListener("mousedown", handle_button_click_scale, false);
+        button_rotate.addEventListener("mousedown", handle_button_click_rotate, false);
+        button_move_left.addEventListener("mousedown", handle_button_click_move_left, false);
+        button_move_right.addEventListener("mousedown", handle_button_click_move_right, false);
+        button_move_up.addEventListener("mousedown", handle_button_click_move_up, false);
+        button_move_down.addEventListener("mousedown", handle_button_click_move_down, false);
+        button_scale_v_shrink.addEventListener("mousedown", handle_button_click_scale_v_shrink, false);
+        button_scale_v_expand.addEventListener("mousedown", handle_button_click_scale_v_expand, false);
+        button_scale_h_shrink.addEventListener("mousedown", handle_button_click_scale_h_shrink, false);
+        button_scale_h_expand.addEventListener("mousedown", handle_button_click_scale_h_expand, false);
+        button_rotate_left.addEventListener("mousedown", handle_button_click_rotate_left, false);
+        button_rotate_right.addEventListener("mousedown", handle_button_click_rotate_right, false);
+        button_deleteZone.addEventListener("mousedown", handle_button_click_deleteZone, false);
+        button_save.addEventListener("mousedown", handle_button_click_save, false);
 
 
         //other handlers
@@ -1149,5 +1149,9 @@
 
     vec2.computeSignedAngle = function (a, b) {
         return Math.atan2(vec2.perpdot(a, b), vec2.dot(a, b));
-    }
+    };
+
+    CanvasEditor.prototype.loadProduct = function(id) {
+
+    };
 }(window));
