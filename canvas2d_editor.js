@@ -157,138 +157,20 @@
         canvas.style.position = "relative";
         that.ctx = canvas.getContext("2d");
 
-        function _mouseDown(event) {
-            //Check if is resizing
-            if (that.selectedEntity) {
-                that._checkCorners(event);
-                if (anchor.resizing) {
-                    _global.addEventListener("mousemove", handle_mousemove_resize, false);
-                    _global.addEventListener("mouseup", handle_mouseup, false);
-                    that.draw();
-                    return true;
-                }
-                else if (anchor.rotating) {
-                    tempAngle = that.selectedEntity.angle;
-                    offsetX = event.x - event.offsetX;
-                    offsetY = event.y - event.offsetY;
-                    vec2.set(vec_tmp2, event.x - offsetX, event.y - offsetY);
-                    vec2.subtract(vec_tmp2, vec_tmp2, that.selectedEntity.position);
-                    vec2.normalize(vec_tmp2, vec_tmp2);
-                    _global.addEventListener("mousemove", handle_mousemove_rotate, false);
-                    _global.addEventListener("mouseup", handle_mouseup, false);
-                    that.draw();
-                    return true;
-                }
-            }
+        this._handle_mouseup = handle_mouseup.bind(this);
+        this._handle_mousemove_resize = handle_mousemove_resize.bind(this);
+        this._handle_mousemove_rotate = handle_mousemove_rotate.bind(this);
+        this._handle_mousemove_move_notClicked = handle_mousemove_move_notClicked.bind(this);
+        this._handle_mousemove_move_clicked = handle_mousemove_move_clicked.bind(this);
 
-            //if not resizing, check if selecting
-            that.selectedEntity = null;
-            for (var i = that.entities.length - 1; i >= 0; i--) {
-                var entity = that.entities[i];
-                if (!entity) continue;
-
-                offsetX = event.x - entity.x;
-                offsetY = event.y - entity.y;
-
-                var w = entity.width;
-                var h = entity.height;
-                mat3.invert(mat_tmp, entity.model);
-                vec2.set(vec_tmp1, event.offsetX, event.offsetY);
-                vec2.transformMat3(vec_tmp1, vec_tmp1, mat_tmp);
-                var x = vec_tmp1[0];
-                var y = vec_tmp1[1];
-
-                if (pointerInside(x, y, -w / 2, -h / 2, w, h)) {
-                    _global.addEventListener("mousemove", handle_mousemove_move_clicked, false);
-                    _global.addEventListener("mouseup", handle_mouseup, false);
-                    that.selectedEntity = entity;
-                    break;
-                }
-            }
-            that.draw();
-        }
-
-        function handle_dragover(event) {
-            event.stopPropagation();
-            event.preventDefault();
-            _augmentEvent(event);
-        }
-
-        function handle_drop(event) {
-            event.stopPropagation();
-            event.preventDefault();
-            _augmentEvent(event);
-            that._createNewImages(event);
-        }
-
-        function handle_mousemove_move_clicked(event) {
-            event.stopPropagation();
-            event.preventDefault();
-            _augmentEvent(event);
-            that._setNewPosition(event);
-        }
-
-        function handle_mousemove_move_notClicked(event) {
-            event.stopPropagation();
-            event.preventDefault();
-            _augmentEvent(event);
-            if (that.selectedEntity) that._checkCorners(event);
-        }
-
-        function handle_mousemove_resize(event) {
-            event.stopPropagation();
-            event.preventDefault();
-            _augmentEvent(event);
-            that._resizeEntity(event);
-        }
-
-        function handle_mousemove_rotate(event) {
-            event.stopPropagation();
-            event.preventDefault();
-            _augmentEvent(event);
-            that._rotateEntity(event);
-        }
-
-        function handle_mousedown(event) {
-            event.stopPropagation();
-            event.preventDefault();
-            _augmentEvent(event);
-            that.ctx.canvas.removeEventListener("mousemove", handle_mousemove_move_notClicked, false);
-            _mouseDown(event);
-        }
-
-        function handle_mouseup(event) {
-            event.stopPropagation();
-            event.preventDefault();
-            _augmentEvent(event);
-            that._fixResize(that.selectedEntity);
-            _global.removeEventListener("mousemove", handle_mousemove_move_clicked, false);
-            that.ctx.canvas.addEventListener("mousemove", handle_mousemove_move_notClicked, false);
-            _global.removeEventListener("mousemove", handle_mousemove_resize, false);
-            _global.removeEventListener("mousemove", handle_mousemove_rotate, false);
-        }
-
-        function handle_keydown(event) {
-            that._keyDown(event);
-        }
-
-        function handle_keyup(event) {
-            that._keyUp(event);
-        }
-
-        function stop_default_drop(event) {
-            event.stopPropagation();
-            event.preventDefault();
-        }
-
-        _global.addEventListener("keydown", handle_keydown, false);
-        _global.addEventListener("keyup", handle_keyup, false);
-        document.body.addEventListener("dragover", stop_default_drop, false);
-        document.body.addEventListener("drop", stop_default_drop, false);
-        that.drop_zone.addEventListener("dragover", handle_dragover, false);
-        that.drop_zone.addEventListener("drop", handle_drop, false);
-        that.ctx.canvas.addEventListener("mousedown", handle_mousedown, false);
-        that.ctx.canvas.addEventListener("mousemove", handle_mousemove_move_notClicked, false);
+        _global.addEventListener("keydown", handle_keydown.bind(this), false);
+        _global.addEventListener("keyup", handle_keyup.bind(this), false);
+        document.body.addEventListener("dragover", stop_default_drop.bind(this), false);
+        document.body.addEventListener("drop", stop_default_drop.bind(this), false);
+        this.drop_zone.addEventListener("dragover", handle_dragover.bind(this), false);
+        this.drop_zone.addEventListener("drop", handle_drop.bind(this), false);
+        this.ctx.canvas.addEventListener("mousedown", handle_mousedown.bind(this), false);
+        this.ctx.canvas.addEventListener("mousemove", this._handle_mousemove_move_notClicked, false);
 
     };
 
@@ -362,7 +244,7 @@
             that.entityTest.y = that.ctx.canvas.height/2;
             that._updateMatrices(that.entityTest);
             that.draw();
-        }
+        };
         ////
 
         //Get all buttons
@@ -399,57 +281,6 @@
         //div_editor_saveButton.style.display = "none";
 
         //START
-        function _selectEntity(event) {
-            //Check if is resizing
-            if (that.selectedEntity) {
-                that._checkCorners(event);
-                if (anchor.resizing) {
-                    _global.addEventListener("mousemove", handle_mousemove_resize, false);
-                    _global.addEventListener("mouseup", handle_mouseup, false);
-                    that.draw();
-                    return true;
-                }
-                else if (anchor.rotating) {
-                    tempAngle = that.selectedEntity.angle;
-                    offsetX = event.x - event.offsetX;
-                    offsetY = event.y - event.offsetY;
-                    vec2.set(vec_tmp2, event.x - offsetX, event.y - offsetY);
-                    vec2.subtract(vec_tmp2, vec_tmp2, that.selectedEntity.position);
-                    vec2.normalize(vec_tmp2, vec_tmp2);
-                    _global.addEventListener("mousemove", handle_mousemove_rotate, false);
-                    _global.addEventListener("mouseup", handle_mouseup, false);
-                    that.draw();
-                    return true;
-                }
-            }
-
-            //if not resizing, check if selecting
-            that.selectedEntity = null;
-            for (var i = that.entities.length - 1; i >= 0; i--) {
-                var entity = that.entities[i];
-                if (!entity) continue;
-
-                offsetX = event.x - entity.x;
-                offsetY = event.y - entity.y;
-
-                var w = entity.width;
-                var h = entity.height;
-                mat3.invert(mat_tmp, entity.model);
-                vec2.set(vec_tmp1, event.offsetX, event.offsetY);
-                vec2.transformMat3(vec_tmp1, vec_tmp1, mat_tmp);
-                var x = vec_tmp1[0];
-                var y = vec_tmp1[1];
-
-                if (pointerInside(x, y, -w / 2, -h / 2, w, h)) {
-                    _global.addEventListener("mousemove", handle_mousemove_move_clicked, false);
-                    _global.addEventListener("mouseup", handle_mouseup, false);
-                    that.selectedEntity = entity;
-                    break;
-                }
-            }
-            manageDivs();
-            that.draw();
-        }
 
         function manageDivs() {
             if(that.selectedEntity) {
@@ -584,76 +415,35 @@
             xmlhttp.send();
         }
 
-        //other handlers
-        function handle_mousemove_move_clicked(event) {
-            event.stopPropagation();
-            event.preventDefault();
-            _augmentEvent(event);
-            that._setNewPosition(event);
-        }
 
-        function handle_mousemove_move_notClicked(event) {
-            event.stopPropagation();
-            event.preventDefault();
-            _augmentEvent(event);
-            if (that.selectedEntity) that._checkCorners(event);
-        }
-
-        function handle_mousemove_resize(event) {
-            event.stopPropagation();
-            event.preventDefault();
-            _augmentEvent(event);
-            that._resizeEntity(event);
-        }
-
-        function handle_mousemove_rotate(event) {
-            event.stopPropagation();
-            event.preventDefault();
-            _augmentEvent(event);
-            that._rotateEntity(event);
-        }
-
+        //Other handlers
         function handle_mousedown(event) {
             event.stopPropagation();
             event.preventDefault();
             _augmentEvent(event);
-            that.ctx.canvas.removeEventListener("mousemove", handle_mousemove_move_notClicked, false);
-            _selectEntity(event);
+            that.ctx.canvas.removeEventListener("mousemove", that._handle_mousemove_move_notClicked, false);
+            that._mouseDown(event);
+            manageDivs();
         }
 
-        function handle_mouseup(event) {
-            event.stopPropagation();
-            event.preventDefault();
-            _augmentEvent(event);
-            that._fixResize(that.selectedEntity);
-            _global.removeEventListener("mousemove", handle_mousemove_move_clicked, false);
-            that.ctx.canvas.addEventListener("mousemove", handle_mousemove_move_notClicked, false);
-            _global.removeEventListener("mousemove", handle_mousemove_resize, false);
-            _global.removeEventListener("mousemove", handle_mousemove_rotate, false);
-        }
+        this._handle_mouseup = handle_mouseup.bind(this);
+        this._handle_mousemove_resize = handle_mousemove_resize.bind(this);
+        this._handle_mousemove_rotate = handle_mousemove_rotate.bind(this);
+        this._handle_mousemove_move_notClicked = handle_mousemove_move_notClicked.bind(this);
+        this._handle_mousemove_move_clicked = handle_mousemove_move_clicked.bind(this);
 
-        function handle_keydown(event) {
-            that._keyDown(event);
-        }
 
-        function handle_keyup(event) {
-            that._keyUp(event);
-        }
 
-        function stop_default_drop(event) {
-            event.stopPropagation();
-            event.preventDefault();
-        }
-
-        _global.addEventListener("keydown", handle_keydown, false);
-        _global.addEventListener("keyup", handle_keyup, false);
-        document.body.addEventListener("dragover", stop_default_drop, false); //TODO: remove?
-        document.body.addEventListener("drop", stop_default_drop, false); //TODO: remove?
-        that.ctx.canvas.addEventListener("mousedown", handle_mousedown, false);
-        that.ctx.canvas.addEventListener("mousemove", handle_mousemove_move_notClicked, false);
+        _global.addEventListener("keydown", handle_keydown.bind(this), false);
+        _global.addEventListener("keyup", handle_keyup.bind(this), false);
+        document.body.addEventListener("dragover", stop_default_drop.bind(this), false); //TODO: remove?
+        document.body.addEventListener("drop", stop_default_drop.bind(this), false); //TODO: remove?
+        this.ctx.canvas.addEventListener("mousedown", handle_mousedown, false);
+        this.ctx.canvas.addEventListener("mousemove", this._handle_mousemove_move_notClicked, false);
 
         loadProduct(1);
     };
+
 
     CanvasEditor.prototype.draw = function () {
         this.ctx.clearRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height);
@@ -793,13 +583,6 @@
         }
     };
 
-    CanvasEditor.prototype._updateMatrices = function (entity) {
-        vec2.set(entity.position, entity.x, entity.y);
-        mat3.translate(entity.translation, identity, entity.position);
-        mat3.rotate(entity.rotation, identity, entity.angle);
-        mat3.multiply(entity.model, entity.translation, entity.rotation);
-    };
-
     CanvasEditor.prototype.addZone = function() {
         var pos = vec2.fromValues(this.ctx.canvas.width/2, this.ctx.canvas.height/2);
         var mat_trans = mat3.create();
@@ -822,6 +605,66 @@
         this.entities.push(entity);
         this.draw();
         return entity;
+    };
+
+    //*** START INTERNAL FUNCTIONS ***
+    CanvasEditor.prototype._mouseDown = function(event) {
+        //Check if is resizing
+        if (this.selectedEntity) {
+            this._checkCorners(event);
+            if (anchor.resizing) {
+                _global.addEventListener("mousemove", this._handle_mousemove_resize, false);
+                _global.addEventListener("mouseup", this._handle_mouseup, false);
+                this.draw();
+                return true;
+            }
+            else if (anchor.rotating) {
+                tempAngle = this.selectedEntity.angle;
+                offsetX = event.x - event.offsetX;
+                offsetY = event.y - event.offsetY;
+                vec2.set(vec_tmp2, event.x - offsetX, event.y - offsetY);
+                vec2.subtract(vec_tmp2, vec_tmp2, this.selectedEntity.position);
+                vec2.normalize(vec_tmp2, vec_tmp2);
+                _global.addEventListener("mousemove", this._handle_mousemove_rotate, false);
+                _global.addEventListener("mouseup", this._handle_mouseup, false);
+                this.draw();
+                return true;
+            }
+        }
+
+        //if not resizing, check if selecting
+        this.selectedEntity = null;
+        for (var i = this.entities.length - 1; i >= 0; i--) {
+            var entity = this.entities[i];
+            if (!entity) continue;
+
+            offsetX = event.x - entity.x;
+            offsetY = event.y - entity.y;
+
+            var w = entity.width;
+            var h = entity.height;
+            mat3.invert(mat_tmp, entity.model);
+            vec2.set(vec_tmp1, event.offsetX, event.offsetY);
+            vec2.transformMat3(vec_tmp1, vec_tmp1, mat_tmp);
+            var x = vec_tmp1[0];
+            var y = vec_tmp1[1];
+
+            if (pointerInside(x, y, -w / 2, -h / 2, w, h)) {
+                _global.addEventListener("mousemove", this._handle_mousemove_move_clicked, false);
+                _global.addEventListener("mouseup", this._handle_mouseup, false);
+                this.selectedEntity = entity;
+                break;
+            }
+        }
+        //manageDivs();
+        this.draw();
+    };
+
+    CanvasEditor.prototype._updateMatrices = function (entity) {
+        vec2.set(entity.position, entity.x, entity.y);
+        mat3.translate(entity.translation, identity, entity.position);
+        mat3.rotate(entity.rotation, identity, entity.angle);
+        mat3.multiply(entity.model, entity.translation, entity.rotation);
     };
 
     CanvasEditor.prototype._deleteSelectedEntity = function() {
@@ -1174,7 +1017,86 @@
         }
     };
 
-    //signed angles
+    //*** END INTERNAL FUNCTIONS ***
+
+    //*** START HANDLERS ***
+    function handle_dragover(event) {
+        event.stopPropagation();
+        event.preventDefault();
+        _augmentEvent(event);
+    }
+
+    function handle_drop(event) {
+        event.stopPropagation();
+        event.preventDefault();
+        _augmentEvent(event);
+        this._createNewImages(event);
+    }
+
+    function handle_mousemove_move_clicked(event) {
+        event.stopPropagation();
+        event.preventDefault();
+        _augmentEvent(event);
+        this._setNewPosition(event);
+    }
+
+    function handle_mousemove_move_notClicked(event) {
+        event.stopPropagation();
+        event.preventDefault();
+        _augmentEvent(event);
+        if (this.selectedEntity) this._checkCorners(event);
+    }
+
+    function handle_mousemove_resize(event) {
+        event.stopPropagation();
+        event.preventDefault();
+        _augmentEvent(event);
+        this._resizeEntity(event);
+    }
+
+    function handle_mousemove_rotate(event) {
+        event.stopPropagation();
+        event.preventDefault();
+        _augmentEvent(event);
+        this._rotateEntity(event);
+    }
+
+    function handle_mouseup(event) {
+        event.stopPropagation();
+        event.preventDefault();
+        _augmentEvent(event);
+        this._fixResize(this.selectedEntity);
+        _global.removeEventListener("mousemove", this._handle_mousemove_move_clicked, false);
+        this.ctx.canvas.addEventListener("mousemove", this._handle_mousemove_move_notClicked, false);
+        _global.removeEventListener("mousemove", this._handle_mousemove_resize, false);
+        _global.removeEventListener("mousemove", this._handle_mousemove_rotate, false);
+    }
+
+    function handle_mousedown(event) {
+        event.stopPropagation();
+        event.preventDefault();
+        _augmentEvent(event);
+        this.ctx.canvas.removeEventListener("mousemove", this._handle_mousemove_move_notClicked, false);
+        this._mouseDown(event);
+    }
+
+
+    function handle_keydown(event) {
+        this._keyDown(event);
+    }
+
+    function handle_keyup(event) {
+        this._keyUp(event);
+    }
+
+    function stop_default_drop(event) {
+        event.stopPropagation();
+        event.preventDefault();
+    }
+
+    //*** END HANDLERS ***
+
+    //*** OTHER FUNCTIONS ***
     vec2.perpdot = function (a, b) {
         return a[1] * b[0] + -a[0] * b[1];
     };
