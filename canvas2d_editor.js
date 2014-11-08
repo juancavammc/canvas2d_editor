@@ -136,14 +136,14 @@
             }
         }
         else {
-            throw("Drop zone element not found: " + options.drop_zone);
+            throw("drop_zone element not found: " + options.drop_zone);
         }
         //Canvas
         if (options.canvas) {
             if (typeof(options.canvas) == "string") {
                 canvas = document.getElementById(options.canvas);
-                canvas.width = that.drop_zone.offsetWidth;
-                canvas.height = that.drop_zone.offsetHeight;
+                canvas.width = options.width || 800;
+                canvas.height = options.height || 600;
                 if (!canvas) throw("Canvas element not found: " + options.canvas );
             }
             else {
@@ -151,7 +151,7 @@
             }
         }
         else {
-            canvas = _createCanvas(options.width || 800, options.height || 600); //TODO
+            canvas = _createCanvas(options.width || 800, options.height || 600);
         }
 
         canvas.style.position = "relative";
@@ -181,12 +181,26 @@
         options = options || {};
         var canvas = null;
 
+        //Image Zone
+        if (options.img_zone) {
+            if (typeof(options.img_zone) == "string") {
+                that.img_zone = document.getElementById(options.img_zone);
+                if (!that.img_zone) throw("img_zone element not found: " + options.img_zone );
+            }
+            else {
+                that.img_zone = options.img_zone;
+            }
+        }
+        else {
+            throw("img_zone element not found: " + options.img_zone);
+        }
+
         //Canvas
         if (options.canvas) {
             if (typeof(options.canvas) == "string") {
                 canvas = document.getElementById(options.canvas);
-                canvas.width = that.drop_zone.offsetWidth;
-                canvas.height = that.drop_zone.offsetHeight;
+                canvas.width = options.width || 600;
+                canvas.height = options.height || 600;
                 if (!canvas) throw("Canvas element not found: " + options.canvas );
             }
             else {
@@ -194,58 +208,13 @@
             }
         }
         else {
-            canvas = _createCanvas(options.width || 800, options.height || 600); //TODO
+            canvas = _createCanvas(options.width || 800, options.height || 600);
         }
 
         canvas.style.position = "relative";
         that.ctx = canvas.getContext("2d");
 
         that.current_img_id = null;
-
-        ////TEST
-        var img_test = new Image();
-        that.entityTest = {};
-        img_test.src = "assets/shirt2.jpg";
-        function test() {
-            var pos = vec2.fromValues(that.ctx.canvas.width/2, that.ctx.canvas.height/2);
-            var mat_trans = mat3.create();
-            mat3.translate(mat_trans, mat_trans, pos);
-            var mat_rot = mat3.create();
-            var model = mat3.clone(mat_trans);
-            that.entityTest = {
-                image: img_test,
-                x: pos[0], //TODO: drop in center (drop_zone != canvas)
-                y: pos[1],
-                width: 500,
-                height: 500,
-                angle: 0,
-                strokeColor: that.strokeColor,
-                position: pos,
-                translation: mat_trans,
-                rotation: mat_rot,
-                model: model
-            };
-        }
-        test();
-        img_test.addEventListener("load", function () {
-            that.update_test();
-        }, false);
-
-        var asp = 0;
-        that.update_test = function() {
-            asp = that.entityTest.width/that.entityTest.height;
-            that.entityTest.height = that.ctx.canvas.height;
-            that.entityTest.width = that.ctx.canvas.height*asp;
-            if(that.entityTest.width > that.ctx.canvas.width) {
-                that.entityTest.width = that.ctx.canvas.width;
-                that.entityTest.height = that.ctx.canvas.width/asp;
-            }
-            that.entityTest.x = that.ctx.canvas.width/2;
-            that.entityTest.y = that.ctx.canvas.height/2;
-            that._updateMatrices(that.entityTest);
-            that.draw();
-        };
-        ////
 
         //Get all buttons
         var button_addZone = document.getElementById("editor_addZone");
