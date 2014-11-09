@@ -34,9 +34,15 @@
         rotating: false
     };
 
+    var type = {
+        IMAGE: 0,
+        ZONE: 1
+    };
+
     //Class CanvasEditor
     function CanvasEditor() {
         this.ctx = undefined;
+        this.type = undefined; //image or zone?
         //this.drop_zone = undefined;
         this.entities = [];
         this.selectedEntity = null;
@@ -156,6 +162,7 @@
 
         canvas.style.position = "relative";
         that.ctx = canvas.getContext("2d");
+        that.type = type.IMAGE;
 
         this._handle_mouseup = handle_mouseup.bind(this);
         this._handle_mousemove_resize = handle_mousemove_resize.bind(this);
@@ -180,6 +187,20 @@
         var that = this;
         options = options || {};
         var canvas = null;
+
+        //Canvas Zone
+        if (options.canvas_zone) {
+            if (typeof(options.canvas_zone) == "string") {
+                that.canvas_zone = document.getElementById(options.canvas_zone);
+                if (!that.canvas_zone) throw("canvas_zone element not found: " + options.canvas_zone );
+            }
+            else {
+                that.canvas_zone = options.canvas_zone;
+            }
+        }
+        else {
+            throw("canvas_zone element not found: " + options.canvas_zone);
+        }
 
         //Image Zone
         if (options.img_zone) {
@@ -213,6 +234,7 @@
 
         canvas.style.position = "relative";
         that.ctx = canvas.getContext("2d");
+        that.type = type.ZONE;
 
         that.current_img_id = null;
         that.product_images = [];
@@ -375,6 +397,7 @@
         function switchImage(id_image) {
             that.current_img_id = id_image;
             manageDivs();
+            that.resizeCanvas(that.canvas_zone.offsetWidth, that.canvas_zone.offsetHeight);
             that.draw();
         }
 
@@ -424,10 +447,6 @@
                     rotation: mat_rot,
                     model: model
                 };
-                console.log(entity.image.width, entity.image.height);
-                //img.addEventListener("load", function () {
-                //    that.draw();
-                //}, false);
                 that.product_images[json[i].id] = entity;
             }
         }
@@ -493,6 +512,7 @@
     CanvasEditor.prototype.resizeCanvas = function(width, height) {
         //zone_editor
         if(this.product_images[this.current_img_id]) {
+            this._updateNormals();
             adjustCanvasTo(this.ctx.canvas, this.product_images[this.current_img_id], width, height);
         }
         //image_editor
@@ -654,12 +674,12 @@
             image: null,
             x: pos[0],
             y: pos[1],
-            width: 200,
-            height: 200,
+            width: 0.2*this.ctx.canvas.width,
+            height: 0.2*this.ctx.canvas.height,
             normal_x: 0.5,
             normal_y: 0.5,
-            normal_width: 200/this.ctx.canvas.width,
-            normal_height: 200/this.ctx.canvas.height,
+            normal_width: 0.2,
+            normal_height: 0.2,
             angle: 0,
             strokeColor: this.color_list[Math.floor(Math.random()*this.color_list.length)],
             position: pos,
@@ -751,6 +771,17 @@
             entity.x = entity.normal_x * canvas_width;
             entity.y = entity.normal_y * canvas_height;
             this._updateMatrices(entity);
+        }
+    };
+
+    CanvasEditor.prototype._updateNormals = function() {
+        var length = this.entities.length;
+        for(var i = 0; i < length; ++i) {
+            var entity = this.entities[i];
+            entity.normal_width = entity.width/this.ctx.canvas.width;
+            entity.normal_height = entity.height/this.ctx.canvas.height;
+            entity.normal_x = entity.x/this.ctx.canvas.width;
+            entity.normal_y= entity.y/this.ctx.canvas.height;
         }
     };
 
@@ -1164,6 +1195,9 @@
         this.ctx.canvas.addEventListener("mousemove", this._handle_mousemove_move_notClicked, false);
         _global.removeEventListener("mousemove", this._handle_mousemove_resize, false);
         _global.removeEventListener("mousemove", this._handle_mousemove_rotate, false);
+        if(this.type === type.ZONE) {
+            //this._updateNormals();
+        }
     }
 
     function handle_mousedown(event) {
