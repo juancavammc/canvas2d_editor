@@ -413,6 +413,10 @@
                     y: pos[1],
                     width: 500,
                     height: 500,
+                    normal_x: 0.5,
+                    normal_y: 0.5,
+                    normal_width: 1,
+                    normal_height: 1,
                     angle: 0,
                     strokeColor: that.strokeColor,
                     position: pos,
@@ -420,10 +424,10 @@
                     rotation: mat_rot,
                     model: model
                 };
+                console.log(entity.image.width, entity.image.height);
                 //img.addEventListener("load", function () {
                 //    that.draw();
                 //}, false);
-                console.log("id: " + json[i].id);
                 that.product_images[json[i].id] = entity;
             }
         }
@@ -476,6 +480,29 @@
         loadProduct(1);
     };
 
+    function adjustCanvasTo(canvas, entity, width, height) {
+        var aspect = entity.image.width/entity.image.height;
+        canvas.height = height;
+        canvas.width = height * aspect;
+        if(canvas.width > width) {
+            canvas.width = width;
+            canvas.height = width / aspect;
+        }
+    }
+
+    CanvasEditor.prototype.resizeCanvas = function(width, height) {
+        //zone_editor
+        if(this.product_images[this.current_img_id]) {
+            adjustCanvasTo(this.ctx.canvas, this.product_images[this.current_img_id], width, height);
+        }
+        //image_editor
+        else {
+            this.ctx.canvas.width = width;
+            this.ctx.canvas.height = height;
+        }
+        this.update();
+        this.draw();
+    };
 
     CanvasEditor.prototype.draw = function () {
         this.ctx.clearRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height);
@@ -629,6 +656,10 @@
             y: pos[1],
             width: 200,
             height: 200,
+            normal_x: 0.5,
+            normal_y: 0.5,
+            normal_width: 200/this.ctx.canvas.width,
+            normal_height: 200/this.ctx.canvas.height,
             angle: 0,
             strokeColor: this.color_list[Math.floor(Math.random()*this.color_list.length)],
             position: pos,
@@ -692,6 +723,35 @@
         }
         //manageDivs();
         this.draw();
+    };
+
+    CanvasEditor.prototype.update = function() {
+        var canvas_width = this.ctx.canvas.width;
+        var canvas_height = this.ctx.canvas.height;
+        var entity;
+        var length;
+        if(this.product_images) {
+            length = this.product_images.length;
+
+            for(var i = 0; i < length; ++i) {
+                entity = this.product_images[i];
+                entity.width = entity.normal_width * canvas_width;
+                entity.height = entity.normal_height * canvas_width;
+                entity.x = entity.normal_x * canvas_width;
+                entity.y = entity.normal_y * canvas_height;
+                this._updateMatrices(entity);
+            }
+        }
+
+        length = this.entities.length;
+        for(var i = 0; i < length; ++i) {
+            entity = this.entities[i];
+            entity.width = entity.normal_width * canvas_width;
+            entity.height = entity.normal_height * canvas_width;
+            entity.x = entity.normal_x * canvas_width;
+            entity.y = entity.normal_y * canvas_height;
+            this._updateMatrices(entity);
+        }
     };
 
     CanvasEditor.prototype._updateMatrices = function (entity) {
