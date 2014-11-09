@@ -23,6 +23,9 @@
     //if shift key is pressed or not
     var shiftPressed = false;
 
+    //used to calculate sticky angle rotations
+    var tempAngle = 0;
+
     //tells you what corner is anchored while resizing. Also if its resizing width, height or both
     //TODO: Bitmask
     var anchor = {
@@ -423,31 +426,13 @@
                 that.img_zone.appendChild(div);
 
                 var img = new Image();
-                var entity = {};
                 img.src = json[i].url;
-                var pos = vec2.fromValues(that.ctx.canvas.width/2, that.ctx.canvas.height/2);
-                var mat_trans = mat3.create();
-                mat3.translate(mat_trans, mat_trans, pos);
-                var mat_rot = mat3.create();
-                var model = mat3.clone(mat_trans);
-                entity = {
-                    image: img,
-                    x: pos[0],
-                    y: pos[1],
-                    width: 500,
-                    height: 500,
-                    normal_x: 0.5,
-                    normal_y: 0.5,
-                    normal_width: 1,
-                    normal_height: 1,
-                    angle: 0,
-                    strokeColor: that.strokeColor,
-                    position: pos,
-                    translation: mat_trans,
-                    rotation: mat_rot,
-                    model: model
-                };
-                that.product_images[json[i].id] = entity;
+                that.product_images[json[i].id] = createEntity(true, img, 0.5, 0.5, 1, 1, that.ctx.canvas.width, that.ctx.canvas.height, 0, that.strokeColor);;
+
+                //img.addEventListener("load", function() {
+                //    //TODO: call this._updateEntity(entity);
+                //    console.log(img.width, img.height);
+                //}, false);
             }
         }
 
@@ -527,12 +512,14 @@
     CanvasEditor.prototype.draw = function () {
         this.ctx.clearRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height);
         var entity;
-        if(this.product_images[this.current_img_id]) {
-            entity = this.product_images[this.current_img_id];
-            this.ctx.save();
-            this.ctx.translate(entity.x, entity.y);
-            this.ctx.drawImage(entity.image, -Math.abs(entity.width) / 2, -Math.abs(entity.height) / 2, Math.abs(entity.width), Math.abs(entity.height));
-            this.ctx.restore();
+        if(this.product_images) {
+            if(this.product_images[this.current_img_id]) {
+                entity = this.product_images[this.current_img_id];
+                this.ctx.save();
+                this.ctx.translate(entity.x, entity.y);
+                this.ctx.drawImage(entity.image, -Math.abs(entity.width) / 2, -Math.abs(entity.height) / 2, Math.abs(entity.width), Math.abs(entity.height));
+                this.ctx.restore();
+            }
         }
 
         var l = this.entities.length;
@@ -665,28 +652,7 @@
     };
 
     CanvasEditor.prototype.addZone = function() {
-        var pos = vec2.fromValues(this.ctx.canvas.width/2, this.ctx.canvas.height/2);
-        var mat_trans = mat3.create();
-        mat3.translate(mat_trans, mat_trans, pos);
-        var mat_rot = mat3.create();
-        var model = mat3.clone(mat_trans);
-        var entity = {
-            image: null,
-            x: pos[0],
-            y: pos[1],
-            width: 0.2*this.ctx.canvas.width,
-            height: 0.2*this.ctx.canvas.height,
-            normal_x: 0.5,
-            normal_y: 0.5,
-            normal_width: 0.2,
-            normal_height: 0.2,
-            angle: 0,
-            strokeColor: this.color_list[Math.floor(Math.random()*this.color_list.length)],
-            position: pos,
-            translation: mat_trans,
-            rotation: mat_rot,
-            model: model
-        };
+        var entity = createEntity(true, null, 0.5, 0.5, 0.2, 0.2, this.ctx.canvas.width, this.ctx.canvas.height, 0, this.color_list[Math.floor(Math.random()*this.color_list.length)]);
         this.entities.push(entity);
         this.draw();
         return entity;
@@ -746,43 +712,41 @@
     };
 
     CanvasEditor.prototype.update = function() {
-        var canvas_width = this.ctx.canvas.width;
-        var canvas_height = this.ctx.canvas.height;
-        var entity;
         var length;
+        var i;
         if(this.product_images) {
             length = this.product_images.length;
-
-            for(var i = 0; i < length; ++i) {
-                entity = this.product_images[i];
-                entity.width = entity.normal_width * canvas_width;
-                entity.height = entity.normal_height * canvas_width;
-                entity.x = entity.normal_x * canvas_width;
-                entity.y = entity.normal_y * canvas_height;
-                this._updateMatrices(entity);
+            for(i = 0; i < length; ++i) {
+                this._updateEntity(this.product_images[i]);
             }
         }
 
         length = this.entities.length;
-        for(var i = 0; i < length; ++i) {
-            entity = this.entities[i];
-            entity.width = entity.normal_width * canvas_width;
-            entity.height = entity.normal_height * canvas_width;
-            entity.x = entity.normal_x * canvas_width;
-            entity.y = entity.normal_y * canvas_height;
-            this._updateMatrices(entity);
+        for(i = 0; i < length; ++i) {
+            this._updateEntity(this.entities[i])
         }
+    };
+
+    CanvasEditor.prototype._updateEntity = function(entity) {
+        entity.width = entity.normal_width * this.ctx.canvas.width;
+        entity.height = entity.normal_height * this.ctx.canvas.width;
+        entity.x = entity.normal_x * this.ctx.canvas.width;
+        entity.y = entity.normal_y * this.ctx.canvas.height;
+        this._updateMatrices(entity);
     };
 
     CanvasEditor.prototype._updateNormals = function() {
         var length = this.entities.length;
         for(var i = 0; i < length; ++i) {
-            var entity = this.entities[i];
-            entity.normal_width = entity.width/this.ctx.canvas.width;
-            entity.normal_height = entity.height/this.ctx.canvas.height;
-            entity.normal_x = entity.x/this.ctx.canvas.width;
-            entity.normal_y= entity.y/this.ctx.canvas.height;
+            this._updateEntityNormals(this.entities[i]);
         }
+    };
+
+    CanvasEditor.prototype._updateEntityNormals = function(entity) {
+        entity.normal_width = entity.width/this.ctx.canvas.width;
+        entity.normal_height = entity.height/this.ctx.canvas.height;
+        entity.normal_x = entity.x/this.ctx.canvas.width;
+        entity.normal_y= entity.y/this.ctx.canvas.height;
     };
 
     CanvasEditor.prototype._updateMatrices = function (entity) {
@@ -853,24 +817,9 @@
                 img.src = this.result;
 
                 img.addEventListener("load", function () {
-                    var pos = vec2.fromValues(event.offsetX, event.offsetY);
-                    var mat_trans = mat3.create();
-                    mat3.translate(mat_trans, mat_trans, pos);
-                    var mat_rot = mat3.create();
-                    var model = mat3.clone(mat_trans);
-                    that.entities.push({
-                        image: img,
-                        x: event.offsetX, //TODO: drop in center (drop_zone != canvas)
-                        y: event.offsetY,
-                        width: img.width,
-                        height: img.height,
-                        angle: 0,
-                        strokeColor: that.strokeColor,
-                        position: pos,
-                        translation: mat_trans,
-                        rotation: mat_rot,
-                        model: model
-                    });
+                    //TODO: drop in center (drop_zone != canvas)
+                    var entity = createEntity(false, img, event.offsetX, event.offsetY, img.width, img.height, that.ctx.canvas.width, that.ctx.canvas.height, 0, that.strokeColor);
+                    that.entities.push(entity);
                     that.draw();
                 }, false);
             };
@@ -878,6 +827,64 @@
         }
         this.draw();
     };
+
+    //if normalized === true : x, y , width, height are normalized
+    //else: x, y, width, height are not normalized
+    function createEntity(normalized, img, _x, _y, _width, _height, container_width, container_height, angle_rad, strokeColor) {
+        var x, y, width, height, normal_x, normal_y, normal_width, normal_height;
+
+        if(normalized) {
+            normal_x = _x;
+            normal_y = _y;
+            normal_width = _width;
+            normal_height = _height;
+            x = normal_x * container_width;
+            y = normal_y * container_height;
+            width = normal_width * container_width;
+            height = normal_height * container_height;
+        }
+        else {
+            x = _x;
+            y = _y;
+            width = _width;
+            height = _height;
+            normal_x = x / container_width;
+            normal_y = y / container_height;
+            normal_width = width / container_width;
+            normal_height = height / container_height;
+        }
+
+        var pos = vec2.fromValues(x, y);
+        var mat_trans = mat3.create();
+        mat3.translate(mat_trans, mat_trans, pos);
+        var mat_rot = mat3.create();
+        var model;
+        if(!angle_rad) {
+            model = mat3.clone(mat_trans);
+        }
+        else {
+            mat3.rotate(mat_rot, mat_rot, angle_rad);
+            model = mat3.multiply(mat3.create(), mat_trans, mat_rot);
+        }
+        var entity = {
+            image: img,
+            x: x, //TODO: drop in center (drop_zone != canvas)
+            y: y,
+            width: width,
+            height: height,
+            normal_x: normal_x,
+            normal_y: normal_y,
+            normal_width: normal_width,
+            normal_height: normal_height,
+            angle: angle_rad,
+            strokeColor: strokeColor,
+            position: pos,
+            translation: mat_trans,
+            rotation: mat_rot,
+            model: model
+        };
+        return entity;
+    }
 
     //TODO: Change cursors according to the angle
     CanvasEditor.prototype._checkCorners = function(event) {
@@ -1059,7 +1066,6 @@
         }
     };
 
-    var tempAngle = 0;
     CanvasEditor.prototype._rotateEntity = function(event) {
         vec2.set(vec_tmp1, event.x - offsetX, event.y - offsetY);
         vec2.subtract(vec_tmp1, vec_tmp1, this.selectedEntity.position);
@@ -1085,7 +1091,6 @@
     };
 
     CanvasEditor.prototype._keyDown = function(event) {
-        //TODO: switch-case
         //console.log(event.keyCode);
         switch(event.keyCode) {
             case 46: //DEL
@@ -1125,7 +1130,7 @@
             case 40:
                 if (this.selectedEntity) this.translate(0,1);
                 break;
-            //case 13:
+            //case 13: //ENTER
             //    this.loadProduct(1);
             //    break;
         }
@@ -1195,9 +1200,6 @@
         this.ctx.canvas.addEventListener("mousemove", this._handle_mousemove_move_notClicked, false);
         _global.removeEventListener("mousemove", this._handle_mousemove_resize, false);
         _global.removeEventListener("mousemove", this._handle_mousemove_rotate, false);
-        if(this.type === type.ZONE) {
-            //this._updateNormals();
-        }
     }
 
     function handle_mousedown(event) {
