@@ -215,6 +215,8 @@
         that.ctx = canvas.getContext("2d");
 
         that.current_img_id = null;
+        that.product_images = [];
+
 
         //Get all buttons
         var button_addZone = document.getElementById("editor_addZone");
@@ -242,26 +244,40 @@
         var div_editor_removeButton =  document.getElementById("div_editor_removeButton");
         var div_editor_saveButton =  document.getElementById("div_editor_saveButton");
 
+        div_editor_addzone.style.display = "none";
         div_editor_mainButtons.style.display = "none";
         div_editor_moveButtons.style.display = "none";
         div_editor_scaleButtons.style.display = "none";
         div_editor_rotateButtons.style.display = "none";
         div_editor_removeButton.style.display = "none";
-        //div_editor_saveButton.style.display = "none";
+        div_editor_saveButton.style.display = "none";
 
         //START
 
         function manageDivs() {
-            if(that.selectedEntity) {
-                div_editor_mainButtons.style.display = "block";
-                div_editor_removeButton.style.display = "block";
-            }
-            else {
+            if(that.current_img_id === null) {
+                div_editor_addzone.style.display = "none";
                 div_editor_mainButtons.style.display = "none";
                 div_editor_moveButtons.style.display = "none";
                 div_editor_scaleButtons.style.display = "none";
                 div_editor_rotateButtons.style.display = "none";
                 div_editor_removeButton.style.display = "none";
+                div_editor_saveButton.style.display = "none";
+            }
+            else {
+                div_editor_addzone.style.display = "block";
+                div_editor_saveButton.style.display = "block";
+                if (that.selectedEntity) {
+                    div_editor_mainButtons.style.display = "block";
+                    div_editor_removeButton.style.display = "block";
+                }
+                else {
+                    div_editor_mainButtons.style.display = "none";
+                    div_editor_moveButtons.style.display = "none";
+                    div_editor_scaleButtons.style.display = "none";
+                    div_editor_rotateButtons.style.display = "none";
+                    div_editor_removeButton.style.display = "none";
+                }
             }
         }
 
@@ -356,13 +372,60 @@
         button_deleteZone.addEventListener("mousedown", handle_button_click_deleteZone, false);
         button_save.addEventListener("mousedown", handle_button_click_save, false);
 
+        function switchImage(id_image) {
+            that.current_img_id = id_image;
+            manageDivs();
+            that.draw();
+        }
 
         //JSON
         //json-->javascript
         function configureJSON(json) {
             console.log(json);
             that.json_content = json;
+            var length = json.length;
+            for(var i = 0; i < length; ++i) {
+                var div = document.createElement("div");
+                var html_image = document.createElement("input");
+                html_image.setAttribute("type", "image");
+                html_image.setAttribute("src", json[i].url);
+                html_image.setAttribute("class", "thumb");
+                html_image.img_id = json[i].id;
 
+                html_image.addEventListener("click", function(event) {
+                    switchImage(event.target.img_id);
+                },false);
+
+                div.appendChild(html_image);
+                that.img_zone.appendChild(div);
+
+                var img = new Image();
+                var entity = {};
+                img.src = json[i].url;
+                var pos = vec2.fromValues(that.ctx.canvas.width/2, that.ctx.canvas.height/2);
+                var mat_trans = mat3.create();
+                mat3.translate(mat_trans, mat_trans, pos);
+                var mat_rot = mat3.create();
+                var model = mat3.clone(mat_trans);
+                entity = {
+                    image: img,
+                    x: pos[0],
+                    y: pos[1],
+                    width: 500,
+                    height: 500,
+                    angle: 0,
+                    strokeColor: that.strokeColor,
+                    position: pos,
+                    translation: mat_trans,
+                    rotation: mat_rot,
+                    model: model
+                };
+                //img.addEventListener("load", function () {
+                //    that.draw();
+                //}, false);
+                console.log("id: " + json[i].id);
+                that.product_images[json[i].id] = entity;
+            }
         }
 
         //javascript-->json
@@ -416,10 +479,12 @@
 
     CanvasEditor.prototype.draw = function () {
         this.ctx.clearRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height);
-        if(this.entityTest) {
+        var entity;
+        if(this.product_images[this.current_img_id]) {
+            entity = this.product_images[this.current_img_id];
             this.ctx.save();
-            this.ctx.translate(this.entityTest.x, this.entityTest.y);
-            this.ctx.drawImage(this.entityTest.image, -Math.abs(this.entityTest.width) / 2, -Math.abs(this.entityTest.height) / 2, Math.abs(this.entityTest.width), Math.abs(this.entityTest.height));
+            this.ctx.translate(entity.x, entity.y);
+            this.ctx.drawImage(entity.image, -Math.abs(entity.width) / 2, -Math.abs(entity.height) / 2, Math.abs(entity.width), Math.abs(entity.height));
             this.ctx.restore();
         }
 
@@ -427,7 +492,7 @@
         for (var i = 0; i < l; ++i) {
             if (this.entities[i]) {
                 this.ctx.save();
-                var entity = this.entities[i];
+                entity = this.entities[i];
                 this.ctx.translate(entity.x, entity.y);
                 this.ctx.rotate(entity.angle);
                 if(entity.image) {
