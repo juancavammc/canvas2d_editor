@@ -495,7 +495,7 @@
 
     CanvasEditor.prototype.resizeCanvas = function(width, height) {
         //zone_editor
-        if(this.product_images[this.current_img_id]) {
+        if(this.product_images) {
             this._updateNormals();
             adjustCanvasTo(this.ctx.canvas, this.product_images[this.current_img_id], width, height);
         }
@@ -896,7 +896,6 @@
 
         var s = this.squaresSize + 1;
 
-        //TODO: switch-case
         //up-left
         if (pointerInside(x, y, (-w / 2) - s, (-h / 2) - s, s * 2, s * 2)) {
             anchor.x = false;
