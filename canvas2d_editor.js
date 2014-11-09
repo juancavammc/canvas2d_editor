@@ -117,19 +117,14 @@
         return canvas;
     }
 
-    //TODO: drag al monitor secundario descoloca la imagen (sin reescalado PPP no pasa?)
-    //TODO: solucionar evento de más cuando mouseup (llama a un mousemove de mas)
-    //TODO: invertir imagen
-    //TODO: sticky
-    //TODO: renderizar
-    //TODO: quitar fondo blanco de pngs
-    //TODO: límite de entities?
-
     //TODO: if drop_zone != canvas ---> canvas->drag->preventdefault
     //TODO: if click outside canvas ---> unselect
 
-    //TODO: Añadir restricción para que una vez creado un img_editor/zone_editor no se pueda crear otro con la misma instancia
     CanvasEditor.prototype.createEditor = function (options) {
+        if(this.type) {
+            return false;
+        }
+
         var that = this;
         options = options || {};
         var canvas = null;
@@ -187,6 +182,10 @@
 
     //TODO: al apretar un boton llamar setInterval
     CanvasEditor.prototype.createZoneEditor = function (options) {
+        if(this.type) {
+            return false;
+        }
+
         var that = this;
         options = options || {};
         var canvas = null;
@@ -427,7 +426,7 @@
 
                 var img = new Image();
                 img.src = json[i].url;
-                that.product_images[json[i].id] = createEntity(true, img, 0.5, 0.5, 1, 1, that.ctx.canvas.width, that.ctx.canvas.height, 0, that.strokeColor);;
+                that.product_images[json[i].id] = createEntity(true, img, 0.5, 0.5, 1, 1, that.ctx.canvas.width, that.ctx.canvas.height, 0, that.strokeColor);
 
                 //img.addEventListener("load", function() {
                 //    //TODO: call this._updateEntity(entity);
@@ -866,7 +865,7 @@
             mat3.rotate(mat_rot, mat_rot, angle_rad);
             model = mat3.multiply(mat3.create(), mat_trans, mat_rot);
         }
-        var entity = {
+        return {
             image: img,
             x: x, //TODO: drop in center (drop_zone != canvas)
             y: y,
@@ -883,7 +882,6 @@
             rotation: mat_rot,
             model: model
         };
-        return entity;
     }
 
     //TODO: Change cursors according to the angle
