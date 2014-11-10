@@ -453,12 +453,14 @@
         //javascript-->json
         function serializeJSON() {
             var json = [];
-            //for (var i = 0; i < that.entities.length; ++i) {
-            for(var i in that.entities) {
+            for (var i = 0; i < that.entities.length; ++i) {
+            //for(var i in that.entities) {
+                if(!that.entities[i]) continue;
                 var img = that.product_images[i].image;
                 json[i] = {"id": i, "url": img.src, "zone": []};
-                //for(var j = 0; j < that.entities[i].length; ++j) {
-                for(var j in that.entities[i]) {
+                for(var j = 0; j < that.entities[i].length; ++j) {
+                //for(var j in that.entities[i]) {
+                    if(!that.entities[i][j]) continue;
                     var entity = that.entities[i][j];
                     var obj = {};
                     if(entity.id !== undefined) obj["id"] = entity.id;
