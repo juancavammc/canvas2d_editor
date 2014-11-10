@@ -161,6 +161,7 @@
         canvas.style.position = "relative";
         that.ctx = canvas.getContext("2d");
         that.type = type.IMAGE;
+        that.current_img_id = 0;
 
         this._handle_mouseup = handle_mouseup.bind(this);
         this._handle_mousemove_resize = handle_mousemove_resize.bind(this);
