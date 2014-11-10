@@ -400,6 +400,7 @@
 
         function switchImage(id_image) {
             if(that.current_img_id !== id_image) {
+                if(that.current_img_id !== null) that._updateNormals();
                 that.current_img_id = id_image;
                 that.selectedEntity = null;
                 manageDivs();
@@ -441,6 +442,8 @@
                     //load existent zones
                     for(var j = 0; j < this.zone.length; ++j) {
                         var o = JSON.parse(this.zone[j].config);
+
+                        console.log(event.target.width, event.target.height);
                         var entity = createEntity(false, null, o.x, o.y, o.width, o.height, event.target.width, event.target.height, DEGtoRAD(o.angle), that.getRandomColor());
                         //that._updateEntity(entity);
                         entity.id = this.zone[j].id;
@@ -691,15 +694,19 @@
 
     CanvasEditor.prototype.addZone = function() {
         var aspect = this.ctx.canvas.width /this.ctx.canvas.height;
-        var entity = createEntity(true, null, 0.5, 0.5, 0.2, 0.2*aspect, this.ctx.canvas.width, this.ctx.canvas.height, 0, this.getRandomColor());
+        var container_width = this.product_images[this.current_img_id].width;
+        var container_height = this.product_images[this.current_img_id].height;
+        var entity = createEntity(true, null, 0.5, 0.5, 0.2, 0.2*aspect, container_width, container_height, 0, this.getRandomColor());
+        this._updateEntity(entity);
         this.entities[this.current_img_id].push(entity);
         this.draw();
+        console.log(entity);
         return entity;
     };
 
     CanvasEditor.prototype.getRandomColor = function() {
         return this.color_list[Math.floor(Math.random()*this.color_list.length)];
-    }
+    };
 
     //*** START INTERNAL FUNCTIONS ***
     CanvasEditor.prototype._mouseDown = function(event) {
@@ -778,19 +785,21 @@
         this._updateMatrices(entity);
     };
 
-     /*CanvasEditor.prototype._updateNormals = function() {
+     CanvasEditor.prototype._updateNormals = function() {
         var length = this.entities[this.current_img_id].length;
         for(var i = 0; i < length; ++i) {
-            this._updateEntityNormals(this.entities[this.current_img_id][i]);
+            this._updateEntityNormals(this.entities[this.current_img_id][i], this.ctx.canvas.width, this.ctx.canvas.height);
         }
     };
 
-    CanvasEditor.prototype._updateEntityNormals = function(entity) {
-        entity.normal_width = entity.width/this.ctx.canvas.width;
-        entity.normal_height = entity.height/this.ctx.canvas.height;
-        entity.normal_x = entity.x/this.ctx.canvas.width;
-        entity.normal_y= entity.y/this.ctx.canvas.height;
-    };*/
+    CanvasEditor.prototype._updateEntityNormals = function(entity, container_width, container_height) {
+        console.log(entity);
+        entity.normal_width = entity.width/container_width;
+        entity.normal_height = entity.height/container_height;
+        entity.normal_x = entity.x/container_width;
+        entity.normal_y= entity.y/container_height;
+        console.log(entity);
+    };
 
     CanvasEditor.prototype._updateMatrices = function (entity) {
         vec2.set(entity.position, entity.x, entity.y);
@@ -1239,6 +1248,7 @@
         event.preventDefault();
         _augmentEvent(event);
         this._fixResize(this.selectedEntity);
+        //this._updateNormals();
         _global.removeEventListener("mousemove", this._handle_mousemove_move_clicked, false);
         this.ctx.canvas.addEventListener("mousemove", this._handle_mousemove_move_notClicked, false);
         _global.removeEventListener("mousemove", this._handle_mousemove_resize, false);
