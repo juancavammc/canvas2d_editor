@@ -19,7 +19,7 @@ body {
     height: 100%;
 }
 #wrap {
-    #background-color: #3c3c3c;
+    /*background-color: #3c3c3c;*/
     position: absolute;
     top: 50px;
     left: 50px;
@@ -41,7 +41,7 @@ body {
     height: 100%;
     margin-left: 260px;
     padding: 0;
-    #float: right;
+    /*float: right;*/
 }
 
 #tools_zone {
@@ -86,6 +86,13 @@ body {
     width: 100%;
 }
 
+.thumb {
+    max-width:100%;
+    max-height:100%;
+    border: 0;
+    margin: 0;
+    padding: 0;
+}
 input {
 	border: 0;
 	margin: 3px;
@@ -98,8 +105,14 @@ input[type="text"] {
 	font-size: 14px;
     font-family: ‘Lucida Console’, Monaco, monospace;
     width: 30px;
-    //height: 14px;
+    /*height: 14px;*/
     border: 2px solid black;
+}
+
+input[type="image"] {
+    border: 0;
+    margin: 0;
+    padding: 0;
 }
 
 button {

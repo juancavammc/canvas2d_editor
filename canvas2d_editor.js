@@ -23,6 +23,9 @@
     //if shift key is pressed or not
     var shiftPressed = false;
 
+    //used to calculate sticky angle rotations
+    var tempAngle = 0;
+
     //tells you what corner is anchored while resizing. Also if its resizing width, height or both
     //TODO: Bitmask
     var anchor = {
@@ -34,21 +37,27 @@
         rotating: false
     };
 
+    var type = {
+        IMAGE: 0,
+        ZONE: 1
+    };
+
     //Class CanvasEditor
     function CanvasEditor() {
         this.ctx = undefined;
+        this.type = undefined; //image or zone?
         //this.drop_zone = undefined;
         this.entities = [];
         this.selectedEntity = null;
 
         this.keepProportions = true;
-        this.stickyAngles = true;
+        this.stickyAngles = false;
         this.StickyAnglesSteps = 15;
 
         //how many pixels/degrees you move with buttons
         this.pixels_move = 3;
         this.pixels_scale = 4;
-        this.degrees_rotate = 2;
+        this.degrees_rotate = 5;
 
         //selection stroke properties
         this.strokeColor = "#FF0000";
@@ -108,19 +117,14 @@
         return canvas;
     }
 
-    //TODO: drag al monitor secundario descoloca la imagen (sin reescalado PPP no pasa?)
-    //TODO: solucionar evento de más cuando mouseup (llama a un mousemove de mas)
-    //TODO: invertir imagen
-    //TODO: sticky
-    //TODO: renderizar
-    //TODO: quitar fondo blanco de pngs
-    //TODO: límite de entities?
-
     //TODO: if drop_zone != canvas ---> canvas->drag->preventdefault
     //TODO: if click outside canvas ---> unselect
 
-    //TODO: Añadir restricción para que una vez creado un img_editor/zone_editor no se pueda crear otro con la misma instancia
     CanvasEditor.prototype.createEditor = function (options) {
+        if(this.type) {
+            return false;
+        }
+
         var that = this;
         options = options || {};
         var canvas = null;
@@ -136,14 +140,14 @@
             }
         }
         else {
-            throw("Drop zone element not found: " + options.drop_zone);
+            throw("drop_zone element not found: " + options.drop_zone);
         }
         //Canvas
         if (options.canvas) {
             if (typeof(options.canvas) == "string") {
                 canvas = document.getElementById(options.canvas);
-                canvas.width = that.drop_zone.offsetWidth;
-                canvas.height = that.drop_zone.offsetHeight;
+                canvas.width = options.width || 800;
+                canvas.height = options.height || 600;
                 if (!canvas) throw("Canvas element not found: " + options.canvas );
             }
             else {
@@ -151,160 +155,77 @@
             }
         }
         else {
-            canvas = _createCanvas(options.width || 800, options.height || 600); //TODO
+            canvas = _createCanvas(options.width || 800, options.height || 600);
         }
 
         canvas.style.position = "relative";
         that.ctx = canvas.getContext("2d");
+        that.type = type.IMAGE;
+        that.current_img_id = 0;
+        that.entities[that.current_img_id] = [];
 
-        function _mouseDown(event) {
-            //Check if is resizing
-            if (that.selectedEntity) {
-                that._checkCorners(event);
-                if (anchor.resizing) {
-                    _global.addEventListener("mousemove", handle_mousemove_resize, false);
-                    _global.addEventListener("mouseup", handle_mouseup, false);
-                    that.draw();
-                    return true;
-                }
-                else if (anchor.rotating) {
-                    tempAngle = that.selectedEntity.angle;
-                    offsetX = event.x - event.offsetX;
-                    offsetY = event.y - event.offsetY;
-                    vec2.set(vec_tmp2, event.x - offsetX, event.y - offsetY);
-                    vec2.subtract(vec_tmp2, vec_tmp2, that.selectedEntity.position);
-                    vec2.normalize(vec_tmp2, vec_tmp2);
-                    _global.addEventListener("mousemove", handle_mousemove_rotate, false);
-                    _global.addEventListener("mouseup", handle_mouseup, false);
-                    that.draw();
-                    return true;
-                }
-            }
+        this._handle_mouseup = handle_mouseup.bind(this);
+        this._handle_mousemove_resize = handle_mousemove_resize.bind(this);
+        this._handle_mousemove_rotate = handle_mousemove_rotate.bind(this);
+        this._handle_mousemove_move_notClicked = handle_mousemove_move_notClicked.bind(this);
+        this._handle_mousemove_move_clicked = handle_mousemove_move_clicked.bind(this);
 
-            //if not resizing, check if selecting
-            that.selectedEntity = null;
-            for (var i = that.entities.length - 1; i >= 0; i--) {
-                var entity = that.entities[i];
-                if (!entity) continue;
-
-                offsetX = event.x - entity.x;
-                offsetY = event.y - entity.y;
-
-                var w = entity.width;
-                var h = entity.height;
-                mat3.invert(mat_tmp, entity.model);
-                vec2.set(vec_tmp1, event.offsetX, event.offsetY);
-                vec2.transformMat3(vec_tmp1, vec_tmp1, mat_tmp);
-                var x = vec_tmp1[0];
-                var y = vec_tmp1[1];
-
-                if (pointerInside(x, y, -w / 2, -h / 2, w, h)) {
-                    _global.addEventListener("mousemove", handle_mousemove_move_clicked, false);
-                    _global.addEventListener("mouseup", handle_mouseup, false);
-                    that.selectedEntity = entity;
-                    break;
-                }
-            }
-            that.draw();
-        }
-
-        function handle_dragover(event) {
-            event.stopPropagation();
-            event.preventDefault();
-            _augmentEvent(event);
-        }
-
-        function handle_drop(event) {
-            event.stopPropagation();
-            event.preventDefault();
-            _augmentEvent(event);
-            that._createNewImages(event);
-        }
-
-        function handle_mousemove_move_clicked(event) {
-            event.stopPropagation();
-            event.preventDefault();
-            _augmentEvent(event);
-            that._setNewPosition(event);
-        }
-
-        function handle_mousemove_move_notClicked(event) {
-            event.stopPropagation();
-            event.preventDefault();
-            _augmentEvent(event);
-            if (that.selectedEntity) that._checkCorners(event);
-        }
-
-        function handle_mousemove_resize(event) {
-            event.stopPropagation();
-            event.preventDefault();
-            _augmentEvent(event);
-            that._resizeEntity(event);
-        }
-
-        function handle_mousemove_rotate(event) {
-            event.stopPropagation();
-            event.preventDefault();
-            _augmentEvent(event);
-            that._rotateEntity(event);
-        }
-
-        function handle_mousedown(event) {
-            event.stopPropagation();
-            event.preventDefault();
-            _augmentEvent(event);
-            that.ctx.canvas.removeEventListener("mousemove", handle_mousemove_move_notClicked, false);
-            _mouseDown(event);
-        }
-
-        function handle_mouseup(event) {
-            event.stopPropagation();
-            event.preventDefault();
-            _augmentEvent(event);
-            that._fixResize(that.selectedEntity);
-            _global.removeEventListener("mousemove", handle_mousemove_move_clicked, false);
-            that.ctx.canvas.addEventListener("mousemove", handle_mousemove_move_notClicked, false);
-            _global.removeEventListener("mousemove", handle_mousemove_resize, false);
-            _global.removeEventListener("mousemove", handle_mousemove_rotate, false);
-        }
-
-        function handle_keydown(event) {
-            that._keyDown(event);
-        }
-
-        function handle_keyup(event) {
-            that._keyUp(event);
-        }
-
-        function stop_default_drop(event) {
-            event.stopPropagation();
-            event.preventDefault();
-        }
-
-        _global.addEventListener("keydown", handle_keydown, false);
-        _global.addEventListener("keyup", handle_keyup, false);
-        document.body.addEventListener("dragover", stop_default_drop, false);
-        document.body.addEventListener("drop", stop_default_drop, false);
-        that.drop_zone.addEventListener("dragover", handle_dragover, false);
-        that.drop_zone.addEventListener("drop", handle_drop, false);
-        that.ctx.canvas.addEventListener("mousedown", handle_mousedown, false);
-        that.ctx.canvas.addEventListener("mousemove", handle_mousemove_move_notClicked, false);
+        _global.addEventListener("keydown", handle_keydown.bind(this), false);
+        _global.addEventListener("keyup", handle_keyup.bind(this), false);
+        document.body.addEventListener("dragover", stop_default_drop.bind(this), false);
+        document.body.addEventListener("drop", stop_default_drop.bind(this), false);
+        this.drop_zone.addEventListener("dragover", handle_dragover.bind(this), false);
+        this.drop_zone.addEventListener("drop", handle_drop.bind(this), false);
+        this.ctx.canvas.addEventListener("mousedown", handle_mousedown.bind(this), false);
+        this.ctx.canvas.addEventListener("mousemove", this._handle_mousemove_move_notClicked, false);
 
     };
 
 
     //TODO: al apretar un boton llamar setInterval
     CanvasEditor.prototype.createZoneEditor = function (options) {
+        if(this.type) {
+            return false;
+        }
+
         var that = this;
         options = options || {};
         var canvas = null;
+
+        //Canvas Zone
+        if (options.canvas_zone) {
+            if (typeof(options.canvas_zone) == "string") {
+                that.canvas_zone = document.getElementById(options.canvas_zone);
+                if (!that.canvas_zone) throw("canvas_zone element not found: " + options.canvas_zone );
+            }
+            else {
+                that.canvas_zone = options.canvas_zone;
+            }
+        }
+        else {
+            throw("canvas_zone element not found: " + options.canvas_zone);
+        }
+
+        //Image Zone
+        if (options.img_zone) {
+            if (typeof(options.img_zone) == "string") {
+                that.img_zone = document.getElementById(options.img_zone);
+                if (!that.img_zone) throw("img_zone element not found: " + options.img_zone );
+            }
+            else {
+                that.img_zone = options.img_zone;
+            }
+        }
+        else {
+            throw("img_zone element not found: " + options.img_zone);
+        }
 
         //Canvas
         if (options.canvas) {
             if (typeof(options.canvas) == "string") {
                 canvas = document.getElementById(options.canvas);
-                canvas.width = that.drop_zone.offsetWidth;
-                canvas.height = that.drop_zone.offsetHeight;
+                canvas.width = options.width || 600;
+                canvas.height = options.height || 600;
                 if (!canvas) throw("Canvas element not found: " + options.canvas );
             }
             else {
@@ -312,58 +233,16 @@
             }
         }
         else {
-            canvas = _createCanvas(options.width || 800, options.height || 600); //TODO
+            canvas = _createCanvas(options.width || 800, options.height || 600);
         }
 
         canvas.style.position = "relative";
         that.ctx = canvas.getContext("2d");
+        that.type = type.ZONE;
 
         that.current_img_id = null;
+        that.product_images = [];
 
-        ////TEST
-        var img_test = new Image();
-        that.entityTest = {};
-        img_test.src = "assets/shirt2.jpg";
-        function test() {
-            var pos = vec2.fromValues(that.ctx.canvas.width/2, that.ctx.canvas.height/2);
-            var mat_trans = mat3.create();
-            mat3.translate(mat_trans, mat_trans, pos);
-            var mat_rot = mat3.create();
-            var model = mat3.clone(mat_trans);
-            that.entityTest = {
-                image: img_test,
-                x: pos[0], //TODO: drop in center (drop_zone != canvas)
-                y: pos[1],
-                width: 500,
-                height: 500,
-                angle: 0,
-                strokeColor: that.strokeColor,
-                position: pos,
-                translation: mat_trans,
-                rotation: mat_rot,
-                model: model
-            };
-        }
-        test();
-        img_test.addEventListener("load", function () {
-            that.update_test();
-        }, false);
-
-        var asp = 0;
-        that.update_test = function() {
-            asp = that.entityTest.width/that.entityTest.height;
-            that.entityTest.height = that.ctx.canvas.height;
-            that.entityTest.width = that.ctx.canvas.height*asp;
-            if(that.entityTest.width > that.ctx.canvas.width) {
-                that.entityTest.width = that.ctx.canvas.width;
-                that.entityTest.height = that.ctx.canvas.width/asp;
-            }
-            that.entityTest.x = that.ctx.canvas.width/2;
-            that.entityTest.y = that.ctx.canvas.height/2;
-            that._updateMatrices(that.entityTest);
-            that.draw();
-        }
-        ////
 
         //Get all buttons
         var button_addZone = document.getElementById("editor_addZone");
@@ -391,77 +270,40 @@
         var div_editor_removeButton =  document.getElementById("div_editor_removeButton");
         var div_editor_saveButton =  document.getElementById("div_editor_saveButton");
 
+        div_editor_addzone.style.display = "none";
         div_editor_mainButtons.style.display = "none";
         div_editor_moveButtons.style.display = "none";
         div_editor_scaleButtons.style.display = "none";
         div_editor_rotateButtons.style.display = "none";
         div_editor_removeButton.style.display = "none";
-        //div_editor_saveButton.style.display = "none";
+        div_editor_saveButton.style.display = "none";
 
         //START
-        function _selectEntity(event) {
-            //Check if is resizing
-            if (that.selectedEntity) {
-                that._checkCorners(event);
-                if (anchor.resizing) {
-                    _global.addEventListener("mousemove", handle_mousemove_resize, false);
-                    _global.addEventListener("mouseup", handle_mouseup, false);
-                    that.draw();
-                    return true;
-                }
-                else if (anchor.rotating) {
-                    tempAngle = that.selectedEntity.angle;
-                    offsetX = event.x - event.offsetX;
-                    offsetY = event.y - event.offsetY;
-                    vec2.set(vec_tmp2, event.x - offsetX, event.y - offsetY);
-                    vec2.subtract(vec_tmp2, vec_tmp2, that.selectedEntity.position);
-                    vec2.normalize(vec_tmp2, vec_tmp2);
-                    _global.addEventListener("mousemove", handle_mousemove_rotate, false);
-                    _global.addEventListener("mouseup", handle_mouseup, false);
-                    that.draw();
-                    return true;
-                }
-            }
-
-            //if not resizing, check if selecting
-            that.selectedEntity = null;
-            for (var i = that.entities.length - 1; i >= 0; i--) {
-                var entity = that.entities[i];
-                if (!entity) continue;
-
-                offsetX = event.x - entity.x;
-                offsetY = event.y - entity.y;
-
-                var w = entity.width;
-                var h = entity.height;
-                mat3.invert(mat_tmp, entity.model);
-                vec2.set(vec_tmp1, event.offsetX, event.offsetY);
-                vec2.transformMat3(vec_tmp1, vec_tmp1, mat_tmp);
-                var x = vec_tmp1[0];
-                var y = vec_tmp1[1];
-
-                if (pointerInside(x, y, -w / 2, -h / 2, w, h)) {
-                    _global.addEventListener("mousemove", handle_mousemove_move_clicked, false);
-                    _global.addEventListener("mouseup", handle_mouseup, false);
-                    that.selectedEntity = entity;
-                    break;
-                }
-            }
-            manageDivs();
-            that.draw();
-        }
 
         function manageDivs() {
-            if(that.selectedEntity) {
-                div_editor_mainButtons.style.display = "block";
-                div_editor_removeButton.style.display = "block";
-            }
-            else {
+            if(that.current_img_id === null) {
+                div_editor_addzone.style.display = "none";
                 div_editor_mainButtons.style.display = "none";
                 div_editor_moveButtons.style.display = "none";
                 div_editor_scaleButtons.style.display = "none";
                 div_editor_rotateButtons.style.display = "none";
                 div_editor_removeButton.style.display = "none";
+                div_editor_saveButton.style.display = "none";
+            }
+            else {
+                div_editor_addzone.style.display = "block";
+                div_editor_saveButton.style.display = "block";
+                if (that.selectedEntity) {
+                    div_editor_mainButtons.style.display = "block";
+                    div_editor_removeButton.style.display = "block";
+                }
+                else {
+                    div_editor_mainButtons.style.display = "none";
+                    div_editor_moveButtons.style.display = "none";
+                    div_editor_scaleButtons.style.display = "none";
+                    div_editor_rotateButtons.style.display = "none";
+                    div_editor_removeButton.style.display = "none";
+                }
             }
         }
 
@@ -536,110 +378,195 @@
         }
 
         function handle_button_click_save() {
-
+            serializeJSON();
         }
 
-        button_addZone.addEventListener("click", handle_button_click_addZone, false);
-        button_move.addEventListener("click", handle_button_click_move, false);
-        button_scale.addEventListener("click", handle_button_click_scale, false);
-        button_rotate.addEventListener("click", handle_button_click_rotate, false);
-        button_move_left.addEventListener("click", handle_button_click_move_left, false);
-        button_move_right.addEventListener("click", handle_button_click_move_right, false);
-        button_move_up.addEventListener("click", handle_button_click_move_up, false);
-        button_move_down.addEventListener("click", handle_button_click_move_down, false);
-        button_scale_v_shrink.addEventListener("click", handle_button_click_scale_v_shrink, false);
-        button_scale_v_expand.addEventListener("click", handle_button_click_scale_v_expand, false);
-        button_scale_h_shrink.addEventListener("click", handle_button_click_scale_h_shrink, false);
-        button_scale_h_expand.addEventListener("click", handle_button_click_scale_h_expand, false);
-        button_rotate_left.addEventListener("click", handle_button_click_rotate_left, false);
-        button_rotate_right.addEventListener("click", handle_button_click_rotate_right, false);
-        button_deleteZone.addEventListener("click", handle_button_click_deleteZone, false);
-        button_save.addEventListener("click", handle_button_click_save, false);
+        button_addZone.addEventListener("mousedown", handle_button_click_addZone, false);
+        button_move.addEventListener("mousedown", handle_button_click_move, false);
+        button_scale.addEventListener("mousedown", handle_button_click_scale, false);
+        button_rotate.addEventListener("mousedown", handle_button_click_rotate, false);
+        button_move_left.addEventListener("mousedown", handle_button_click_move_left, false);
+        button_move_right.addEventListener("mousedown", handle_button_click_move_right, false);
+        button_move_up.addEventListener("mousedown", handle_button_click_move_up, false);
+        button_move_down.addEventListener("mousedown", handle_button_click_move_down, false);
+        button_scale_v_shrink.addEventListener("mousedown", handle_button_click_scale_v_shrink, false);
+        button_scale_v_expand.addEventListener("mousedown", handle_button_click_scale_v_expand, false);
+        button_scale_h_shrink.addEventListener("mousedown", handle_button_click_scale_h_shrink, false);
+        button_scale_h_expand.addEventListener("mousedown", handle_button_click_scale_h_expand, false);
+        button_rotate_left.addEventListener("mousedown", handle_button_click_rotate_left, false);
+        button_rotate_right.addEventListener("mousedown", handle_button_click_rotate_right, false);
+        button_deleteZone.addEventListener("mousedown", handle_button_click_deleteZone, false);
+        button_save.addEventListener("mousedown", handle_button_click_save, false);
 
-
-        //other handlers
-        function handle_mousemove_move_clicked(event) {
-            event.stopPropagation();
-            event.preventDefault();
-            _augmentEvent(event);
-            that._setNewPosition(event);
+        function switchImage(id_image) {
+            if(that.current_img_id !== id_image) {
+                if(that.current_img_id !== null) that._updateNormals();
+                that.current_img_id = id_image;
+                that.selectedEntity = null;
+                manageDivs();
+                that.resizeCanvas(that.canvas_zone.offsetWidth, that.canvas_zone.offsetHeight);
+                that.draw();
+            }
         }
 
-        function handle_mousemove_move_notClicked(event) {
-            event.stopPropagation();
-            event.preventDefault();
-            _augmentEvent(event);
-            if (that.selectedEntity) that._checkCorners(event);
+        //JSON
+        //json-->javascript
+        function configureJSON(json) {
+            console.log(json);
+            that.json_content = json;
+            for(var i = 0; i < json.length; ++i) {
+                var div = document.createElement("div");
+                var html_image = document.createElement("input");
+                var id = json[i].id;
+                html_image.setAttribute("type", "image");
+                html_image.setAttribute("src", json[i].url);
+                html_image.setAttribute("class", "thumb");
+                html_image.img_id = id;
+
+                html_image.addEventListener("click", function(event) {
+                    switchImage(event.target.img_id);
+                },false);
+
+                div.appendChild(html_image);
+                that.img_zone.appendChild(div);
+
+                var img = new Image();
+                img.dataset["id"] = id;
+                img.dataset["url"] = json[i].url;
+                img.src = json[i].url;
+
+                img.addEventListener("load", (function(event) {
+                    //TODO: call this._updateEntity(entity);
+                    var _id = event.target.dataset.id;
+                    that.product_images[_id] = createEntity(true, event.target, 0.5, 0.5, 1, 1, event.target.width, event.target.height, 0, that.strokeColor);
+                    that.entities[_id] = [];
+                    //load existent zones
+                    for(var j = 0; j < this.zone.length; ++j) {
+                        var o = this.zone[j].config;
+
+                        var entity = createEntity(false, null, o.x, o.y, o.width, o.height, event.target.width, event.target.height, DEGtoRAD(o.angle), that.getRandomColor());
+                        entity.id = this.zone[j].id;
+                        that.entities[_id].push(entity);
+                    }
+                }).bind(json[i]), false);
+            }
         }
 
-        function handle_mousemove_resize(event) {
-            event.stopPropagation();
-            event.preventDefault();
-            _augmentEvent(event);
-            that._resizeEntity(event);
+        //javascript-->json
+        function serializeJSON() {
+            var json = [];
+            for (var i = 0; i < that.entities.length; ++i) {
+            //for(var i in that.entities) {
+                if(!that.entities[i]) continue;
+                var img = that.product_images[i].image;
+                json[i] = {"id": i, "url": img.dataset.url, "zone": []};
+                for(var j = 0; j < that.entities[i].length; ++j) {
+                //for(var j in that.entities[i]) {
+                    if(!that.entities[i][j]) continue;
+                    var entity = that.entities[i][j];
+                    var obj = {};
+                    if(entity.id !== undefined) obj["id"] = entity.id;
+                    var config = {};
+                    config.x = entity.normal_x * img.width;
+                    config.y = entity.normal_y * img.height;
+                    config.width = entity.normal_width * img.width;
+                    config.height = entity.normal_height * img.height;
+                    config.angle = RADtoDEG(entity.angle);
+                    obj["config"] = config;
+                    json[i].zone.push(obj);
+                }
+            }
+            console.log(json);
+            console.log(JSON.stringify(json));
         }
 
-        function handle_mousemove_rotate(event) {
-            event.stopPropagation();
-            event.preventDefault();
-            _augmentEvent(event);
-            that._rotateEntity(event);
+        function loadProduct(id) {
+            var xmlhttp = new XMLHttpRequest();
+            var url = "assets/test.json";
+
+            xmlhttp.onreadystatechange = function() {
+                if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
+                    var json = JSON.parse(xmlhttp.responseText);
+                    configureJSON(json);
+                }
+            };
+            xmlhttp.open("GET", url, true);
+            xmlhttp.send();
         }
 
+
+        //Other handlers
         function handle_mousedown(event) {
             event.stopPropagation();
             event.preventDefault();
             _augmentEvent(event);
-            that.ctx.canvas.removeEventListener("mousemove", handle_mousemove_move_notClicked, false);
-            _selectEntity(event);
+            that.ctx.canvas.removeEventListener("mousemove", that._handle_mousemove_move_notClicked, false);
+            that._mouseDown(event);
+            manageDivs();
         }
 
-        function handle_mouseup(event) {
-            event.stopPropagation();
-            event.preventDefault();
-            _augmentEvent(event);
-            that._fixResize(that.selectedEntity);
-            _global.removeEventListener("mousemove", handle_mousemove_move_clicked, false);
-            that.ctx.canvas.addEventListener("mousemove", handle_mousemove_move_notClicked, false);
-            _global.removeEventListener("mousemove", handle_mousemove_resize, false);
-            _global.removeEventListener("mousemove", handle_mousemove_rotate, false);
-        }
+        this._handle_mouseup = handle_mouseup.bind(this);
+        this._handle_mousemove_resize = handle_mousemove_resize.bind(this);
+        this._handle_mousemove_rotate = handle_mousemove_rotate.bind(this);
+        this._handle_mousemove_move_notClicked = handle_mousemove_move_notClicked.bind(this);
+        this._handle_mousemove_move_clicked = handle_mousemove_move_clicked.bind(this);
 
-        function handle_keydown(event) {
-            that._keyDown(event);
-        }
 
-        function handle_keyup(event) {
-            that._keyUp(event);
-        }
 
-        function stop_default_drop(event) {
-            event.stopPropagation();
-            event.preventDefault();
-        }
+        _global.addEventListener("keydown", handle_keydown.bind(this), false);
+        _global.addEventListener("keyup", handle_keyup.bind(this), false);
+        document.body.addEventListener("dragover", stop_default_drop.bind(this), false); //TODO: remove?
+        document.body.addEventListener("drop", stop_default_drop.bind(this), false); //TODO: remove?
+        this.ctx.canvas.addEventListener("mousedown", handle_mousedown, false);
+        this.ctx.canvas.addEventListener("mousemove", this._handle_mousemove_move_notClicked, false);
 
-        _global.addEventListener("keydown", handle_keydown, false);
-        _global.addEventListener("keyup", handle_keyup, false);
-        document.body.addEventListener("dragover", stop_default_drop, false); //TODO: remove?
-        document.body.addEventListener("drop", stop_default_drop, false); //TODO: remove?
-        that.ctx.canvas.addEventListener("mousedown", handle_mousedown, false);
-        that.ctx.canvas.addEventListener("mousemove", handle_mousemove_move_notClicked, false);
+        loadProduct(1);
+    };
+
+    function adjustCanvasTo(canvas, entity, width, height) {
+        var aspect = entity.image.width/entity.image.height;
+        canvas.height = height;
+        canvas.width = height * aspect;
+        if(canvas.width > width) {
+            canvas.width = width;
+            canvas.height = width / aspect;
+        }
+    }
+
+    CanvasEditor.prototype.resizeCanvas = function(width, height) {
+        //zone_editor
+        if(this.product_images) {
+            //this._updateNormals();
+            this._updateEntity(this.product_images[this.current_img_id]);
+            adjustCanvasTo(this.ctx.canvas, this.product_images[this.current_img_id], width, height);
+        }
+        //image_editor
+        else {
+            this.ctx.canvas.width = width;
+            this.ctx.canvas.height = height;
+        }
+        this.update();
+        this.draw();
     };
 
     CanvasEditor.prototype.draw = function () {
         this.ctx.clearRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height);
-        if(this.entityTest) {
-            this.ctx.save();
-            this.ctx.translate(this.entityTest.x, this.entityTest.y);
-            this.ctx.drawImage(this.entityTest.image, -Math.abs(this.entityTest.width) / 2, -Math.abs(this.entityTest.height) / 2, Math.abs(this.entityTest.width), Math.abs(this.entityTest.height));
-            this.ctx.restore();
+        var entity;
+        if(this.product_images) {
+            if(this.product_images[this.current_img_id]) {
+                entity = this.product_images[this.current_img_id];
+                this.ctx.save();
+                this.ctx.translate(entity.x, entity.y);
+                this.ctx.drawImage(entity.image, -Math.abs(entity.width) / 2, -Math.abs(entity.height) / 2, Math.abs(entity.width), Math.abs(entity.height));
+                this.ctx.restore();
+            }
         }
 
-        var l = this.entities.length;
+        var l = this.entities[this.current_img_id].length;
         for (var i = 0; i < l; ++i) {
-            if (this.entities[i]) {
+            if (this.entities[this.current_img_id][i]) {
                 this.ctx.save();
-                var entity = this.entities[i];
+                entity = this.entities[this.current_img_id][i];
                 this.ctx.translate(entity.x, entity.y);
                 this.ctx.rotate(entity.angle);
                 if(entity.image) {
@@ -739,7 +666,7 @@
 
     CanvasEditor.prototype.rotateDEG = function (angle) {
         if (this.selectedEntity) {
-            angle = angle * Math.PI / 180;
+            angle = DEGtoRAD(angle);
             this.selectedEntity.angle += angle;
             this.selectedEntity.angle = this.selectedEntity.angle % (Math.PI * 2);
             this._updateMatrices(this.selectedEntity);
@@ -764,6 +691,112 @@
         }
     };
 
+    CanvasEditor.prototype.addZone = function() {
+        var aspect = this.ctx.canvas.width /this.ctx.canvas.height;
+        var container_width = this.product_images[this.current_img_id].width;
+        var container_height = this.product_images[this.current_img_id].height;
+        var entity = createEntity(true, null, 0.5, 0.5, 0.2, 0.2*aspect, container_width, container_height, 0, this.getRandomColor());
+        this._updateEntity(entity);
+        this.entities[this.current_img_id].push(entity);
+        this.draw();
+        return entity;
+    };
+
+    CanvasEditor.prototype.getRandomColor = function() {
+        return this.color_list[Math.floor(Math.random()*this.color_list.length)];
+    };
+
+    //*** START INTERNAL FUNCTIONS ***
+    CanvasEditor.prototype._mouseDown = function(event) {
+        //Check if is resizing
+        if (this.selectedEntity) {
+            this._checkCorners(event);
+            if (anchor.resizing) {
+                _global.addEventListener("mousemove", this._handle_mousemove_resize, false);
+                _global.addEventListener("mouseup", this._handle_mouseup, false);
+                this.draw();
+                return true;
+            }
+            else if (anchor.rotating) {
+                tempAngle = this.selectedEntity.angle;
+                offsetX = event.x - event.offsetX;
+                offsetY = event.y - event.offsetY;
+                vec2.set(vec_tmp2, event.x - offsetX, event.y - offsetY);
+                vec2.subtract(vec_tmp2, vec_tmp2, this.selectedEntity.position);
+                vec2.normalize(vec_tmp2, vec_tmp2);
+                _global.addEventListener("mousemove", this._handle_mousemove_rotate, false);
+                _global.addEventListener("mouseup", this._handle_mouseup, false);
+                this.draw();
+                return true;
+            }
+        }
+
+        //if not resizing, check if selecting
+        this.selectedEntity = null;
+        for (var i = this.entities[this.current_img_id].length - 1; i >= 0; i--) {
+            var entity = this.entities[this.current_img_id][i];
+            if (!entity) continue;
+
+            offsetX = event.x - entity.x;
+            offsetY = event.y - entity.y;
+
+            var w = entity.width;
+            var h = entity.height;
+            mat3.invert(mat_tmp, entity.model);
+            vec2.set(vec_tmp1, event.offsetX, event.offsetY);
+            vec2.transformMat3(vec_tmp1, vec_tmp1, mat_tmp);
+            var x = vec_tmp1[0];
+            var y = vec_tmp1[1];
+
+            if (pointerInside(x, y, -w / 2, -h / 2, w, h)) {
+                _global.addEventListener("mousemove", this._handle_mousemove_move_clicked, false);
+                _global.addEventListener("mouseup", this._handle_mouseup, false);
+                this.selectedEntity = entity;
+                break;
+            }
+        }
+        //manageDivs();
+        this.draw();
+    };
+
+    CanvasEditor.prototype.update = function() {
+        var length;
+        var i;
+        if(this.product_images) {
+            length = this.product_images.length;
+            for(i = 0; i < length; ++i) {
+                this._updateEntity(this.product_images[i]);
+            }
+        }
+
+        length = this.entities[this.current_img_id].length;
+        for(i = 0; i < length; ++i) {
+            this._updateEntity(this.entities[this.current_img_id][i]);
+        }
+    };
+
+    CanvasEditor.prototype._updateEntity = function(entity) {
+        entity.width = entity.normal_width * this.ctx.canvas.width;
+        entity.height = entity.normal_height * this.ctx.canvas.height;
+        entity.x = entity.normal_x * this.ctx.canvas.width;
+        entity.y = entity.normal_y * this.ctx.canvas.height;
+        this._updateMatrices(entity);
+    };
+
+     CanvasEditor.prototype._updateNormals = function() {
+        var length = this.entities[this.current_img_id].length;
+        for(var i = 0; i < length; ++i) {
+            this._updateEntityNormals(this.entities[this.current_img_id][i], this.ctx.canvas.width, this.ctx.canvas.height);
+        }
+    };
+
+    CanvasEditor.prototype._updateEntityNormals = function(entity, container_width, container_height) {
+        entity.normal_width = entity.width/container_width;
+        entity.normal_height = entity.height/container_height;
+        entity.normal_x = entity.x/container_width;
+        entity.normal_y= entity.y/container_height;
+    };
+
     CanvasEditor.prototype._updateMatrices = function (entity) {
         vec2.set(entity.position, entity.x, entity.y);
         mat3.translate(entity.translation, identity, entity.position);
@@ -771,37 +804,13 @@
         mat3.multiply(entity.model, entity.translation, entity.rotation);
     };
 
-    CanvasEditor.prototype.addZone = function() {
-        var pos = vec2.fromValues(this.ctx.canvas.width/2, this.ctx.canvas.height/2);
-        var mat_trans = mat3.create();
-        mat3.translate(mat_trans, mat_trans, pos);
-        var mat_rot = mat3.create();
-        var model = mat3.clone(mat_trans);
-        var entity = {
-            image: null,
-            x: pos[0],
-            y: pos[1],
-            width: 200,
-            height: 200,
-            angle: 0,
-            strokeColor: this.color_list[Math.floor(Math.random()*this.color_list.length)],
-            position: pos,
-            translation: mat_trans,
-            rotation: mat_rot,
-            model: model
-        };
-        this.entities.push(entity);
-        this.draw();
-        return entity;
-    };
-
     CanvasEditor.prototype._deleteSelectedEntity = function() {
-        var l = this.entities.length;
+        var l = this.entities[this.current_img_id].length;
         for (var i = 0; i < l; ++i) {
-            if (this.entities[i] === this.selectedEntity) {
+            if (this.entities[this.current_img_id][i] === this.selectedEntity) {
                 this.selectedEntity = null;
-                this.entities[i] = null;
-                this.entities = this.entities.filter(function (n) {
+                this.entities[this.current_img_id][i] = null;
+                this.entities[this.current_img_id] = this.entities[this.current_img_id].filter(function (n) {
                     return n != undefined
                 });
                 this.draw();
@@ -811,13 +820,13 @@
     };
 
     CanvasEditor.prototype._promoteSelectedEntity = function() {
-        var l = this.entities.length;
+        var l = this.entities[this.current_img_id].length;
         for (var i = 0; i < l; ++i) {
-            if (this.entities[i] === this.selectedEntity) {
-                if (i < this.entities.length - 1) {
-                    var temp = this.entities[i + 1];
-                    this.entities[i + 1] = this.entities[i];
-                    this.entities[i] = temp;
+            if (this.entities[this.current_img_id][i] === this.selectedEntity) {
+                if (i < l - 1) {
+                    var temp = this.entities[this.current_img_id][i + 1];
+                    this.entities[this.current_img_id][i + 1] = this.entities[this.current_img_id][i];
+                    this.entities[this.current_img_id][i] = temp;
                     this.draw();
                     break;
                 }
@@ -826,13 +835,13 @@
     };
 
     CanvasEditor.prototype._demoteSelectedEntity = function() {
-        var l = this.entities.length;
+        var l = this.entities[this.current_img_id].length;
         for (var i = 0; i < l; ++i) {
-            if (this.entities[i] === this.selectedEntity) {
+            if (this.entities[this.current_img_id][i] === this.selectedEntity) {
                 if (i > 0) {
-                    var temp = this.entities[i - 1];
-                    this.entities[i - 1] = this.entities[i];
-                    this.entities[i] = temp;
+                    var temp = this.entities[this.current_img_id][i - 1];
+                    this.entities[this.current_img_id][i - 1] = this.entities[this.current_img_id][i];
+                    this.entities[this.current_img_id][i] = temp;
                     this.draw();
                     break;
                 }
@@ -856,24 +865,9 @@
                 img.src = this.result;
 
                 img.addEventListener("load", function () {
-                    var pos = vec2.fromValues(event.offsetX, event.offsetY);
-                    var mat_trans = mat3.create();
-                    mat3.translate(mat_trans, mat_trans, pos);
-                    var mat_rot = mat3.create();
-                    var model = mat3.clone(mat_trans);
-                    that.entities.push({
-                        image: img,
-                        x: event.offsetX, //TODO: drop in center (drop_zone != canvas)
-                        y: event.offsetY,
-                        width: img.width,
-                        height: img.height,
-                        angle: 0,
-                        strokeColor: that.strokeColor,
-                        position: pos,
-                        translation: mat_trans,
-                        rotation: mat_rot,
-                        model: model
-                    });
+                    //TODO: drop in center (drop_zone != canvas)
+                    var entity = createEntity(false, img, event.offsetX, event.offsetY, img.width, img.height, that.ctx.canvas.width, that.ctx.canvas.height, 0, that.strokeColor);
+                    that.entities[that.current_img_id].push(entity);
                     that.draw();
                 }, false);
             };
@@ -881,6 +875,65 @@
         }
         this.draw();
     };
+
+    //if normalized === true : x, y , width, height are normalized
+    //else: x, y, width, height are not normalized
+    function createEntity(normalized, img, _x, _y, _width, _height, container_width, container_height, angle_rad, strokeColor) {
+        var x, y, width, height, normal_x, normal_y, normal_width, normal_height;
+
+        if(normalized) {
+            normal_x = _x;
+            normal_y = _y;
+            normal_width = _width;
+            normal_height = _height;
+            x = normal_x * container_width;
+            y = normal_y * container_height;
+            width = normal_width * container_width;
+            height = normal_height * container_height;
+        }
+        else {
+            x = _x;
+            y = _y;
+            width = _width;
+            height = _height;
+            normal_x = x / container_width;
+            normal_y = y / container_height;
+            normal_width = width / container_width;
+            normal_height = height / container_height;
+        }
+
+        var pos = vec2.fromValues(x, y);
+        var mat_trans = mat3.create();
+        mat3.translate(mat_trans, mat_trans, pos);
+        var mat_rot = mat3.create();
+        var model;
+        if(!angle_rad) {
+            model = mat3.clone(mat_trans);
+        }
+        else {
+            mat3.rotate(mat_rot, mat_rot, angle_rad);
+            model = mat3.multiply(mat3.create(), mat_trans, mat_rot);
+        }
+        return {
+            image: img,
+            x: x, //TODO: drop in center (drop_zone != canvas)
+            y: y,
+            width: width,
+            height: height,
+            normal_x: normal_x,
+            normal_y: normal_y,
+            normal_width: normal_width,
+            normal_height: normal_height,
+            container_width: container_width,
+            container_height: container_height,
+            angle: angle_rad,
+            strokeColor: strokeColor,
+            position: pos,
+            translation: mat_trans,
+            rotation: mat_rot,
+            model: model
+        };
+    }
 
     //TODO: Change cursors according to the angle
     CanvasEditor.prototype._checkCorners = function(event) {
@@ -894,7 +947,6 @@
 
         var s = this.squaresSize + 1;
 
-        //TODO: switch-case
         //up-left
         if (pointerInside(x, y, (-w / 2) - s, (-h / 2) - s, s * 2, s * 2)) {
             anchor.x = false;
@@ -1062,7 +1114,6 @@
         }
     };
 
-    var tempAngle = 0;
     CanvasEditor.prototype._rotateEntity = function(event) {
         vec2.set(vec_tmp1, event.x - offsetX, event.y - offsetY);
         vec2.subtract(vec_tmp1, vec_tmp1, this.selectedEntity.position);
@@ -1073,7 +1124,7 @@
 
         if(this.stickyAngles) {
             if(!tempAngle) angle = 0;
-            else angle = parseInt((tempAngle*(180/Math.PI))/this.StickyAnglesSteps) * this.StickyAnglesSteps;
+            else angle = parseInt(RADtoDEG(tempAngle)/this.StickyAnglesSteps) * this.StickyAnglesSteps;
             this.resetRotation();
             this.rotateDEG(angle);
         }
@@ -1088,7 +1139,6 @@
     };
 
     CanvasEditor.prototype._keyDown = function(event) {
-        //TODO: switch-case
         //console.log(event.keyCode);
         switch(event.keyCode) {
             case 46: //DEL
@@ -1128,6 +1178,9 @@
             case 40:
                 if (this.selectedEntity) this.translate(0,1);
                 break;
+            //case 13: //ENTER
+            //    this.loadProduct(1);
+            //    break;
         }
     };
 
@@ -1142,12 +1195,111 @@
         }
     };
 
-    //signed angles
+    //*** END INTERNAL FUNCTIONS ***
+
+    //*** START HANDLERS ***
+    function handle_dragover(event) {
+        event.stopPropagation();
+        event.preventDefault();
+        _augmentEvent(event);
+    }
+
+    function handle_drop(event) {
+        event.stopPropagation();
+        event.preventDefault();
+        _augmentEvent(event);
+        this._createNewImages(event);
+    }
+
+    function handle_mousemove_move_clicked(event) {
+        event.stopPropagation();
+        event.preventDefault();
+        _augmentEvent(event);
+        this._setNewPosition(event);
+    }
+
+    function handle_mousemove_move_notClicked(event) {
+        event.stopPropagation();
+        event.preventDefault();
+        _augmentEvent(event);
+        if (this.selectedEntity) this._checkCorners(event);
+    }
+
+    function handle_mousemove_resize(event) {
+        event.stopPropagation();
+        event.preventDefault();
+        _augmentEvent(event);
+        this._resizeEntity(event);
+    }
+
+    function handle_mousemove_rotate(event) {
+        event.stopPropagation();
+        event.preventDefault();
+        _augmentEvent(event);
+        this._rotateEntity(event);
+    }
+
+    function handle_mouseup(event) {
+        event.stopPropagation();
+        event.preventDefault();
+        _augmentEvent(event);
+        this._fixResize(this.selectedEntity);
+        //this._updateNormals();
+        _global.removeEventListener("mousemove", this._handle_mousemove_move_clicked, false);
+        this.ctx.canvas.addEventListener("mousemove", this._handle_mousemove_move_notClicked, false);
+        _global.removeEventListener("mousemove", this._handle_mousemove_resize, false);
+        _global.removeEventListener("mousemove", this._handle_mousemove_rotate, false);
+    }
+
+    function handle_mousedown(event) {
+        event.stopPropagation();
+        event.preventDefault();
+        _augmentEvent(event);
+        this.ctx.canvas.removeEventListener("mousemove", this._handle_mousemove_move_notClicked, false);
+        this._mouseDown(event);
+    }
+
+
+    function handle_keydown(event) {
+        this._keyDown(event);
+    }
+
+    function handle_keyup(event) {
+        this._keyUp(event);
+    }
+
+    function stop_default_drop(event) {
+        event.stopPropagation();
+        event.preventDefault();
+    }
+
+    //*** END HANDLERS ***
+
+    //*** OTHER FUNCTIONS ***
     vec2.perpdot = function (a, b) {
         return a[1] * b[0] + -a[0] * b[1];
     };
 
     vec2.computeSignedAngle = function (a, b) {
         return Math.atan2(vec2.perpdot(a, b), vec2.dot(a, b));
+    };
+
+
+    /**
+     *
+     * @param angle
+     * @returns {number}
+     */
+    function DEGtoRAD(angle) {
+        return angle * (Math.PI/180);
+    }
+
+    /**
+     *
+     * @param angle
+     * @returns {number}
+     */
+    function RADtoDEG(angle) {
+        return angle * (180/Math.PI);
     }
 }(window));
