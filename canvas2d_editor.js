@@ -432,6 +432,7 @@
 
                 var img = new Image();
                 img.dataset["id"] = id;
+                img.dataset["url"] = json[i].url;
                 img.src = json[i].url;
 
                 img.addEventListener("load", (function(event) {
@@ -441,11 +442,9 @@
                     that.entities[_id] = [];
                     //load existent zones
                     for(var j = 0; j < this.zone.length; ++j) {
-                        var o = JSON.parse(this.zone[j].config);
+                        var o = this.zone[j].config;
 
-                        console.log(event.target.width, event.target.height);
                         var entity = createEntity(false, null, o.x, o.y, o.width, o.height, event.target.width, event.target.height, DEGtoRAD(o.angle), that.getRandomColor());
-                        //that._updateEntity(entity);
                         entity.id = this.zone[j].id;
                         that.entities[_id].push(entity);
                     }
@@ -460,7 +459,7 @@
             //for(var i in that.entities) {
                 if(!that.entities[i]) continue;
                 var img = that.product_images[i].image;
-                json[i] = {"id": i, "url": img.src, "zone": []};
+                json[i] = {"id": i, "url": img.dataset.url, "zone": []};
                 for(var j = 0; j < that.entities[i].length; ++j) {
                 //for(var j in that.entities[i]) {
                     if(!that.entities[i][j]) continue;
@@ -473,7 +472,7 @@
                     config.width = entity.normal_width * img.width;
                     config.height = entity.normal_height * img.height;
                     config.angle = RADtoDEG(entity.angle);
-                    obj["config"] = JSON.stringify(config);
+                    obj["config"] = config;
                     json[i].zone.push(obj);
                 }
             }
@@ -700,7 +699,6 @@
         this._updateEntity(entity);
         this.entities[this.current_img_id].push(entity);
         this.draw();
-        console.log(entity);
         return entity;
     };
 
@@ -793,12 +791,10 @@
     };
 
     CanvasEditor.prototype._updateEntityNormals = function(entity, container_width, container_height) {
-        console.log(entity);
         entity.normal_width = entity.width/container_width;
         entity.normal_height = entity.height/container_height;
         entity.normal_x = entity.x/container_width;
         entity.normal_y= entity.y/container_height;
-        console.log(entity);
     };
 
     CanvasEditor.prototype._updateMatrices = function (entity) {
