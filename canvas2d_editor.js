@@ -162,6 +162,7 @@
         that.ctx = canvas.getContext("2d");
         that.type = type.IMAGE;
         that.current_img_id = 0;
+        that.entities[that.current_img_id] = [];
 
         this._handle_mouseup = handle_mouseup.bind(this);
         this._handle_mousemove_resize = handle_mousemove_resize.bind(this);
@@ -398,10 +399,13 @@
         button_save.addEventListener("mousedown", handle_button_click_save, false);
 
         function switchImage(id_image) {
-            that.current_img_id = id_image;
-            manageDivs();
-            that.resizeCanvas(that.canvas_zone.offsetWidth, that.canvas_zone.offsetHeight);
-            that.draw();
+            if(that.current_img_id !== id_image) {
+                that.current_img_id = id_image;
+                that.selectedEntity = null;
+                manageDivs();
+                that.resizeCanvas(that.canvas_zone.offsetWidth, that.canvas_zone.offsetHeight);
+                that.draw();
+            }
         }
 
         //JSON
@@ -428,6 +432,7 @@
                 var img = new Image();
                 img.src = json[i].url;
                 that.product_images[json[i].id] = createEntity(true, img, 0.5, 0.5, 1, 1, that.ctx.canvas.width, that.ctx.canvas.height, 0, that.strokeColor);
+                that.entities[json[i].id] = [];
 
                 //img.addEventListener("load", function() {
                 //    //TODO: call this._updateEntity(entity);
@@ -522,11 +527,11 @@
             }
         }
 
-        var l = this.entities.length;
+        var l = this.entities[this.current_img_id].length;
         for (var i = 0; i < l; ++i) {
-            if (this.entities[i]) {
+            if (this.entities[this.current_img_id][i]) {
                 this.ctx.save();
-                entity = this.entities[i];
+                entity = this.entities[this.current_img_id][i];
                 this.ctx.translate(entity.x, entity.y);
                 this.ctx.rotate(entity.angle);
                 if(entity.image) {
@@ -653,7 +658,7 @@
 
     CanvasEditor.prototype.addZone = function() {
         var entity = createEntity(true, null, 0.5, 0.5, 0.2, 0.2, this.ctx.canvas.width, this.ctx.canvas.height, 0, this.color_list[Math.floor(Math.random()*this.color_list.length)]);
-        this.entities.push(entity);
+        this.entities[this.current_img_id].push(entity);
         this.draw();
         return entity;
     };
@@ -685,8 +690,8 @@
 
         //if not resizing, check if selecting
         this.selectedEntity = null;
-        for (var i = this.entities.length - 1; i >= 0; i--) {
-            var entity = this.entities[i];
+        for (var i = this.entities[this.current_img_id].length - 1; i >= 0; i--) {
+            var entity = this.entities[this.current_img_id][i];
             if (!entity) continue;
 
             offsetX = event.x - entity.x;
@@ -721,9 +726,9 @@
             }
         }
 
-        length = this.entities.length;
+        length = this.entities[this.current_img_id].length;
         for(i = 0; i < length; ++i) {
-            this._updateEntity(this.entities[i])
+            this._updateEntity(this.entities[this.current_img_id][i])
         }
     };
 
@@ -736,9 +741,9 @@
     };
 
     CanvasEditor.prototype._updateNormals = function() {
-        var length = this.entities.length;
+        var length = this.entities[this.current_img_id].length;
         for(var i = 0; i < length; ++i) {
-            this._updateEntityNormals(this.entities[i]);
+            this._updateEntityNormals(this.entities[this.current_img_id][i]);
         }
     };
 
@@ -757,12 +762,12 @@
     };
 
     CanvasEditor.prototype._deleteSelectedEntity = function() {
-        var l = this.entities.length;
+        var l = this.entities[this.current_img_id].length;
         for (var i = 0; i < l; ++i) {
-            if (this.entities[i] === this.selectedEntity) {
+            if (this.entities[this.current_img_id][i] === this.selectedEntity) {
                 this.selectedEntity = null;
-                this.entities[i] = null;
-                this.entities = this.entities.filter(function (n) {
+                this.entities[this.current_img_id][i] = null;
+                this.entities[this.current_img_id] = this.entities[this.current_img_id].filter(function (n) {
                     return n != undefined
                 });
                 this.draw();
@@ -772,13 +777,13 @@
     };
 
     CanvasEditor.prototype._promoteSelectedEntity = function() {
-        var l = this.entities.length;
+        var l = this.entities[this.current_img_id].length;
         for (var i = 0; i < l; ++i) {
-            if (this.entities[i] === this.selectedEntity) {
-                if (i < this.entities.length - 1) {
-                    var temp = this.entities[i + 1];
-                    this.entities[i + 1] = this.entities[i];
-                    this.entities[i] = temp;
+            if (this.entities[this.current_img_id][i] === this.selectedEntity) {
+                if (i < l - 1) {
+                    var temp = this.entities[this.current_img_id][i + 1];
+                    this.entities[this.current_img_id][i + 1] = this.entities[this.current_img_id][i];
+                    this.entities[this.current_img_id][i] = temp;
                     this.draw();
                     break;
                 }
@@ -787,13 +792,13 @@
     };
 
     CanvasEditor.prototype._demoteSelectedEntity = function() {
-        var l = this.entities.length;
+        var l = this.entities[this.current_img_id].length;
         for (var i = 0; i < l; ++i) {
-            if (this.entities[i] === this.selectedEntity) {
+            if (this.entities[this.current_img_id][i] === this.selectedEntity) {
                 if (i > 0) {
-                    var temp = this.entities[i - 1];
-                    this.entities[i - 1] = this.entities[i];
-                    this.entities[i] = temp;
+                    var temp = this.entities[this.current_img_id][i - 1];
+                    this.entities[this.current_img_id][i - 1] = this.entities[this.current_img_id][i];
+                    this.entities[this.current_img_id][i] = temp;
                     this.draw();
                     break;
                 }
@@ -819,7 +824,7 @@
                 img.addEventListener("load", function () {
                     //TODO: drop in center (drop_zone != canvas)
                     var entity = createEntity(false, img, event.offsetX, event.offsetY, img.width, img.height, that.ctx.canvas.width, that.ctx.canvas.height, 0, that.strokeColor);
-                    that.entities.push(entity);
+                    that.entities[that.current_img_id].push(entity);
                     that.draw();
                 }, false);
             };
