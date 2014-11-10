@@ -10,8 +10,16 @@
   "url" : "assets/shirt2.jpg",
   "zone" :
       [
-        { "id" : 0, "config" : "{\"x\":300,\"y\":200,\"width\":100,\"height\":60,\"angle\":0}" },
-        { "id" : 1, "config" : "{\"x\":150,\"y\":150,\"width\":75,\"height\":75,\"angle\":45}" }
+        { "id" : 0, "config" : "{\"x\":250,\"y\":250,\"width\":100,\"height\":100,\"angle\":0}" },
+        { "id" : 1, "config" : "{\"x\":100,\"y\":150,\"width\":75,\"height\":125,\"angle\":45}" }
+      ]
+  },
+  {
+    "id" : 3,
+    "url" : "assets/tel1.jpg",
+    "zone" :
+      [
+        { "id" : 2, "config" : "{\"x\":250,\"y\":250,\"width\":100,\"height\":100,\"angle\":0}" }
       ]
   }
 ]

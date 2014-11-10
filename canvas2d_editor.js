@@ -378,7 +378,7 @@
         }
 
         function handle_button_click_save() {
-
+            serializeJSON();
         }
 
         button_addZone.addEventListener("mousedown", handle_button_click_addZone, false);
@@ -413,8 +413,7 @@
         function configureJSON(json) {
             console.log(json);
             that.json_content = json;
-            var length = json.length;
-            for(var i = 0; i < length; ++i) {
+            for(var i = 0; i < json.length; ++i) {
                 var div = document.createElement("div");
                 var html_image = document.createElement("input");
                 html_image.setAttribute("type", "image");
@@ -434,6 +433,16 @@
                 that.product_images[json[i].id] = createEntity(true, img, 0.5, 0.5, 1, 1, that.ctx.canvas.width, that.ctx.canvas.height, 0, that.strokeColor);
                 that.entities[json[i].id] = [];
 
+                //load existent zones
+                for(var j = 0; j < json[i].zone.length; ++j) {
+                    var o = JSON.parse(json[i].zone[j].config);
+                    var entity = createEntity(false, null, o.x, o.y, o.width, o.height, img.width, img.height, DEGtoRAD(o.angle), that.getRandomColor());
+                    that._updateEntity(entity);
+                    entity.id = json[i].zone[j].id;
+                    that.entities[json[i].id].push(entity);
+                    console.log(entity);
+                }
+
                 //img.addEventListener("load", function() {
                 //    //TODO: call this._updateEntity(entity);
                 //    console.log(img.width, img.height);
@@ -443,7 +452,27 @@
 
         //javascript-->json
         function serializeJSON() {
-
+            var json = [];
+            //for (var i = 0; i < that.entities.length; ++i) {
+            for(var i in that.entities) {
+                var img = that.product_images[i].image;
+                json[i] = {"id": i, "url": img.src, "zone": []};
+                for(var j = 0; j < that.entities[i].length; ++j) {
+                    var entity = that.entities[i][j];
+                    var obj = {};
+                    if(entity.id !== undefined) obj["id"] = entity.id;
+                    var config = {};
+                    config.x = entity.normal_x * img.width;
+                    config.y = entity.normal_y * img.height;
+                    config.width = entity.normal_width * img.width;
+                    config.height = entity.normal_height * img.height;
+                    config.angle = RADtoDEG(entity.angle);
+                    obj["config"] = JSON.stringify(config);
+                    json[i].zone.push(obj);
+                }
+            }
+            console.log(json);
+            console.log(JSON.stringify(json));
         }
 
         function loadProduct(id) {
@@ -631,7 +660,7 @@
 
     CanvasEditor.prototype.rotateDEG = function (angle) {
         if (this.selectedEntity) {
-            angle = angle * Math.PI / 180;
+            angle = DEGtoRAD(angle);
             this.selectedEntity.angle += angle;
             this.selectedEntity.angle = this.selectedEntity.angle % (Math.PI * 2);
             this._updateMatrices(this.selectedEntity);
@@ -657,11 +686,15 @@
     };
 
     CanvasEditor.prototype.addZone = function() {
-        var entity = createEntity(true, null, 0.5, 0.5, 0.2, 0.2, this.ctx.canvas.width, this.ctx.canvas.height, 0, this.color_list[Math.floor(Math.random()*this.color_list.length)]);
+        var entity = createEntity(true, null, 0.5, 0.5, 0.2, 0.2, this.ctx.canvas.width, this.ctx.canvas.height, 0, this.getRandomColor());
         this.entities[this.current_img_id].push(entity);
         this.draw();
         return entity;
     };
+
+    CanvasEditor.prototype.getRandomColor = function() {
+        return this.color_list[Math.floor(Math.random()*this.color_list.length)];
+    }
 
     //*** START INTERNAL FUNCTIONS ***
     CanvasEditor.prototype._mouseDown = function(event) {
@@ -728,13 +761,13 @@
 
         length = this.entities[this.current_img_id].length;
         for(i = 0; i < length; ++i) {
-            this._updateEntity(this.entities[this.current_img_id][i])
+            this._updateEntity(this.entities[this.current_img_id][i]);
         }
     };
 
     CanvasEditor.prototype._updateEntity = function(entity) {
         entity.width = entity.normal_width * this.ctx.canvas.width;
-        entity.height = entity.normal_height * this.ctx.canvas.width;
+        entity.height = entity.normal_height * this.ctx.canvas.height;
         entity.x = entity.normal_x * this.ctx.canvas.width;
         entity.y = entity.normal_y * this.ctx.canvas.height;
         this._updateMatrices(entity);
@@ -1079,7 +1112,7 @@
 
         if(this.stickyAngles) {
             if(!tempAngle) angle = 0;
-            else angle = parseInt((tempAngle*(180/Math.PI))/this.StickyAnglesSteps) * this.StickyAnglesSteps;
+            else angle = parseInt(RADtoDEG(tempAngle)/this.StickyAnglesSteps) * this.StickyAnglesSteps;
             this.resetRotation();
             this.rotateDEG(angle);
         }
@@ -1237,4 +1270,23 @@
     vec2.computeSignedAngle = function (a, b) {
         return Math.atan2(vec2.perpdot(a, b), vec2.dot(a, b));
     };
+
+
+    /**
+     *
+     * @param angle
+     * @returns {number}
+     */
+    function DEGtoRAD(angle) {
+        return angle * (Math.PI/180);
+    }
+
+    /**
+     *
+     * @param angle
+     * @returns {number}
+     */
+    function RADtoDEG(angle) {
+        return angle * (180/Math.PI);
+    }
 }(window));
