@@ -281,7 +281,7 @@
 
         //START
 
-        function manageDivs() {
+        this.manageDivs = function() {
             if(that.current_img_id === null) {
                 div_editor_addzone.style.display = "none";
                 div_editor_mainButtons.style.display = "none";
@@ -311,7 +311,7 @@
         //button handlers
         function handle_button_click_addZone() {
             that.selectedEntity = that.addZone();
-            manageDivs();
+            that.manageDivs();
             that.draw();
         }
 
@@ -335,7 +335,7 @@
 
         function handle_button_click_deleteZone() {
             that._deleteSelectedEntity();
-            manageDivs();
+            that.manageDivs();
         }
 
         function handle_button_click_move_left() {
@@ -404,7 +404,7 @@
                 if(that.current_img_id !== null) that._updateNormals();
                 that.current_img_id = id_image;
                 that.selectedEntity = null;
-                manageDivs();
+                that.manageDivs();
                 that.resizeCanvas(that.canvas_zone.offsetWidth, that.canvas_zone.offsetHeight);
                 that.draw();
             }
@@ -503,7 +503,7 @@
             _augmentEvent(event);
             that.ctx.canvas.removeEventListener("mousemove", that._handle_mousemove_move_notClicked, false);
             that._mouseDown(event);
-            manageDivs();
+            that.manageDivs();
         }
 
         this._handle_mouseup = handle_mouseup.bind(this);
@@ -1186,7 +1186,10 @@
         //console.log(event.keyCode);
         switch(event.keyCode) {
             case 46: //DEL
-                if (this.selectedEntity) this._deleteSelectedEntity();
+                if (this.selectedEntity) {
+                    this._deleteSelectedEntity();
+                    if(this.manageDivs) this.manageDivs();
+                }
                 break;
             case 107: //+
             case 187:
