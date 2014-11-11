@@ -523,28 +523,31 @@
         loadProduct(1);
     };
 
-    function adjustCanvasTo(canvas, entity, width, height) {
+    function adjustCanvasTo(canvas, entity, width, height, minimumSize) {
         var aspect = entity.image.width/entity.image.height;
-        canvas.height = height;
-        canvas.width = height * aspect;
+        canvas.height = height || minimumSize;
+        canvas.width = (height * aspect) || minimumSize*aspect;
         if(canvas.width > width) {
-            canvas.width = width;
-            canvas.height = width / aspect;
+            canvas.width = width || minimumSize;
+            canvas.height = (width / aspect) || minimumSize/aspect;
         }
     }
 
     CanvasEditor.prototype.resizeCanvas = function(width, height) {
         //zone_editor
-        if(this.product_images) {
+        if(this.type === type.ZONE) {
             //this._updateNormals();
-            this._updateEntity(this.product_images[this.current_img_id]);
-            adjustCanvasTo(this.ctx.canvas, this.product_images[this.current_img_id], width, height);
+            if(this.current_img_id !== null) {
+                this._updateEntity(this.product_images[this.current_img_id]);
+                adjustCanvasTo(this.ctx.canvas, this.product_images[this.current_img_id], width, height, this.minimumSize);
+            }
         }
         //image_editor
-        else {
-            this.ctx.canvas.width = width;
-            this.ctx.canvas.height = height;
+        else if(this.type === type.IMAGE) {
+            this.ctx.canvas.width = width || this.minimumSize;
+            this.ctx.canvas.height = height || this.minimumSize;
         }
+        console.log(this.ctx.canvas.width, this.ctx.canvas.height);
         this.update();
         this.draw();
     };
@@ -562,25 +565,27 @@
             }
         }
 
-        var l = this.entities[this.current_img_id].length;
-        for (var i = 0; i < l; ++i) {
-            if (this.entities[this.current_img_id][i]) {
-                this.ctx.save();
-                entity = this.entities[this.current_img_id][i];
-                this.ctx.translate(entity.x, entity.y);
-                this.ctx.rotate(entity.angle);
-                if(entity.image) {
-                    this.ctx.drawImage(entity.image, -Math.abs(entity.width) / 2, -Math.abs(entity.height) / 2, Math.abs(entity.width), Math.abs(entity.height));
+        if(this.current_img_id !== null) {
+            var l = this.entities[this.current_img_id].length;
+            for (var i = 0; i < l; ++i) {
+                if (this.entities[this.current_img_id][i]) {
+                    this.ctx.save();
+                    entity = this.entities[this.current_img_id][i];
+                    this.ctx.translate(entity.x, entity.y);
+                    this.ctx.rotate(entity.angle);
+                    if (entity.image) {
+                        this.ctx.drawImage(entity.image, -Math.abs(entity.width) / 2, -Math.abs(entity.height) / 2, Math.abs(entity.width), Math.abs(entity.height));
+                    }
+                    else {
+                        this.ctx.lineWidth = this.lineWidth;
+                        this.ctx.strokeStyle = entity.strokeColor;
+                        this.ctx.strokeRect(-Math.abs(entity.width) / 2, -Math.abs(entity.height) / 2, Math.abs(entity.width), Math.abs(entity.height));
+                    }
+                    this.ctx.restore();
                 }
-                else {
-                    this.ctx.lineWidth = this.lineWidth;
-                    this.ctx.strokeStyle = entity.strokeColor;
-                    this.ctx.strokeRect(-Math.abs(entity.width) / 2, -Math.abs(entity.height) / 2, Math.abs(entity.width), Math.abs(entity.height));
-                }
-                this.ctx.restore();
             }
+            if (this.selectedEntity) this._drawSelectedStroke();
         }
-        if (this.selectedEntity) this._drawSelectedStroke();
     };
 
     CanvasEditor.prototype._drawSelectedStroke = function () {
@@ -769,9 +774,11 @@
             }
         }
 
-        length = this.entities[this.current_img_id].length;
-        for(i = 0; i < length; ++i) {
-            this._updateEntity(this.entities[this.current_img_id][i]);
+        if(this.current_img_id !== null) {
+            length = this.entities[this.current_img_id].length;
+            for (i = 0; i < length; ++i) {
+                this._updateEntity(this.entities[this.current_img_id][i]);
+            }
         }
     };
 
