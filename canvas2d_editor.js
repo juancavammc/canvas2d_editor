@@ -493,6 +493,7 @@
             };
             xmlhttp.open("GET", url, true);
             xmlhttp.send();
+            console.log(_global.localStorage);
         }
 
 
@@ -758,19 +759,21 @@
     };
 
     CanvasEditor.prototype._mouseInsideEntity = function(x, y) {
-        for (var i = this.entities[this.current_img_id].length - 1; i >= 0; i--) {
-            var entity = this.entities[this.current_img_id][i];
-            if (!entity) continue;
+        if(this.current_img_id !== null) {
+            for (var i = this.entities[this.current_img_id].length - 1; i >= 0; i--) {
+                var entity = this.entities[this.current_img_id][i];
+                if (!entity) continue;
 
-            var w = entity.width;
-            var h = entity.height;
-            mat3.invert(mat_tmp, entity.model);
-            vec2.set(vec_tmp1, x, y);
-            vec2.transformMat3(vec_tmp1, vec_tmp1, mat_tmp);
-            var xx = vec_tmp1[0];
-            var yy = vec_tmp1[1];
+                var w = entity.width;
+                var h = entity.height;
+                mat3.invert(mat_tmp, entity.model);
+                vec2.set(vec_tmp1, x, y);
+                vec2.transformMat3(vec_tmp1, vec_tmp1, mat_tmp);
+                var xx = vec_tmp1[0];
+                var yy = vec_tmp1[1];
 
-            if (pointerInside(xx, yy, -w / 2, -h / 2, w, h)) return entity;
+                if (pointerInside(xx, yy, -w / 2, -h / 2, w, h)) return entity;
+            }
         }
         return null;
     };
