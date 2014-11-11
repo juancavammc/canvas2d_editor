@@ -535,7 +535,7 @@
 
     CanvasEditor.prototype.resizeCanvas = function(width, height) {
         //zone_editor
-        if(this.product_images) {
+        if(this.type === type.ZONE) {
             //this._updateNormals();
             if(this.current_img_id !== null) {
                 this._updateEntity(this.product_images[this.current_img_id]);
@@ -543,7 +543,7 @@
             }
         }
         //image_editor
-        else {
+        else if(this.type === type.IMAGE) {
             this.ctx.canvas.width = width || this.minimumSize;
             this.ctx.canvas.height = height || this.minimumSize;
         }
