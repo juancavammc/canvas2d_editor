@@ -422,10 +422,10 @@
                 html_image.setAttribute("type", "image");
                 html_image.setAttribute("src", json[i].url);
                 html_image.setAttribute("class", "thumb");
-                html_image.img_id = id;
+                html_image.dataset.id = id;
 
                 html_image.addEventListener("click", function(event) {
-                    switchImage(event.target.img_id);
+                    switchImage(event.target.dataset.id);
                 },false);
 
                 div.appendChild(html_image);
