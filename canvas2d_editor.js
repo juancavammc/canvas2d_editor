@@ -49,6 +49,7 @@
         //this.drop_zone = undefined;
         this.entities = [];
         this.selectedEntity = null;
+        this.entityMouseOver = null;
 
         this.keepProportions = true;
         this.stickyAngles = false;
@@ -547,7 +548,6 @@
             this.ctx.canvas.width = width || this.minimumSize;
             this.ctx.canvas.height = height || this.minimumSize;
         }
-        console.log(this.ctx.canvas.width, this.ctx.canvas.height);
         this.update();
         this.draw();
     };
@@ -575,20 +575,30 @@
                     this.ctx.rotate(entity.angle);
                     if (entity.image) {
                         this.ctx.drawImage(entity.image, -Math.abs(entity.width) / 2, -Math.abs(entity.height) / 2, Math.abs(entity.width), Math.abs(entity.height));
+                        if (this.entityMouseOver === entity && this.selectedEntity !== entity) {
+                            this.ctx.lineWidth = this.lineWidth * 1.5;
+                            this.ctx.strokeStyle = entity.strokeColor;
+                            this.ctx.strokeRect(-Math.abs(entity.width) / 2, -Math.abs(entity.height) / 2, Math.abs(entity.width), Math.abs(entity.height));
+                        }
                     }
                     else {
-                        this.ctx.lineWidth = this.lineWidth;
-                        this.ctx.strokeStyle = entity.strokeColor;
-                        this.ctx.strokeRect(-Math.abs(entity.width) / 2, -Math.abs(entity.height) / 2, Math.abs(entity.width), Math.abs(entity.height));
+                        if(this.selectedEntity !== entity) {
+                            if (this.entityMouseOver === entity) this.ctx.lineWidth = this.lineWidth * 1.5;
+                            else this.ctx.lineWidth = this.lineWidth;
+                            this.ctx.strokeStyle = entity.strokeColor;
+                            this.ctx.strokeRect(-Math.abs(entity.width) / 2, -Math.abs(entity.height) / 2, Math.abs(entity.width), Math.abs(entity.height));
+                        }
+
                     }
+
                     this.ctx.restore();
                 }
             }
-            if (this.selectedEntity) this._drawSelectedStroke();
+            if (this.selectedEntity) this._drawSelection();
         }
     };
 
-    CanvasEditor.prototype._drawSelectedStroke = function () {
+    CanvasEditor.prototype._drawSelection = function () {
         this.ctx.save();
         var entity = this.selectedEntity;
         this.ctx.strokeStyle = entity.strokeColor;
@@ -737,31 +747,32 @@
         }
 
         //if not resizing, check if selecting
-        this.selectedEntity = null;
+        this.selectedEntity = this._mouseInsideEntity(event.offsetX, event.offsetY);
+        if(this.selectedEntity) {
+            offsetX = event.x - this.selectedEntity.x;
+            offsetY = event.y - this.selectedEntity.y;
+            _global.addEventListener("mousemove", this._handle_mousemove_move_clicked, false);
+            _global.addEventListener("mouseup", this._handle_mouseup, false);
+            this.draw();
+        }
+    };
+
+    CanvasEditor.prototype._mouseInsideEntity = function(x, y) {
         for (var i = this.entities[this.current_img_id].length - 1; i >= 0; i--) {
             var entity = this.entities[this.current_img_id][i];
             if (!entity) continue;
 
-            offsetX = event.x - entity.x;
-            offsetY = event.y - entity.y;
-
             var w = entity.width;
             var h = entity.height;
             mat3.invert(mat_tmp, entity.model);
-            vec2.set(vec_tmp1, event.offsetX, event.offsetY);
+            vec2.set(vec_tmp1, x, y);
             vec2.transformMat3(vec_tmp1, vec_tmp1, mat_tmp);
-            var x = vec_tmp1[0];
-            var y = vec_tmp1[1];
+            var xx = vec_tmp1[0];
+            var yy = vec_tmp1[1];
 
-            if (pointerInside(x, y, -w / 2, -h / 2, w, h)) {
-                _global.addEventListener("mousemove", this._handle_mousemove_move_clicked, false);
-                _global.addEventListener("mouseup", this._handle_mouseup, false);
-                this.selectedEntity = entity;
-                break;
-            }
+            if (pointerInside(xx, yy, -w / 2, -h / 2, w, h)) return entity;
         }
-        //manageDivs();
-        this.draw();
+        return null;
     };
 
     CanvasEditor.prototype.update = function() {
@@ -1145,6 +1156,32 @@
         this.moveTo(event.x - offsetX, event.y - offsetY);
     };
 
+    CanvasEditor.prototype._check_mouseOverEntity = function(event) {
+        var entity = this._mouseInsideEntity(event.offsetX, event.offsetY);
+        if (entity) {
+            this.entityMouseOver = entity;
+            this.ctx.save();
+            this.ctx.strokeStyle = entity.strokeColor;
+            this.ctx.lineWidth = this.lineWidth;
+            var x = entity.x;
+            var y = entity.y;
+            var w = entity.width;
+            var h = entity.height;
+
+            this.ctx.translate(x, y);
+            this.ctx.rotate(entity.angle);
+
+            this.ctx.strokeRect(-w / 2, -h / 2, w, h);
+            this.ctx.restore();
+
+            this.draw();
+        }
+        else {
+            this.entityMouseOver = null;
+            this.draw();
+        }
+    };
+
     CanvasEditor.prototype._keyDown = function(event) {
         //console.log(event.keyCode);
         switch(event.keyCode) {
@@ -1230,6 +1267,7 @@
         event.preventDefault();
         _augmentEvent(event);
         if (this.selectedEntity) this._checkCorners(event);
+        if(this.current_img_id !== null) this._check_mouseOverEntity(event);
     }
 
     function handle_mousemove_resize(event) {
