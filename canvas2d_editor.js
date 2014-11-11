@@ -281,7 +281,7 @@
 
         //START
 
-        function manageDivs() {
+        this.manageDivs = function() {
             if(that.current_img_id === null) {
                 div_editor_addzone.style.display = "none";
                 div_editor_mainButtons.style.display = "none";
@@ -306,12 +306,12 @@
                     div_editor_removeButton.style.display = "none";
                 }
             }
-        }
+        };
 
         //button handlers
         function handle_button_click_addZone() {
             that.selectedEntity = that.addZone();
-            manageDivs();
+            that.manageDivs();
             that.draw();
         }
 
@@ -335,7 +335,7 @@
 
         function handle_button_click_deleteZone() {
             that._deleteSelectedEntity();
-            manageDivs();
+            that.manageDivs();
         }
 
         function handle_button_click_move_left() {
@@ -404,7 +404,7 @@
                 if(that.current_img_id !== null) that._updateNormals();
                 that.current_img_id = id_image;
                 that.selectedEntity = null;
-                manageDivs();
+                that.manageDivs();
                 that.resizeCanvas(that.canvas_zone.offsetWidth, that.canvas_zone.offsetHeight);
                 that.draw();
             }
@@ -422,10 +422,10 @@
                 html_image.setAttribute("type", "image");
                 html_image.setAttribute("src", json[i].url);
                 html_image.setAttribute("class", "thumb");
-                html_image.img_id = id;
+                html_image.dataset.id = id;
 
                 html_image.addEventListener("click", function(event) {
-                    switchImage(event.target.img_id);
+                    switchImage(event.target.dataset.id);
                 },false);
 
                 div.appendChild(html_image);
@@ -493,6 +493,7 @@
             };
             xmlhttp.open("GET", url, true);
             xmlhttp.send();
+            console.log(_global.localStorage);
         }
 
 
@@ -503,7 +504,7 @@
             _augmentEvent(event);
             that.ctx.canvas.removeEventListener("mousemove", that._handle_mousemove_move_notClicked, false);
             that._mouseDown(event);
-            manageDivs();
+            that.manageDivs();
         }
 
         this._handle_mouseup = handle_mouseup.bind(this);
@@ -758,19 +759,21 @@
     };
 
     CanvasEditor.prototype._mouseInsideEntity = function(x, y) {
-        for (var i = this.entities[this.current_img_id].length - 1; i >= 0; i--) {
-            var entity = this.entities[this.current_img_id][i];
-            if (!entity) continue;
+        if(this.current_img_id !== null) {
+            for (var i = this.entities[this.current_img_id].length - 1; i >= 0; i--) {
+                var entity = this.entities[this.current_img_id][i];
+                if (!entity) continue;
 
-            var w = entity.width;
-            var h = entity.height;
-            mat3.invert(mat_tmp, entity.model);
-            vec2.set(vec_tmp1, x, y);
-            vec2.transformMat3(vec_tmp1, vec_tmp1, mat_tmp);
-            var xx = vec_tmp1[0];
-            var yy = vec_tmp1[1];
+                var w = entity.width;
+                var h = entity.height;
+                mat3.invert(mat_tmp, entity.model);
+                vec2.set(vec_tmp1, x, y);
+                vec2.transformMat3(vec_tmp1, vec_tmp1, mat_tmp);
+                var xx = vec_tmp1[0];
+                var yy = vec_tmp1[1];
 
-            if (pointerInside(xx, yy, -w / 2, -h / 2, w, h)) return entity;
+                if (pointerInside(xx, yy, -w / 2, -h / 2, w, h)) return entity;
+            }
         }
         return null;
     };
@@ -1186,7 +1189,10 @@
         //console.log(event.keyCode);
         switch(event.keyCode) {
             case 46: //DEL
-                if (this.selectedEntity) this._deleteSelectedEntity();
+                if (this.selectedEntity) {
+                    this._deleteSelectedEntity();
+                    if(this.manageDivs) this.manageDivs();
+                }
                 break;
             case 107: //+
             case 187:
