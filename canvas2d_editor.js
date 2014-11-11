@@ -306,7 +306,7 @@
                     div_editor_removeButton.style.display = "none";
                 }
             }
-        }
+        };
 
         //button handlers
         function handle_button_click_addZone() {
