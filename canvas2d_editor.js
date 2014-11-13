@@ -64,7 +64,7 @@
         this.strokeColor = "#FF0000";
         this.squaresSize = 4;
         this.sizeLine = 16; //line to rotation circle
-        this.minimumSize = 2; //minimum (width/height) of an entityh
+        this.minimumSize = 2; //minimum (width/height) of an entity
         this.lineWidth = 2;
         this.color_list = [
             'aqua',
@@ -672,10 +672,45 @@
         }
     };
 
+    CanvasEditor.prototype._computeHalfSize = function(entity) {
+        var v = [];
+        var w = entity.width/2;
+        var h = entity.height/2;
+        var halfsize = {};
+        halfsize.x = 0;
+        halfsize.y = 0;
+        var t;
+        v[0] = vec2.fromValues(-w,-h);
+        v[1] = vec2.fromValues( w,-h);
+        v[2] = vec2.fromValues( w, h);
+        v[3] = vec2.fromValues(-w, h);
+        mat3.invert(mat_tmp, entity.rotation);
+        for(var i = 0; i < v.length; ++i) {
+            vec2.transformMat3(v[i], v[i], mat_tmp);
+            t = Math.abs(v[i][0]);
+            if(t > halfsize.x) halfsize.x = t;
+            t = Math.abs(v[i][1]);
+            if(t > halfsize.y) halfsize.y = t;
+        }
+        console.log(halfsize);
+        return halfsize;
+    };
+
+    CanvasEditor.prototype._checkBoundingBox = function(entity) {
+        var halfsize = this._computeHalfSize(entity);
+        var canvas = this.ctx.canvas;
+        if(this.selectedEntity.x + halfsize.x > canvas.width) this.selectedEntity.x = canvas.width - halfsize.x;
+        else if(this.selectedEntity.x - halfsize.x < 0) this.selectedEntity.x = halfsize.x;
+        if(this.selectedEntity.y + halfsize.y > canvas.height) this.selectedEntity.y = canvas.height - halfsize.y;
+        else if(this.selectedEntity.y - halfsize.y < 0) this.selectedEntity.y = halfsize.y;
+    };
+
     CanvasEditor.prototype.moveTo = function (x, y) {
         if (this.selectedEntity) {
             this.selectedEntity.x = x;
             this.selectedEntity.y = y;
+            this._updateMatrices(this.selectedEntity);
+            this._checkBoundingBox(this.selectedEntity);
             this._updateMatrices(this.selectedEntity);
             this.draw();
         }
