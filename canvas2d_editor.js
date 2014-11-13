@@ -692,26 +692,25 @@
             t = Math.abs(v[i][1]);
             if(t > halfsize.y) halfsize.y = t;
         }
-        console.log(halfsize);
         return halfsize;
     };
 
     CanvasEditor.prototype._checkBoundingBox = function(entity) {
+        this._updateMatrices(this.selectedEntity);
         var halfsize = this._computeHalfSize(entity);
         var canvas = this.ctx.canvas;
-        if(this.selectedEntity.x + halfsize.x > canvas.width) this.selectedEntity.x = canvas.width - halfsize.x;
-        else if(this.selectedEntity.x - halfsize.x < 0) this.selectedEntity.x = halfsize.x;
-        if(this.selectedEntity.y + halfsize.y > canvas.height) this.selectedEntity.y = canvas.height - halfsize.y;
-        else if(this.selectedEntity.y - halfsize.y < 0) this.selectedEntity.y = halfsize.y;
+        if (this.selectedEntity.x + halfsize.x > canvas.width) this.selectedEntity.x = canvas.width - halfsize.x;
+        else if (this.selectedEntity.x - halfsize.x < 0) this.selectedEntity.x = halfsize.x;
+        if (this.selectedEntity.y + halfsize.y > canvas.height) this.selectedEntity.y = canvas.height - halfsize.y;
+        else if (this.selectedEntity.y - halfsize.y < 0) this.selectedEntity.y = halfsize.y;
+        this._updateMatrices(this.selectedEntity);
     };
 
     CanvasEditor.prototype.moveTo = function (x, y) {
         if (this.selectedEntity) {
             this.selectedEntity.x = x;
             this.selectedEntity.y = y;
-            this._updateMatrices(this.selectedEntity);
             this._checkBoundingBox(this.selectedEntity);
-            this._updateMatrices(this.selectedEntity);
             this.draw();
         }
     };
@@ -720,7 +719,7 @@
         if(this.selectedEntity) {
             this.selectedEntity.x += x;
             this.selectedEntity.y += y;
-            this._updateMatrices(this.selectedEntity);
+            this._checkBoundingBox(this.selectedEntity);
             this.draw();
         }
     };
@@ -1340,7 +1339,6 @@
         event.preventDefault();
         _augmentEvent(event);
         this._fixResize(this.selectedEntity);
-        //this._updateNormals();
         _global.removeEventListener("mousemove", this._handle_mousemove_move_clicked, false);
         this.ctx.canvas.addEventListener("mousemove", this._handle_mousemove_move_notClicked, false);
         _global.removeEventListener("mousemove", this._handle_mousemove_resize, false);
