@@ -379,7 +379,8 @@
         }
 
         function handle_button_click_save() {
-            serializeJSON();
+            that._updateNormals();
+            saveZones(0);
         }
 
         button_addZone.addEventListener("mousedown", handle_button_click_addZone, false);
@@ -479,23 +480,32 @@
             }
             console.log(json);
             console.log(JSON.stringify(json));
+            return json;
         }
 
         function loadProduct(id) {
-            var xmlhttp = new XMLHttpRequest();
-            var url = "assets/test.json";
+            if(!_global.localStorage.json) {
+                var xmlhttp = new XMLHttpRequest();
+                var url = "assets/test.json";
 
-            xmlhttp.onreadystatechange = function() {
-                if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
-                    var json = JSON.parse(xmlhttp.responseText);
-                    configureJSON(json);
-                }
-            };
-            xmlhttp.open("GET", url, true);
-            xmlhttp.send();
-            console.log(_global.localStorage);
+                xmlhttp.onreadystatechange = function () {
+                    if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
+                        var json = JSON.parse(xmlhttp.responseText);
+                        configureJSON(json);
+                    }
+                };
+                xmlhttp.open("GET", url, true);
+                xmlhttp.send();
+                console.log(_global.localStorage);
+            }
+            else {
+                configureJSON(JSON.parse(_global.localStorage.json));
+            }
         }
 
+        function saveZones(id) {
+            _global.localStorage.json = JSON.stringify(serializeJSON());
+        }
 
         //Other handlers
         function handle_mousedown(event) {
