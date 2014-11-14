@@ -772,6 +772,8 @@
         if (this.selectedEntity) {
             this._checkCorners(event);
             if (anchor.resizing) {
+                offsetX = event.x - event.offsetX;
+                offsetY = event.y - event.offsetY;
                 _global.addEventListener("mousemove", this._handle_mousemove_resize, false);
                 _global.addEventListener("mouseup", this._handle_mouseup, false);
                 this.draw();
@@ -1104,6 +1106,62 @@
     };
 
     CanvasEditor.prototype._resizeEntity = function(event) {
+        var entity = this.selectedEntity;
+        //this._updateEntity(entity);
+
+        var a;
+        var b;
+        if (anchor.x) a = 1;
+        else a = -1;
+        if (anchor.y) b = 1;
+        else b = -1;
+
+        //get origin
+        if(!anchor.x && !anchor.y) {
+            vec2.set(vec_tmp1, entity.width/2, entity.height/2);
+        }
+        if(anchor.x && !anchor.y) {
+            vec2.set(vec_tmp1,-entity.width/2, entity.height/2);
+        }
+        if(anchor.x && anchor.y) {
+            vec2.set(vec_tmp1,-entity.width/2,-entity.height/2);
+        }
+        if(!anchor.x && anchor.y) {
+            vec2.set(vec_tmp1, entity.width/2,-entity.height/2);
+        }
+
+        //translate mouse to local
+        mat3.invert(mat_tmp, entity.model);
+        vec2.set(vec_tmp2, event.x - offsetX, event.y - offsetY);
+        vec2.transformMat3(vec_tmp2, vec_tmp2, mat_tmp);
+
+        //get new entity local center
+        var width = Math.abs(vec_tmp2[0] - vec_tmp1[0]);
+        var height = Math.abs(vec_tmp2[1] - vec_tmp1[1]);
+
+        if(width < 0 || height < 0 ) console.log(width, height);
+
+        var x = (vec_tmp2[0] + vec_tmp1[0])/2;
+        var y = (vec_tmp2[1] + vec_tmp1[1])/2;
+
+        vec2.set(vec_tmp1, x, y);
+
+        //get global center
+        vec2.transformMat3(vec_tmp1, vec_tmp1, entity.model);
+
+        //update entity data
+        entity.x = vec_tmp1[0];
+        entity.y = vec_tmp1[1];
+        entity.width = width;
+        entity.height = height;
+
+        //update matrices
+        this._updateMatrices(entity);
+        this._updateEntityNormals(entity, this.ctx.canvas.width, this.ctx.canvas.height);
+        this.draw();
+    };
+
+    CanvasEditor.prototype.__resizeEntity = function(event) {
         mat3.invert(mat_tmp, this.selectedEntity.rotation);
         vec2.set(vec_tmp1, event.deltaX, event.deltaY);
         vec2.transformMat3(vec_tmp1, vec_tmp1, mat_tmp);
