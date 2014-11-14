@@ -1135,25 +1135,58 @@
         vec2.set(vec_tmp2, event.x - offsetX, event.y - offsetY);
         vec2.transformMat3(vec_tmp2, vec_tmp2, mat_tmp);
 
+        //get width and height
+        var width = (vec_tmp2[0] - vec_tmp1[0])*a;
+        var height = (vec_tmp2[1] - vec_tmp1[1])*b;
+
+        //check minimum size
+        var min = 10;
+        var oldWidth = width;
+        var oldHeight = height;
+        if(width < min && width > 0) width = min;
+        if(height < min && height > 0) height = min;
+        /*
+        //check if keepProportions is true
+        if(this.keepProportions) {
+            var aspect = this.selectedEntity.width / this.selectedEntity.height;
+            var min = this.minimumSize;
+
+            height = width / aspect;
+            if (Math.abs(height) < min) {
+                this.selectedEntity.height = -min * sign(this.selectedEntity.height);
+                height = (this.selectedEntity.height - oldHeight) / 2 * b;
+                width = this.selectedEntity.height * aspect;
+                this.selectedEntity.width = width;
+                width = (height * aspect) * a * b;
+            }
+        }
+        */
+
+        //check negative width/height
+        if(width < 0) {
+            anchor.x = !anchor.x;
+            width = -width;
+        }
+        if(height < 0) {
+            anchor.y = !anchor.y;
+            height = -height;
+        }
+
         //get new entity local center
-        var width = Math.abs(vec_tmp2[0] - vec_tmp1[0]);
-        var height = Math.abs(vec_tmp2[1] - vec_tmp1[1]);
+        var x = (vec_tmp2[0] + vec_tmp1[0])/2 + (width-oldWidth)/2*a;
+        var y = (vec_tmp2[1] + vec_tmp1[1])/2 + (height-oldHeight)/2*b;
 
-        if(width < 0 || height < 0 ) console.log(width, height);
-
-        var x = (vec_tmp2[0] + vec_tmp1[0])/2;
-        var y = (vec_tmp2[1] + vec_tmp1[1])/2;
-
+        //return true;
         vec2.set(vec_tmp1, x, y);
 
         //get global center
         vec2.transformMat3(vec_tmp1, vec_tmp1, entity.model);
 
         //update entity data
-        entity.x = vec_tmp1[0];
-        entity.y = vec_tmp1[1];
-        entity.width = width;
-        entity.height = height;
+        if(anchor.width) entity.x = vec_tmp1[0];
+        if(anchor.height) entity.y = vec_tmp1[1];
+        if(anchor.width) entity.width = width;
+        if(anchor.height) entity.height = height;
 
         //update matrices
         this._updateMatrices(entity);
