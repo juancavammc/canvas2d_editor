@@ -1109,6 +1109,8 @@
         var entity = this.selectedEntity;
         //this._updateEntity(entity);
 
+        var min = 10;
+
         var a;
         var b;
         if (anchor.x) a = 1;
@@ -1140,27 +1142,17 @@
         var height = (vec_tmp2[1] - vec_tmp1[1])*b;
 
         //check minimum size
-        var min = 10;
         var oldWidth = width;
         var oldHeight = height;
-        if(width < min && width > 0) width = min;
-        if(height < min && height > 0) height = min;
-        /*
+        if(width < min && width >= 0) width = min;
+        if(height < min && height >= 0) height = min;
+
         //check if keepProportions is true
         if(this.keepProportions) {
             var aspect = this.selectedEntity.width / this.selectedEntity.height;
-            var min = this.minimumSize;
-
-            height = width / aspect;
-            if (Math.abs(height) < min) {
-                this.selectedEntity.height = -min * sign(this.selectedEntity.height);
-                height = (this.selectedEntity.height - oldHeight) / 2 * b;
-                width = this.selectedEntity.height * aspect;
-                this.selectedEntity.width = width;
-                width = (height * aspect) * a * b;
-            }
+            if(aspect <= 1) height = width / aspect;
+            else width = height * aspect;
         }
-        */
 
         //check negative width/height
         if(width < 0) {
@@ -1172,6 +1164,7 @@
             height = -height;
         }
 
+        console.log(width, height);
         //get new entity local center
         var x = (vec_tmp2[0] + vec_tmp1[0])/2 + (width-oldWidth)/2*a;
         var y = (vec_tmp2[1] + vec_tmp1[1])/2 + (height-oldHeight)/2*b;
