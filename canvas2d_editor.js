@@ -1109,7 +1109,7 @@
         var entity = this.selectedEntity;
         //this._updateEntity(entity);
 
-        var min = 10;
+        var min = this.minimumSize;
 
         var a;
         var b;
@@ -1137,36 +1137,50 @@
         vec2.set(vec_tmp2, event.x - offsetX, event.y - offsetY);
         vec2.transformMat3(vec_tmp2, vec_tmp2, mat_tmp);
 
+
         //get width and height
         var width = (vec_tmp2[0] - vec_tmp1[0])*a;
         var height = (vec_tmp2[1] - vec_tmp1[1])*b;
-
-        //check minimum size
-        var oldWidth = width;
-        var oldHeight = height;
-        if(width < min && width >= 0) width = min;
-        if(height < min && height >= 0) height = min;
-
-        //check if keepProportions is true
-        if(this.keepProportions) {
-            var aspect = this.selectedEntity.width / this.selectedEntity.height;
-            if(aspect <= 1) height = width / aspect;
-            else width = height * aspect;
-        }
 
         //check negative width/height
         if(width < 0) {
             anchor.x = !anchor.x;
             width = -width;
+            a = -a;
+            if(this.keepProportions) {
+                anchor.y = !anchor.y;
+                height = -height;
+                b = -b;
+            }
         }
-        if(height < 0) {
+        if(height < 0 && (!this.keepProportions || !anchor.width) ) {
             anchor.y = !anchor.y;
             height = -height;
+            b = -b;
+        }
+        var oldWidth = width;
+        var oldHeight = height;
+
+        //check minimum size
+        if(width < min) {
+            width = min;
+            //var flagX = true;
+        }
+        if(height < min ) {
+            height = min;
+            //var flagY = true;
         }
 
-        console.log(width, height);
+        //check if keepProportions is true
+        if(this.keepProportions && anchor.width && anchor.height) {
+            var aspect = this.selectedEntity.width / this.selectedEntity.height;
+            if(aspect <= 1) height = width / aspect;
+            else width = height * aspect;
+        }
+
         //get new entity local center
         var x = (vec_tmp2[0] + vec_tmp1[0])/2 + (width-oldWidth)/2*a;
+        //if(flagX) x += (width-oldWidth)/2*a;
         var y = (vec_tmp2[1] + vec_tmp1[1])/2 + (height-oldHeight)/2*b;
 
         //return true;
