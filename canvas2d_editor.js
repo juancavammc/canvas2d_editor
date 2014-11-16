@@ -1162,14 +1162,8 @@
         var oldHeight = height;
 
         //check minimum size
-        if(width < min) {
-            width = min;
-            //var flagX = true;
-        }
-        if(height < min ) {
-            height = min;
-            //var flagY = true;
-        }
+        if(width < min) width = min;
+        if(height < min ) height = min;
 
         //check if keepProportions is true
         if(this.keepProportions && anchor.width && anchor.height) {
@@ -1180,7 +1174,6 @@
 
         //get new entity local center
         var x = (vec_tmp2[0] + vec_tmp1[0])/2 + (width-oldWidth)/2*a;
-        //if(flagX) x += (width-oldWidth)/2*a;
         var y = (vec_tmp2[1] + vec_tmp1[1])/2 + (height-oldHeight)/2*b;
 
         //return true;
