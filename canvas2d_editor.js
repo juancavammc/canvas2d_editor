@@ -1107,9 +1107,8 @@
 
     CanvasEditor.prototype._resizeEntity = function(event) {
         var entity = this.selectedEntity;
-        //this._updateEntity(entity);
-
         var min = this.minimumSize;
+        var aspect = this.selectedEntity.width / this.selectedEntity.height;
 
         var a;
         var b;
@@ -1119,27 +1118,22 @@
         else b = -1;
 
         //get origin
-        if(!anchor.x && !anchor.y) {
-            vec2.set(vec_tmp1, entity.width/2, entity.height/2);
-        }
-        if(anchor.x && !anchor.y) {
-            vec2.set(vec_tmp1,-entity.width/2, entity.height/2);
-        }
-        if(anchor.x && anchor.y) {
-            vec2.set(vec_tmp1,-entity.width/2,-entity.height/2);
-        }
-        if(!anchor.x && anchor.y) {
-            vec2.set(vec_tmp1, entity.width/2,-entity.height/2);
-        }
+        if(!anchor.x && !anchor.y) vec2.set(vec_tmp1, entity.width/2, entity.height/2);
+        if( anchor.x && !anchor.y) vec2.set(vec_tmp1,-entity.width/2, entity.height/2);
+        if( anchor.x &&  anchor.y) vec2.set(vec_tmp1,-entity.width/2,-entity.height/2);
+        if(!anchor.x &&  anchor.y) vec2.set(vec_tmp1, entity.width/2,-entity.height/2);
+
+        ////check if mouse is outside canvas
+        var aux1 = event.x - offsetX;
+        var aux2 = event.y - offsetY;
 
         //translate mouse to local
         mat3.invert(mat_tmp, entity.model);
-        vec2.set(vec_tmp2, event.x - offsetX, event.y - offsetY);
+        vec2.set(vec_tmp2, aux1, aux2);
         vec2.transformMat3(vec_tmp2, vec_tmp2, mat_tmp);
 
-
         //get width and height
-        var width = (vec_tmp2[0] - vec_tmp1[0])*a;
+        var width =  (vec_tmp2[0] - vec_tmp1[0])*a;
         var height = (vec_tmp2[1] - vec_tmp1[1])*b;
 
         //check negative width/height
@@ -1163,28 +1157,26 @@
 
         //check minimum size
         if(width < min) width = min;
-        if(height < min ) height = min;
+        if(height < min) height = min;
 
         //check if keepProportions is true
         if(this.keepProportions && anchor.width && anchor.height) {
-            var aspect = this.selectedEntity.width / this.selectedEntity.height;
             if(aspect <= 1) height = width / aspect;
             else width = height * aspect;
         }
 
         //get new entity local center
-        var x = (vec_tmp2[0] + vec_tmp1[0])/2 + (width-oldWidth)/2*a;
-        var y = (vec_tmp2[1] + vec_tmp1[1])/2 + (height-oldHeight)/2*b;
-
-        //return true;
+        var x = 0;
+        var y = 0;
+        if(anchor.width) x = (vec_tmp2[0] + vec_tmp1[0])/2 + (width-oldWidth)/2*a;
+        if(anchor.height) y = (vec_tmp2[1] + vec_tmp1[1])/2 + (height-oldHeight)/2*b;
         vec2.set(vec_tmp1, x, y);
 
         //get global center
         vec2.transformMat3(vec_tmp1, vec_tmp1, entity.model);
 
-        //update entity data
-        if(anchor.width) entity.x = vec_tmp1[0];
-        if(anchor.height) entity.y = vec_tmp1[1];
+        entity.x = vec_tmp1[0];
+        entity.y = vec_tmp1[1];
         if(anchor.width) entity.width = width;
         if(anchor.height) entity.height = height;
 
