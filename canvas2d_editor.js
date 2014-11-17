@@ -1119,15 +1119,19 @@
         //get origin
         if(!anchor.x && !anchor.y) {
             vec2.set(vec_tmp1, entity.width/2, entity.height/2);
+            //vec2.copy(vec_tmp1, v[2]);
         }
         if( anchor.x && !anchor.y) {
             vec2.set(vec_tmp1,-entity.width/2, entity.height/2);
+            //vec2.copy(vec_tmp1, v[3]);
         }
         if( anchor.x &&  anchor.y) {
             vec2.set(vec_tmp1,-entity.width/2,-entity.height/2);
+            //vec2.copy(vec_tmp1, v[0]);
         }
         if(!anchor.x &&  anchor.y) {
             vec2.set(vec_tmp1, entity.width/2,-entity.height/2);
+            //vec2.copy(vec_tmp1, v[1]);
         }
 
         //translate mouse to local
@@ -1187,6 +1191,21 @@
         this._updateMatrices(entity);
         this._updateEntityNormals(entity, this.ctx.canvas.width, this.ctx.canvas.height);
         this.draw();
+    };
+
+    CanvasEditor.prototype._resizeInCanvas = function(entity) {
+        //get all new vertices
+        mat3.invert(mat_tmp, entity.model);
+        var oldWidth = entity.width;
+        var oldHeight = entity.height;
+        var v = [];
+        v[0] = vec2.fromValues(-entity.width/2,-entity.height/2);
+        v[1] = vec2.fromValues( entity.width/2,-entity.height/2);
+        v[2] = vec2.fromValues( entity.width/2, entity.height/2);
+        v[3] = vec2.fromValues(-entity.width/2, entity.height/2);
+        for(var i = 0; i < 4; ++i) {
+            vec2.transformMat3(v[i], v[i], mat_tmp);
+        }
     };
 
     CanvasEditor.prototype.__resizeEntity = function(event) {
