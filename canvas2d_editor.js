@@ -1130,13 +1130,9 @@
             vec2.set(vec_tmp1, entity.width/2,-entity.height/2);
         }
 
-        ////check if mouse is outside canvas
-        var aux1 = event.x - offsetX;
-        var aux2 = event.y - offsetY;
-
         //translate mouse to local
         mat3.invert(mat_tmp, entity.model);
-        vec2.set(vec_tmp2, aux1, aux2);
+        vec2.set(vec_tmp2, event.x - offsetX, event.y - offsetY);
         vec2.transformMat3(vec_tmp2, vec_tmp2, mat_tmp);
 
         //get width and height
