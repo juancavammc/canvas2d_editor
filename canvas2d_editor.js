@@ -658,18 +658,17 @@
         if (this.selectedEntity) {
             this.selectedEntity.width = width;
             this.selectedEntity.height = height;
+
+            //check minimum size
+            if (this.selectedEntity.width < this.minimumSize) this.selectedEntity.width = this.minimumSize;
+            if (this.selectedEntity.height < this.minimumSize) this.selectedEntity.height = this.minimumSize;
+
             this.draw();
         }
     };
 
     CanvasEditor.prototype.resizeStep = function(width, height) {
-        if (this.selectedEntity) {
-            this.selectedEntity.width += width;
-            this.selectedEntity.height += height;
-            if (this.selectedEntity.width < this.minimumSize) this.selectedEntity.width = this.minimumSize;
-            if (this.selectedEntity.height < this.minimumSize) this.selectedEntity.height = this.minimumSize;
-            this.draw();
-        }
+        this.resize(this.selectedEntity.width + width, this.selectedEntity.height + height);
     };
 
     CanvasEditor.prototype._computeHalfSize = function(entity) {
@@ -1118,10 +1117,18 @@
         else b = -1;
 
         //get origin
-        if(!anchor.x && !anchor.y) vec2.set(vec_tmp1, entity.width/2, entity.height/2);
-        if( anchor.x && !anchor.y) vec2.set(vec_tmp1,-entity.width/2, entity.height/2);
-        if( anchor.x &&  anchor.y) vec2.set(vec_tmp1,-entity.width/2,-entity.height/2);
-        if(!anchor.x &&  anchor.y) vec2.set(vec_tmp1, entity.width/2,-entity.height/2);
+        if(!anchor.x && !anchor.y) {
+            vec2.set(vec_tmp1, entity.width/2, entity.height/2);
+        }
+        if( anchor.x && !anchor.y) {
+            vec2.set(vec_tmp1,-entity.width/2, entity.height/2);
+        }
+        if( anchor.x &&  anchor.y) {
+            vec2.set(vec_tmp1,-entity.width/2,-entity.height/2);
+        }
+        if(!anchor.x &&  anchor.y) {
+            vec2.set(vec_tmp1, entity.width/2,-entity.height/2);
+        }
 
         ////check if mouse is outside canvas
         var aux1 = event.x - offsetX;
