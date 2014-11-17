@@ -1104,7 +1104,7 @@
         }
     };
 
-    CanvasEditor.prototype._resizeEntity = function(event) {
+    CanvasEditor.prototype.__resizeEntity = function(event) {
         var entity = this.selectedEntity;
         var min = this.minimumSize;
         var aspect = this.selectedEntity.width / this.selectedEntity.height;
@@ -1190,25 +1190,47 @@
         //update matrices
         this._updateMatrices(entity);
         this._updateEntityNormals(entity, this.ctx.canvas.width, this.ctx.canvas.height);
+
+
+        this.draw();
+        this._resizeInCanvas(entity);
+
+
         this.draw();
     };
 
     CanvasEditor.prototype._resizeInCanvas = function(entity) {
         //get all new vertices
-        mat3.invert(mat_tmp, entity.model);
         var oldWidth = entity.width;
         var oldHeight = entity.height;
+
+        var a;
+        var b;
+        if (anchor.x) a = 1;
+        else a = -1;
+        if (anchor.y) b = 1;
+        else b = -1;
+
         var v = [];
         v[0] = vec2.fromValues(-entity.width/2,-entity.height/2);
         v[1] = vec2.fromValues( entity.width/2,-entity.height/2);
         v[2] = vec2.fromValues( entity.width/2, entity.height/2);
         v[3] = vec2.fromValues(-entity.width/2, entity.height/2);
+        var aux, _vec;
         for(var i = 0; i < 4; ++i) {
-            vec2.transformMat3(v[i], v[i], mat_tmp);
+            _vec = v[i];
+            vec2.transformMat3(_vec, _vec, entity.model);
+            if( _vec[0] < 0 ) { //width
+
+            }
+            else if( _vec[0] > this.ctx.canvas.width) {
+            }
         }
+        this._updateMatrices(entity);
+        this._updateEntityNormals(entity, this.ctx.canvas.width, this.ctx.canvas.height);
     };
 
-    CanvasEditor.prototype.__resizeEntity = function(event) {
+    CanvasEditor.prototype._resizeEntity = function(event) {
         mat3.invert(mat_tmp, this.selectedEntity.rotation);
         vec2.set(vec_tmp1, event.deltaX, event.deltaY);
         vec2.transformMat3(vec_tmp1, vec_tmp1, mat_tmp);
@@ -1377,9 +1399,10 @@
             case 40:
                 if (this.selectedEntity) this.translate(0,1);
                 break;
-            //case 13: //ENTER
-            //    this.loadProduct(1);
-            //    break;
+            case 13: //ENTER
+                this._resizeInCanvas(this.selectedEntity);
+                this.draw();
+                break;
         }
     };
 
