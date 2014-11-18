@@ -64,7 +64,7 @@
         this.strokeColor = "#FF0000";
         this.squaresSize = 4;
         this.sizeLine = 16; //line to rotation circle
-        this.minimumSize = 2; //minimum (width/height) of an entityh
+        this.minimumSize = 2; //minimum (width/height) of an entity
         this.lineWidth = 2;
         this.color_list = [
             'aqua',
@@ -658,25 +658,58 @@
         if (this.selectedEntity) {
             this.selectedEntity.width = width;
             this.selectedEntity.height = height;
+
+            //check minimum size
+            if (this.selectedEntity.width < this.minimumSize) this.selectedEntity.width = this.minimumSize;
+            if (this.selectedEntity.height < this.minimumSize) this.selectedEntity.height = this.minimumSize;
+
             this.draw();
         }
     };
 
     CanvasEditor.prototype.resizeStep = function(width, height) {
-        if (this.selectedEntity) {
-            this.selectedEntity.width += width;
-            this.selectedEntity.height += height;
-            if (this.selectedEntity.width < this.minimumSize) this.selectedEntity.width = this.minimumSize;
-            if (this.selectedEntity.height < this.minimumSize) this.selectedEntity.height = this.minimumSize;
-            this.draw();
+        this.resize(this.selectedEntity.width + width, this.selectedEntity.height + height);
+    };
+
+    CanvasEditor.prototype._computeHalfSize = function(entity) {
+        var v = [];
+        var w = entity.width/2;
+        var h = entity.height/2;
+        var halfsize = {};
+        halfsize.x = 0;
+        halfsize.y = 0;
+        var t;
+        v[0] = vec2.fromValues(-w,-h);
+        v[1] = vec2.fromValues( w,-h);
+        v[2] = vec2.fromValues( w, h);
+        v[3] = vec2.fromValues(-w, h);
+        mat3.invert(mat_tmp, entity.rotation);
+        for(var i = 0; i < v.length; ++i) {
+            vec2.transformMat3(v[i], v[i], mat_tmp);
+            t = Math.abs(v[i][0]);
+            if(t > halfsize.x) halfsize.x = t;
+            t = Math.abs(v[i][1]);
+            if(t > halfsize.y) halfsize.y = t;
         }
+        return halfsize;
+    };
+
+    CanvasEditor.prototype._checkBoundingBox = function(entity) {
+        this._updateMatrices(this.selectedEntity);
+        var halfsize = this._computeHalfSize(entity);
+        var canvas = this.ctx.canvas;
+        if (this.selectedEntity.x + halfsize.x > canvas.width) this.selectedEntity.x = canvas.width - halfsize.x;
+        else if (this.selectedEntity.x - halfsize.x < 0) this.selectedEntity.x = halfsize.x;
+        if (this.selectedEntity.y + halfsize.y > canvas.height) this.selectedEntity.y = canvas.height - halfsize.y;
+        else if (this.selectedEntity.y - halfsize.y < 0) this.selectedEntity.y = halfsize.y;
+        this._updateMatrices(this.selectedEntity);
     };
 
     CanvasEditor.prototype.moveTo = function (x, y) {
         if (this.selectedEntity) {
             this.selectedEntity.x = x;
             this.selectedEntity.y = y;
-            this._updateMatrices(this.selectedEntity);
+            this._checkBoundingBox(this.selectedEntity);
             this.draw();
         }
     };
@@ -685,7 +718,7 @@
         if(this.selectedEntity) {
             this.selectedEntity.x += x;
             this.selectedEntity.y += y;
-            this._updateMatrices(this.selectedEntity);
+            this._checkBoundingBox(this.selectedEntity);
             this.draw();
         }
     };
@@ -738,6 +771,8 @@
         if (this.selectedEntity) {
             this._checkCorners(event);
             if (anchor.resizing) {
+                offsetX = event.x - event.offsetX;
+                offsetY = event.y - event.offsetY;
                 _global.addEventListener("mousemove", this._handle_mousemove_resize, false);
                 _global.addEventListener("mouseup", this._handle_mouseup, false);
                 this.draw();
@@ -1069,6 +1104,132 @@
         }
     };
 
+    CanvasEditor.prototype.__resizeEntity = function(event) {
+        var entity = this.selectedEntity;
+        var min = this.minimumSize;
+        var aspect = this.selectedEntity.width / this.selectedEntity.height;
+
+        var a;
+        var b;
+        if (anchor.x) a = 1;
+        else a = -1;
+        if (anchor.y) b = 1;
+        else b = -1;
+
+        //get origin
+        if(!anchor.x && !anchor.y) {
+            vec2.set(vec_tmp1, entity.width/2, entity.height/2);
+            //vec2.copy(vec_tmp1, v[2]);
+        }
+        if( anchor.x && !anchor.y) {
+            vec2.set(vec_tmp1,-entity.width/2, entity.height/2);
+            //vec2.copy(vec_tmp1, v[3]);
+        }
+        if( anchor.x &&  anchor.y) {
+            vec2.set(vec_tmp1,-entity.width/2,-entity.height/2);
+            //vec2.copy(vec_tmp1, v[0]);
+        }
+        if(!anchor.x &&  anchor.y) {
+            vec2.set(vec_tmp1, entity.width/2,-entity.height/2);
+            //vec2.copy(vec_tmp1, v[1]);
+        }
+
+        //translate mouse to local
+        mat3.invert(mat_tmp, entity.model);
+        vec2.set(vec_tmp2, event.x - offsetX, event.y - offsetY);
+        vec2.transformMat3(vec_tmp2, vec_tmp2, mat_tmp);
+
+        //get width and height
+        var width =  (vec_tmp2[0] - vec_tmp1[0])*a;
+        var height = (vec_tmp2[1] - vec_tmp1[1])*b;
+
+        //check negative width/height
+        if(width < 0) {
+            anchor.x = !anchor.x;
+            width = -width;
+            a = -a;
+            if(this.keepProportions) {
+                anchor.y = !anchor.y;
+                height = -height;
+                b = -b;
+            }
+        }
+        if(height < 0 && (!this.keepProportions || !anchor.width) ) {
+            anchor.y = !anchor.y;
+            height = -height;
+            b = -b;
+        }
+        var oldWidth = width;
+        var oldHeight = height;
+
+        //check minimum size
+        if(width < min) width = min;
+        if(height < min) height = min;
+
+        //check if keepProportions is true
+        if(this.keepProportions && anchor.width && anchor.height) {
+            if(aspect <= 1) height = width / aspect;
+            else width = height * aspect;
+        }
+
+        //get new entity local center
+        var x = 0;
+        var y = 0;
+        if(anchor.width) x = (vec_tmp2[0] + vec_tmp1[0])/2 + (width-oldWidth)/2*a;
+        if(anchor.height) y = (vec_tmp2[1] + vec_tmp1[1])/2 + (height-oldHeight)/2*b;
+        vec2.set(vec_tmp1, x, y);
+
+        //get global center
+        vec2.transformMat3(vec_tmp1, vec_tmp1, entity.model);
+
+        entity.x = vec_tmp1[0];
+        entity.y = vec_tmp1[1];
+        if(anchor.width) entity.width = width;
+        if(anchor.height) entity.height = height;
+
+        //update matrices
+        this._updateMatrices(entity);
+        this._updateEntityNormals(entity, this.ctx.canvas.width, this.ctx.canvas.height);
+
+
+        this.draw();
+        this._resizeInCanvas(entity);
+
+
+        this.draw();
+    };
+
+    CanvasEditor.prototype._resizeInCanvas = function(entity) {
+        //get all new vertices
+        var oldWidth = entity.width;
+        var oldHeight = entity.height;
+
+        var a;
+        var b;
+        if (anchor.x) a = 1;
+        else a = -1;
+        if (anchor.y) b = 1;
+        else b = -1;
+
+        var v = [];
+        v[0] = vec2.fromValues(-entity.width/2,-entity.height/2);
+        v[1] = vec2.fromValues( entity.width/2,-entity.height/2);
+        v[2] = vec2.fromValues( entity.width/2, entity.height/2);
+        v[3] = vec2.fromValues(-entity.width/2, entity.height/2);
+        var aux, _vec;
+        for(var i = 0; i < 4; ++i) {
+            _vec = v[i];
+            vec2.transformMat3(_vec, _vec, entity.model);
+            if( _vec[0] < 0 ) { //width
+
+            }
+            else if( _vec[0] > this.ctx.canvas.width) {
+            }
+        }
+        this._updateMatrices(entity);
+        this._updateEntityNormals(entity, this.ctx.canvas.width, this.ctx.canvas.height);
+    };
+
     CanvasEditor.prototype._resizeEntity = function(event) {
         mat3.invert(mat_tmp, this.selectedEntity.rotation);
         vec2.set(vec_tmp1, event.deltaX, event.deltaY);
@@ -1238,9 +1399,10 @@
             case 40:
                 if (this.selectedEntity) this.translate(0,1);
                 break;
-            //case 13: //ENTER
-            //    this.loadProduct(1);
-            //    break;
+            case 13: //ENTER
+                this._resizeInCanvas(this.selectedEntity);
+                this.draw();
+                break;
         }
     };
 
@@ -1305,7 +1467,6 @@
         event.preventDefault();
         _augmentEvent(event);
         this._fixResize(this.selectedEntity);
-        //this._updateNormals();
         _global.removeEventListener("mousemove", this._handle_mousemove_move_clicked, false);
         this.ctx.canvas.addEventListener("mousemove", this._handle_mousemove_move_notClicked, false);
         _global.removeEventListener("mousemove", this._handle_mousemove_resize, false);
