@@ -19,7 +19,7 @@ body {
     height: 100%;
 }
 #wrap {
-    background-color: #3c3c3c;
+    background-color: #000000;
     position: absolute;
     top: 50px;
     left: 50px;
@@ -27,30 +27,58 @@ body {
     bottom: 50px;
 }
 
-#toolbar {
-    background-color: #3c3c3c;
-    width: 250px;
+
+#logos_zone {
+    background-color: #5ed157;
+    width: 225px;
     height: 100%;
     margin: 0;
     padding: 0;
     float: left;
-    color: #FFF;
 }
 
-#toolbar2 {
-    padding: 5px;
-}
-
-#content {
+#tools_zone {
+    background-color: #2355c5;
     height: 100%;
-    margin-left: 260px;
-    padding: 0; 
+    width: 225px;
+    float: right;
+    margin: 0;
+    padding: 0;
 }
 
-#drop_zone {
+#product_zone {
+    padding: 0;
+    background-color: #e85447;
     height: 100%;
-    width: 100%;
+    margin-left: 235px;
+    margin-right: 235px;
 }
+
+#product_thumbs_zone {
+    background-color: #e8dc07;
+    height: 140px;
+}
+
+#editor_zone {
+    background-color: #e855c5;
+    margin-top: 10px;
+    height: calc(100% - 150px);
+}
+
+#canvas_tools_zone {
+    background-color: #8d81e8;
+    height: 100%;
+    float: right;
+    width: 150px;
+}
+
+#canvas_zone {
+    background-color: #31e8c6;
+    height: 100%;
+    margin-right: 150px;
+}
+
+
 
 input {
 	border: 0;
@@ -82,11 +110,4 @@ button:hover:not(:disabled) {
 
 button:active:not(:disabled) {
 	background-color: #222;
-}
-
-ul {
-    list-style-type: none;
-    padding: 0px;
-    margin: 0;
-    padding-bottom: 10px;
 }
