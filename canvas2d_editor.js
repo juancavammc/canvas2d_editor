@@ -949,7 +949,7 @@
                 var img = new Image();
                 img.addEventListener("load", function () {
                     //TODO: drop in center (drop_zone != canvas)
-                    var entity = createEntity(false, img, event.offsetX, event.offsetY, img.naturalWidth, img.naturalHeight, that.ctx.canvas.width, that.ctx.canvas.height, 0, that.strokeColor);
+                    var entity = createEntity(false, img, that.ctx.canvas.width/2, that.ctx.canvas.height/2, img.naturalWidth, img.naturalHeight, that.ctx.canvas.width, that.ctx.canvas.height, 0, that.strokeColor);
                     that.entities[that.current_img_id].push(entity);
                     that.draw();
                 }, false);
