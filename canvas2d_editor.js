@@ -646,6 +646,7 @@
     CanvasEditor.prototype.resizeCanvas = function(width, height) {
         if(this.current_img_id !== null) {
             this._updateEntity(this.product_images[this.current_img_id]);
+            //this._updateNormals();
             adjustCanvasTo(this.ctx.canvas, this.product_images[this.current_img_id], width, height, this.minimumSize);
         }
         this.update();
@@ -752,6 +753,7 @@
             if (this.selectedEntity.width < this.minimumSize) this.selectedEntity.width = this.minimumSize;
             if (this.selectedEntity.height < this.minimumSize) this.selectedEntity.height = this.minimumSize;
 
+            this._updateEntityNormals(this.selectedEntity, this.ctx.canvas.width, this.ctx.canvas.height);
             this.draw();
         }
     };
@@ -799,20 +801,28 @@
             this.selectedEntity.x = x;
             this.selectedEntity.y = y;
             this._checkBoundingBox(this.selectedEntity);
+            this._updateEntityNormals(this.selectedEntity, this.ctx.canvas.width, this.ctx.canvas.height);
             this.draw();
         }
     };
-
     CanvasEditor.prototype.translate = function (x, y) {
+            this.moveTo(this.selectedEntity.x + x, this.selectedEntity.y + y);
+    };
+
+    /*CanvasEditor.prototype.translate = function (x, y) {
         if(this.selectedEntity) {
             this.selectedEntity.x += x;
             this.selectedEntity.y += y;
             this._checkBoundingBox(this.selectedEntity);
             this.draw();
         }
-    };
+    };*/
 
     CanvasEditor.prototype.rotateDEG = function (angle) {
+        this.rotateRAD(DEGtoRAD(angle));
+    };
+
+    /*CanvasEditor.prototype.rotateDEG = function (angle) {
         if (this.selectedEntity) {
             angle = DEGtoRAD(angle);
             this.selectedEntity.angle += angle;
@@ -820,7 +830,7 @@
             this._updateMatrices(this.selectedEntity);
             this.draw();
         }
-    };
+    };*/
 
     CanvasEditor.prototype.rotateRAD = function (angle) {
         if (this.selectedEntity) {
@@ -1288,6 +1298,7 @@
         this._resizeInCanvas(entity);
 
 
+        this._updateEntityNormals(entity, this.ctx.canvas.width, this.ctx.canvas.height);
         this.draw();
     };
 
@@ -1387,6 +1398,7 @@
         this.selectedEntity.x += width;
         this.selectedEntity.y += height;
         this._updateMatrices(this.selectedEntity);
+        this._updateEntityNormals(this.selectedEntity, this.ctx.canvas.width, this.ctx.canvas.height);
         this.draw();
     };
 
