@@ -442,30 +442,12 @@
             console.log(json);
             that.json_content = json;
             for(var i = 0; i < json.length; ++i) {
-                var div = document.createElement("div");
-                var html_image = document.createElement("input");
-                var id = json[i].id;
-                html_image.setAttribute("type", "image");
-                html_image.setAttribute("src", json[i].url);
-                html_image.setAttribute("class", "thumb");
-                html_image.dataset.id = id;
-
-                html_image.addEventListener("click", function(event) {
-                    switchImage(event.target.dataset.id);
-                },false);
-
-                div.appendChild(html_image);
-                that.img_zone.appendChild(div);
-
                 var img = new Image();
-                img.dataset["id"] = id;
-                img.dataset["url"] = json[i].url;
-                img.src = json[i].url;
-
                 img.addEventListener("load", (function(event) {
                     //TODO: call this._updateEntity(entity);
                     var _id = event.target.dataset.id;
-                    that.product_images[_id] = createEntity(true, event.target, 0.5, 0.5, 1, 1, event.target.width, event.target.height, 0, that.strokeColor);
+                    console.log(event.target.width);
+                    that.product_images[_id] = createEntity(true, event.target, 0.5, 0.5, 1, 1, event.target.naturalWidth, event.target.naturalHeight, 0, that.strokeColor);
                     that.entities[_id] = [];
                     //load existent zones
                     for(var j = 0; j < this.zone.length; ++j) {
@@ -475,7 +457,21 @@
                         entity.id = this.zone[j].id;
                         that.entities[_id].push(entity);
                     }
+
+                    var div = document.createElement("div");
+                    div.appendChild(event.target);
+                    that.img_zone.appendChild(div);
+
                 }).bind(json[i]), false);
+
+                img.addEventListener("click", function(event) {
+                    switchImage(event.target.dataset.id);
+                },false);
+
+                img.dataset.id = json[i].id;
+                img.dataset.url = json[i].url;
+                img.setAttribute("class", "thumb");
+                img.src = json[i].url;
             }
         }
 
@@ -483,21 +479,19 @@
         function serializeJSON() {
             var json = [];
             for (var i = 0; i < that.entities.length; ++i) {
-            //for(var i in that.entities) {
                 if(!that.entities[i]) continue;
                 var img = that.product_images[i].image;
                 json[i] = {"id": i, "url": img.dataset.url, "zone": []};
                 for(var j = 0; j < that.entities[i].length; ++j) {
-                //for(var j in that.entities[i]) {
                     if(!that.entities[i][j]) continue;
                     var entity = that.entities[i][j];
                     var obj = {};
                     if(entity.id !== undefined) obj["id"] = entity.id;
                     var config = {};
-                    config.x = entity.normal_x * img.width;
-                    config.y = entity.normal_y * img.height;
-                    config.width = entity.normal_width * img.width;
-                    config.height = entity.normal_height * img.height;
+                    config.x = entity.normal_x * img.naturalWidth;
+                    config.y = entity.normal_y * img.naturalHeight;
+                    config.width = entity.normal_width * img.naturalWidth;
+                    config.height = entity.normal_height * img.naturalHeight;
                     config.angle = RADtoDEG(entity.angle);
                     obj["config"] = config;
                     json[i].zone.push(obj);
@@ -953,14 +947,13 @@
             var reader = new FileReader();
             reader.onloadend = function () {
                 var img = new Image();
-                img.src = this.result;
-
                 img.addEventListener("load", function () {
                     //TODO: drop in center (drop_zone != canvas)
-                    var entity = createEntity(false, img, event.offsetX, event.offsetY, img.width, img.height, that.ctx.canvas.width, that.ctx.canvas.height, 0, that.strokeColor);
+                    var entity = createEntity(false, img, event.offsetX, event.offsetY, img.naturalWidth, img.naturalHeight, that.ctx.canvas.width, that.ctx.canvas.height, 0, that.strokeColor);
                     that.entities[that.current_img_id].push(entity);
                     that.draw();
                 }, false);
+                img.src = this.result;
             };
             reader.readAsDataURL(file);
         }
