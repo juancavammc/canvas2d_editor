@@ -194,6 +194,7 @@
 
         that.current_img_id = null;
         that.product_images = [];
+        that.logos_images = [];
         //that.entities[that.current_img_id] = [];
 
         //Get all buttons
@@ -1017,12 +1018,16 @@
             reader.onloadend = function () {
                 var img = new Image();
                 img.addEventListener("load", function () {
-                    //TODO: drop in center (drop_zone != canvas)
-                    var entity = createEntity(false, img, that.ctx.canvas.width/2, that.ctx.canvas.height/2, img.naturalWidth, img.naturalHeight, that.ctx.canvas.width, that.ctx.canvas.height, 0, that.strokeColor);
-                    that.entities[that.current_img_id].push(entity);
-                    that.draw();
+                    if(that.current_img_id) { //TODO: TEST, remove
+                        var entity = createEntity(false, img, that.ctx.canvas.width / 2, that.ctx.canvas.height / 2, img.naturalWidth, img.naturalHeight, that.ctx.canvas.width, that.ctx.canvas.height, 0, that.strokeColor);
+                        that.entities[that.current_img_id].push(entity);
+                        that.draw();
+                    }
                 }, false);
                 img.src = this.result;
+                img.setAttribute("class", "thumb");
+                that.logos_images.push(img); //TODO: check if image already exists
+                that.drop_zone.appendChild(img);
             };
             reader.readAsDataURL(file);
         }
