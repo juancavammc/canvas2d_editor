@@ -222,6 +222,18 @@
             console.log(json);
             that.json_content = json;
             for(var i = 0; i < json.length; ++i) {
+
+                var html_image = document.createElement("input");
+                html_image.setAttribute("type", "image");
+                html_image.setAttribute("src", json[i].url);
+                html_image.setAttribute("class", "thumb");
+                html_image.dataset.id = json[i].id;
+
+                html_image.addEventListener("click", function(event) {
+                    switchImage(event.target.dataset.id);
+                },false);
+
+
                 var img = new Image();
                 img.addEventListener("load", (function(event) {
                     //TODO: call this._updateEntity(entity);
@@ -247,7 +259,7 @@
                 img.dataset.url = json[i].url;
                 img.setAttribute("class", "thumb");
                 img.src = json[i].url;
-                that.img_zone.appendChild(img);
+                that.img_zone.appendChild(html_image);
             }
         }
 
@@ -525,6 +537,19 @@
             console.log(json);
             that.json_content = json;
             for(var i = 0; i < json.length; ++i) {
+
+
+                var html_image = document.createElement("input");
+                html_image.setAttribute("type", "image");
+                html_image.setAttribute("src", json[i].url);
+                html_image.setAttribute("class", "thumb");
+                html_image.dataset.id = json[i].id;
+
+                html_image.addEventListener("click", function(event) {
+                    switchImage(event.target.dataset.id);
+                },false);
+
+
                 var img = new Image();
                 img.addEventListener("load", (function(event) {
                     //TODO: call this._updateEntity(entity);
@@ -550,7 +575,10 @@
                 img.dataset.url = json[i].url;
                 img.setAttribute("class", "thumb");
                 img.src = json[i].url;
-                that.img_zone.appendChild(img);
+                //var div = document.createElement("div");
+                //that.img_zone.appendChild(div);
+                //div.appendChild(html_image);
+                that.img_zone.appendChild(html_image);
             }
         }
 

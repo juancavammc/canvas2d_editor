@@ -53,6 +53,8 @@ body {
     background-color: #787878;
     height: 140px;
     text-align: center;
+    /*overflow-x: scroll;
+    overflow-y: hidden;*/
 }
 
 #editor_zone {
