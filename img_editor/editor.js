@@ -8,13 +8,11 @@
     var editor1 = new CanvasEditor();
 
     //Canvas is attached to drop_zone
-    editor1.createEditor({drop_zone: logos_zone, img_zone: logos_zone, width: canvas_zone.offsetWidth, height: canvas_zone.offsetHeight});
+    editor1.createEditor({drop_zone: logos_zone, canvas_zone: canvas_zone, img_zone: product_thumbs_zone, width: canvas_zone.offsetWidth, height: canvas_zone.offsetHeight});
     canvas_zone.appendChild(editor1.ctx.canvas);
 
     function handle_window_resize(event) {
-        editor1.ctx.canvas.width = canvas_zone.offsetWidth;
-        editor1.ctx.canvas.height = canvas_zone.offsetHeight;
-        editor1.draw();
+        editor1.resizeCanvas(canvas_zone.offsetWidth, canvas_zone.offsetHeight);
     }
     window.addEventListener("resize", handle_window_resize, false);
 

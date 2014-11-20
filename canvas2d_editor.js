@@ -144,6 +144,19 @@
             throw("drop_zone element not found: " + options.drop_zone);
         }
 
+        //Canvas Zone
+        if (options.canvas_zone) {
+            if (typeof(options.canvas_zone) == "string") {
+                that.canvas_zone = document.getElementById(options.canvas_zone);
+                if (!that.canvas_zone) throw("canvas_zone element not found: " + options.canvas_zone );
+            }
+            else {
+                that.canvas_zone = options.canvas_zone;
+            }
+        }
+        else {
+            throw("canvas_zone element not found: " + options.canvas_zone);
+        }
 
         //Image Zone
         if (options.img_zone) {
@@ -178,8 +191,10 @@
         canvas.style.position = "relative";
         that.ctx = canvas.getContext("2d");
         that.type = type.IMAGE;
-        that.current_img_id = 0;
-        that.entities[that.current_img_id] = [];
+
+        that.current_img_id = null;
+        that.product_images = [];
+        //that.entities[that.current_img_id] = [];
 
         //Get all buttons
         var button_removeSelection = document.getElementById("editor_removeSelection");
@@ -188,6 +203,72 @@
 
         //Button handlers
 
+
+        function switchImage(id_image) {
+            if(that.current_img_id !== id_image) {
+                if(that.current_img_id !== null) that._updateNormals();
+                that.current_img_id = id_image;
+                that.selectedEntity = null;
+                //that.manageDivs();
+                that.resizeCanvas(that.canvas_zone.offsetWidth, that.canvas_zone.offsetHeight);
+                that.draw();
+            }
+        }
+
+        //JSON
+        //json-->javascript
+        function configureJSON(json) {
+            console.log(json);
+            that.json_content = json;
+            for(var i = 0; i < json.length; ++i) {
+                var img = new Image();
+                img.addEventListener("load", (function(event) {
+                    //TODO: call this._updateEntity(entity);
+                    var _id = event.target.dataset.id;
+                    console.log(event.target.width);
+                    that.product_images[_id] = createEntity(true, event.target, 0.5, 0.5, 1, 1, event.target.naturalWidth, event.target.naturalHeight, 0, that.strokeColor);
+                    that.entities[_id] = [];
+                    //load existent zones
+                    //for(var j = 0; j < this.zone.length; ++j) {
+                    //    var o = this.zone[j].config;
+                    //
+                    //    var entity = createEntity(false, null, o.x, o.y, o.width, o.height, event.target.naturalWidth, event.target.naturalHeight, DEGtoRAD(o.angle), that.getRandomColor());
+                    //    entity.id = this.zone[j].id;
+                    //    that.entities[_id].push(entity);
+                    //}
+                }).bind(json[i]), false);
+
+                img.addEventListener("click", function(event) {
+                    switchImage(event.target.dataset.id);
+                },false);
+
+                img.dataset.id = json[i].id;
+                img.dataset.url = json[i].url;
+                img.setAttribute("class", "thumb");
+                img.src = json[i].url;
+                that.img_zone.appendChild(img);
+            }
+        }
+
+        function loadProduct(id) {
+            if(!_global.localStorage.json) {
+                var xmlhttp = new XMLHttpRequest();
+                var url = "assets/test.json";
+
+                xmlhttp.onreadystatechange = function () {
+                    if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
+                        var json = JSON.parse(xmlhttp.responseText);
+                        configureJSON(json);
+                    }
+                };
+                xmlhttp.open("GET", url, true);
+                xmlhttp.send();
+                console.log(_global.localStorage);
+            }
+            else {
+                configureJSON(JSON.parse(_global.localStorage.json));
+            }
+        }
 
         //Other handlers
         this._handle_mouseup = handle_mouseup.bind(this);
@@ -205,6 +286,7 @@
         this.ctx.canvas.addEventListener("mousedown", handle_mousedown.bind(this), false);
         this.ctx.canvas.addEventListener("mousemove", this._handle_mousemove_move_notClicked, false);
 
+        loadProduct(1);
     };
 
 
@@ -453,15 +535,10 @@
                     for(var j = 0; j < this.zone.length; ++j) {
                         var o = this.zone[j].config;
 
-                        var entity = createEntity(false, null, o.x, o.y, o.width, o.height, event.target.width, event.target.height, DEGtoRAD(o.angle), that.getRandomColor());
+                        var entity = createEntity(false, null, o.x, o.y, o.width, o.height, event.target.naturalWidth, event.target.naturalHeight, DEGtoRAD(o.angle), that.getRandomColor());
                         entity.id = this.zone[j].id;
                         that.entities[_id].push(entity);
                     }
-
-                    var div = document.createElement("div");
-                    div.appendChild(event.target);
-                    that.img_zone.appendChild(div);
-
                 }).bind(json[i]), false);
 
                 img.addEventListener("click", function(event) {
@@ -472,6 +549,7 @@
                 img.dataset.url = json[i].url;
                 img.setAttribute("class", "thumb");
                 img.src = json[i].url;
+                that.img_zone.appendChild(img);
             }
         }
 
@@ -565,18 +643,9 @@
     }
 
     CanvasEditor.prototype.resizeCanvas = function(width, height) {
-        //zone_editor
-        if(this.type === type.ZONE) {
-            //this._updateNormals();
-            if(this.current_img_id !== null) {
-                this._updateEntity(this.product_images[this.current_img_id]);
-                adjustCanvasTo(this.ctx.canvas, this.product_images[this.current_img_id], width, height, this.minimumSize);
-            }
-        }
-        //image_editor
-        else if(this.type === type.IMAGE) {
-            this.ctx.canvas.width = width || this.minimumSize;
-            this.ctx.canvas.height = height || this.minimumSize;
+        if(this.current_img_id !== null) {
+            this._updateEntity(this.product_images[this.current_img_id]);
+            adjustCanvasTo(this.ctx.canvas, this.product_images[this.current_img_id], width, height, this.minimumSize);
         }
         this.update();
         this.draw();

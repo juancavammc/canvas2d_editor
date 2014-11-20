@@ -89,6 +89,7 @@ body {
     margin: 0;
     padding: 0;
 }
+
 input {
 	border: 0;
 	margin: 3px;
@@ -115,6 +116,10 @@ input[type="button"] {
     background: #42A0FF;
     color: #FFFFFF;
     height: 30px;
+}
+
+input[type="button"].size1 {
+    width: 125px;
 }
 
 input[type="button"]:hover:not(:disabled) {
