@@ -194,6 +194,7 @@
 
         that.current_img_id = null;
         that.product_images = [];
+        that.logos_images = [];
         //that.entities[that.current_img_id] = [];
 
         //Get all buttons
@@ -645,6 +646,7 @@
     CanvasEditor.prototype.resizeCanvas = function(width, height) {
         if(this.current_img_id !== null) {
             this._updateEntity(this.product_images[this.current_img_id]);
+            //this._updateNormals();
             adjustCanvasTo(this.ctx.canvas, this.product_images[this.current_img_id], width, height, this.minimumSize);
         }
         this.update();
@@ -751,6 +753,7 @@
             if (this.selectedEntity.width < this.minimumSize) this.selectedEntity.width = this.minimumSize;
             if (this.selectedEntity.height < this.minimumSize) this.selectedEntity.height = this.minimumSize;
 
+            this._updateEntityNormals(this.selectedEntity, this.ctx.canvas.width, this.ctx.canvas.height);
             this.draw();
         }
     };
@@ -798,20 +801,28 @@
             this.selectedEntity.x = x;
             this.selectedEntity.y = y;
             this._checkBoundingBox(this.selectedEntity);
+            this._updateEntityNormals(this.selectedEntity, this.ctx.canvas.width, this.ctx.canvas.height);
             this.draw();
         }
     };
-
     CanvasEditor.prototype.translate = function (x, y) {
+            this.moveTo(this.selectedEntity.x + x, this.selectedEntity.y + y);
+    };
+
+    /*CanvasEditor.prototype.translate = function (x, y) {
         if(this.selectedEntity) {
             this.selectedEntity.x += x;
             this.selectedEntity.y += y;
             this._checkBoundingBox(this.selectedEntity);
             this.draw();
         }
-    };
+    };*/
 
     CanvasEditor.prototype.rotateDEG = function (angle) {
+        this.rotateRAD(DEGtoRAD(angle));
+    };
+
+    /*CanvasEditor.prototype.rotateDEG = function (angle) {
         if (this.selectedEntity) {
             angle = DEGtoRAD(angle);
             this.selectedEntity.angle += angle;
@@ -819,7 +830,7 @@
             this._updateMatrices(this.selectedEntity);
             this.draw();
         }
-    };
+    };*/
 
     CanvasEditor.prototype.rotateRAD = function (angle) {
         if (this.selectedEntity) {
@@ -1017,12 +1028,16 @@
             reader.onloadend = function () {
                 var img = new Image();
                 img.addEventListener("load", function () {
-                    //TODO: drop in center (drop_zone != canvas)
-                    var entity = createEntity(false, img, that.ctx.canvas.width/2, that.ctx.canvas.height/2, img.naturalWidth, img.naturalHeight, that.ctx.canvas.width, that.ctx.canvas.height, 0, that.strokeColor);
-                    that.entities[that.current_img_id].push(entity);
-                    that.draw();
+                    if(that.current_img_id) { //TODO: TEST, remove
+                        var entity = createEntity(false, img, that.ctx.canvas.width / 2, that.ctx.canvas.height / 2, img.naturalWidth, img.naturalHeight, that.ctx.canvas.width, that.ctx.canvas.height, 0, that.strokeColor);
+                        that.entities[that.current_img_id].push(entity);
+                        that.draw();
+                    }
                 }, false);
                 img.src = this.result;
+                img.setAttribute("class", "thumb");
+                that.logos_images.push(img); //TODO: check if image already exists
+                that.drop_zone.appendChild(img);
             };
             reader.readAsDataURL(file);
         }
@@ -1283,6 +1298,7 @@
         this._resizeInCanvas(entity);
 
 
+        this._updateEntityNormals(entity, this.ctx.canvas.width, this.ctx.canvas.height);
         this.draw();
     };
 
@@ -1382,6 +1398,7 @@
         this.selectedEntity.x += width;
         this.selectedEntity.y += height;
         this._updateMatrices(this.selectedEntity);
+        this._updateEntityNormals(this.selectedEntity, this.ctx.canvas.width, this.ctx.canvas.height);
         this.draw();
     };
 
