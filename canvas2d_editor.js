@@ -143,6 +143,35 @@
         else {
             throw("drop_zone element not found: " + options.drop_zone);
         }
+
+        //Canvas Zone
+        if (options.canvas_zone) {
+            if (typeof(options.canvas_zone) == "string") {
+                that.canvas_zone = document.getElementById(options.canvas_zone);
+                if (!that.canvas_zone) throw("canvas_zone element not found: " + options.canvas_zone );
+            }
+            else {
+                that.canvas_zone = options.canvas_zone;
+            }
+        }
+        else {
+            throw("canvas_zone element not found: " + options.canvas_zone);
+        }
+
+        //Image Zone
+        if (options.img_zone) {
+            if (typeof(options.img_zone) == "string") {
+                that.img_zone = document.getElementById(options.img_zone);
+                if (!that.img_zone) throw("img_zone element not found: " + options.img_zone );
+            }
+            else {
+                that.img_zone = options.img_zone;
+            }
+        }
+        else {
+            throw("img_zone element not found: " + options.img_zone);
+        }
+
         //Canvas
         if (options.canvas) {
             if (typeof(options.canvas) == "string") {
@@ -162,9 +191,86 @@
         canvas.style.position = "relative";
         that.ctx = canvas.getContext("2d");
         that.type = type.IMAGE;
-        that.current_img_id = 0;
-        that.entities[that.current_img_id] = [];
 
+        that.current_img_id = null;
+        that.product_images = [];
+        //that.entities[that.current_img_id] = [];
+
+        //Get all buttons
+        var button_removeSelection = document.getElementById("editor_removeSelection");
+        var button_cleanSelection = document.getElementById("editor_cleanSelection");
+        var button_addText = document.getElementById("editor_addText");
+
+        //Button handlers
+
+
+        function switchImage(id_image) {
+            if(that.current_img_id !== id_image) {
+                if(that.current_img_id !== null) that._updateNormals();
+                that.current_img_id = id_image;
+                that.selectedEntity = null;
+                //that.manageDivs();
+                that.resizeCanvas(that.canvas_zone.offsetWidth, that.canvas_zone.offsetHeight);
+                that.draw();
+            }
+        }
+
+        //JSON
+        //json-->javascript
+        function configureJSON(json) {
+            console.log(json);
+            that.json_content = json;
+            for(var i = 0; i < json.length; ++i) {
+                var img = new Image();
+                img.addEventListener("load", (function(event) {
+                    //TODO: call this._updateEntity(entity);
+                    var _id = event.target.dataset.id;
+                    console.log(event.target.width);
+                    that.product_images[_id] = createEntity(true, event.target, 0.5, 0.5, 1, 1, event.target.naturalWidth, event.target.naturalHeight, 0, that.strokeColor);
+                    that.entities[_id] = [];
+                    //load existent zones
+                    //for(var j = 0; j < this.zone.length; ++j) {
+                    //    var o = this.zone[j].config;
+                    //
+                    //    var entity = createEntity(false, null, o.x, o.y, o.width, o.height, event.target.naturalWidth, event.target.naturalHeight, DEGtoRAD(o.angle), that.getRandomColor());
+                    //    entity.id = this.zone[j].id;
+                    //    that.entities[_id].push(entity);
+                    //}
+                }).bind(json[i]), false);
+
+                img.addEventListener("click", function(event) {
+                    switchImage(event.target.dataset.id);
+                },false);
+
+                img.dataset.id = json[i].id;
+                img.dataset.url = json[i].url;
+                img.setAttribute("class", "thumb");
+                img.src = json[i].url;
+                that.img_zone.appendChild(img);
+            }
+        }
+
+        function loadProduct(id) {
+            if(!_global.localStorage.json) {
+                var xmlhttp = new XMLHttpRequest();
+                var url = "assets/test.json";
+
+                xmlhttp.onreadystatechange = function () {
+                    if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
+                        var json = JSON.parse(xmlhttp.responseText);
+                        configureJSON(json);
+                    }
+                };
+                xmlhttp.open("GET", url, true);
+                xmlhttp.send();
+                console.log(_global.localStorage);
+            }
+            else {
+                configureJSON(JSON.parse(_global.localStorage.json));
+            }
+        }
+
+        //Other handlers
         this._handle_mouseup = handle_mouseup.bind(this);
         this._handle_mousemove_resize = handle_mousemove_resize.bind(this);
         this._handle_mousemove_rotate = handle_mousemove_rotate.bind(this);
@@ -180,6 +286,7 @@
         this.ctx.canvas.addEventListener("mousedown", handle_mousedown.bind(this), false);
         this.ctx.canvas.addEventListener("mousemove", this._handle_mousemove_move_notClicked, false);
 
+        loadProduct(1);
     };
 
 
@@ -417,40 +524,32 @@
             console.log(json);
             that.json_content = json;
             for(var i = 0; i < json.length; ++i) {
-                var div = document.createElement("div");
-                var html_image = document.createElement("input");
-                var id = json[i].id;
-                html_image.setAttribute("type", "image");
-                html_image.setAttribute("src", json[i].url);
-                html_image.setAttribute("class", "thumb");
-                html_image.dataset.id = id;
-
-                html_image.addEventListener("click", function(event) {
-                    switchImage(event.target.dataset.id);
-                },false);
-
-                div.appendChild(html_image);
-                that.img_zone.appendChild(div);
-
                 var img = new Image();
-                img.dataset["id"] = id;
-                img.dataset["url"] = json[i].url;
-                img.src = json[i].url;
-
                 img.addEventListener("load", (function(event) {
                     //TODO: call this._updateEntity(entity);
                     var _id = event.target.dataset.id;
-                    that.product_images[_id] = createEntity(true, event.target, 0.5, 0.5, 1, 1, event.target.width, event.target.height, 0, that.strokeColor);
+                    console.log(event.target.width);
+                    that.product_images[_id] = createEntity(true, event.target, 0.5, 0.5, 1, 1, event.target.naturalWidth, event.target.naturalHeight, 0, that.strokeColor);
                     that.entities[_id] = [];
                     //load existent zones
                     for(var j = 0; j < this.zone.length; ++j) {
                         var o = this.zone[j].config;
 
-                        var entity = createEntity(false, null, o.x, o.y, o.width, o.height, event.target.width, event.target.height, DEGtoRAD(o.angle), that.getRandomColor());
+                        var entity = createEntity(false, null, o.x, o.y, o.width, o.height, event.target.naturalWidth, event.target.naturalHeight, DEGtoRAD(o.angle), that.getRandomColor());
                         entity.id = this.zone[j].id;
                         that.entities[_id].push(entity);
                     }
                 }).bind(json[i]), false);
+
+                img.addEventListener("click", function(event) {
+                    switchImage(event.target.dataset.id);
+                },false);
+
+                img.dataset.id = json[i].id;
+                img.dataset.url = json[i].url;
+                img.setAttribute("class", "thumb");
+                img.src = json[i].url;
+                that.img_zone.appendChild(img);
             }
         }
 
@@ -458,21 +557,19 @@
         function serializeJSON() {
             var json = [];
             for (var i = 0; i < that.entities.length; ++i) {
-            //for(var i in that.entities) {
                 if(!that.entities[i]) continue;
                 var img = that.product_images[i].image;
                 json[i] = {"id": i, "url": img.dataset.url, "zone": []};
                 for(var j = 0; j < that.entities[i].length; ++j) {
-                //for(var j in that.entities[i]) {
                     if(!that.entities[i][j]) continue;
                     var entity = that.entities[i][j];
                     var obj = {};
                     if(entity.id !== undefined) obj["id"] = entity.id;
                     var config = {};
-                    config.x = entity.normal_x * img.width;
-                    config.y = entity.normal_y * img.height;
-                    config.width = entity.normal_width * img.width;
-                    config.height = entity.normal_height * img.height;
+                    config.x = entity.normal_x * img.naturalWidth;
+                    config.y = entity.normal_y * img.naturalHeight;
+                    config.width = entity.normal_width * img.naturalWidth;
+                    config.height = entity.normal_height * img.naturalHeight;
                     config.angle = RADtoDEG(entity.angle);
                     obj["config"] = config;
                     json[i].zone.push(obj);
@@ -546,18 +643,9 @@
     }
 
     CanvasEditor.prototype.resizeCanvas = function(width, height) {
-        //zone_editor
-        if(this.type === type.ZONE) {
-            //this._updateNormals();
-            if(this.current_img_id !== null) {
-                this._updateEntity(this.product_images[this.current_img_id]);
-                adjustCanvasTo(this.ctx.canvas, this.product_images[this.current_img_id], width, height, this.minimumSize);
-            }
-        }
-        //image_editor
-        else if(this.type === type.IMAGE) {
-            this.ctx.canvas.width = width || this.minimumSize;
-            this.ctx.canvas.height = height || this.minimumSize;
+        if(this.current_img_id !== null) {
+            this._updateEntity(this.product_images[this.current_img_id]);
+            adjustCanvasTo(this.ctx.canvas, this.product_images[this.current_img_id], width, height, this.minimumSize);
         }
         this.update();
         this.draw();
@@ -928,14 +1016,13 @@
             var reader = new FileReader();
             reader.onloadend = function () {
                 var img = new Image();
-                img.src = this.result;
-
                 img.addEventListener("load", function () {
                     //TODO: drop in center (drop_zone != canvas)
-                    var entity = createEntity(false, img, event.offsetX, event.offsetY, img.width, img.height, that.ctx.canvas.width, that.ctx.canvas.height, 0, that.strokeColor);
+                    var entity = createEntity(false, img, that.ctx.canvas.width/2, that.ctx.canvas.height/2, img.naturalWidth, img.naturalHeight, that.ctx.canvas.width, that.ctx.canvas.height, 0, that.strokeColor);
                     that.entities[that.current_img_id].push(entity);
                     that.draw();
                 }, false);
+                img.src = this.result;
             };
             reader.readAsDataURL(file);
         }

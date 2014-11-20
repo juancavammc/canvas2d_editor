@@ -7,7 +7,23 @@
     </head>
     <body>
         <div id="wrap">
-            <div id="drop_zone"><!-- canvas here --></div>
+            <div id="logos_zone">
+                <!-- <div id="drop_zone"></div> -->
+            </div>
+            <div id="tools_zone"></div>
+            <div id="product_zone">
+                <div id="product_thumbs_zone"></div>
+                <div id="editor_zone">
+                    <div id="canvas_tools_zone">
+                        <div id="canvas_tools_zone_content">
+                            <input type="button" value="Eliminar selección" src="" id="editor_removeSelection" class="red size1">
+                            <input type="button" value="Limpiar todo" src="" id="editor_cleanSelection" class="red size1">
+                            <input type="button" value="Agregar texto" src="" id="editor_addText" class="blue size1">
+                        </div>
+                    </div>
+                    <div id="canvas_zone"></div>
+                </div>
+            </div>
         </div>
         <script type="text/javascript" src="../gl-matrix.js"></script>
         <script type="text/javascript" src="../canvas2d_editor.js"></script>

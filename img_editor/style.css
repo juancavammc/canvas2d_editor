@@ -14,12 +14,7 @@ body {
     font:  14px 'Tahoma';
 }
 
-#all {
-    width: 100%;
-    height: 100%;
-}
 #wrap {
-    background-color: #3c3c3c;
     position: absolute;
     top: 50px;
     left: 50px;
@@ -27,29 +22,70 @@ body {
     bottom: 50px;
 }
 
-#toolbar {
-    background-color: #3c3c3c;
-    width: 250px;
+
+#logos_zone {
+    background-color: #787878;
+    width: 225px;
     height: 100%;
     margin: 0;
     padding: 0;
     float: left;
-    color: #FFF;
 }
 
-#toolbar2 {
+#tools_zone {
+    background-color: #787878;
+    height: 100%;
+    width: 225px;
+    float: right;
+    margin: 0;
+    padding: 0;
+}
+
+#product_zone {
+    padding: 0;
+    height: 100%;
+    margin-left: 235px;
+    margin-right: 235px;
+}
+
+#product_thumbs_zone {
+    background-color: #787878;
+    height: 140px;
+    text-align: center;
+}
+
+#editor_zone {
+    background-color: #787878;
+    margin-top: 10px;
+    height: calc(100% - 150px);
+}
+
+#canvas_tools_zone {
+    position: relative;
+    background-color: #787878;
+    height: 100%;
+    float: right;
+    width: 150px;
+}
+
+#canvas_tools_zone_content {
+    position: absolute;
+    bottom: 0;
     padding: 5px;
 }
 
-#content {
+#canvas_zone {
     height: 100%;
-    margin-left: 260px;
-    padding: 0; 
+    margin-right: 150px;
 }
 
-#drop_zone {
-    height: 100%;
-    width: 100%;
+.thumb {
+    /*float: left;
+    max-width:100%;*/
+    max-height:100%;
+    border: 0;
+    margin: 0;
+    padding: 0;
 }
 
 input {
@@ -68,25 +104,50 @@ input[type="text"] {
     border: 2px solid black;
 }
 
-button {
-    background: #747474;
-    color: #FFFFFF;
-    border: 2px solid black;
-    width: 40px;
-}
-
-
-button:hover:not(:disabled) {
-	background: #a2a2a2;
-}
-
-button:active:not(:disabled) {
-	background-color: #222;
-}
-
-ul {
-    list-style-type: none;
-    padding: 0px;
+input[type="image"] {
+    border: 0;
     margin: 0;
-    padding-bottom: 10px;
+    padding: 0;
+}
+
+input[type="button"] {
+    background: #42A0FF;
+    color: #FFFFFF;
+    height: 30px;
+}
+
+input[type="button"].size1 {
+    width: 125px;
+}
+
+input[type="button"]:hover:not(:disabled) {
+    background: #a2a2a2;
+}
+
+input[type="button"]:active:not(:disabled) {
+    background: #a6a6a6;
+}
+
+input[type="button"].blue {
+    background: #3d77d2;
+}
+
+input[type="button"]:hover:not(:disabled).blue {
+    background: #42A0FF;
+}
+
+input[type="button"].red {
+    background: #d25656;
+}
+
+input[type="button"]:hover:not(:disabled).red {
+    background: #ff6464;
+}
+
+input[type="button"].green {
+    background: #20af57;
+}
+
+input[type="button"]:hover:not(:disabled).green {
+    background: #21dc81;
 }
