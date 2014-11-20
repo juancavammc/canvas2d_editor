@@ -143,6 +143,22 @@
         else {
             throw("drop_zone element not found: " + options.drop_zone);
         }
+
+
+        //Image Zone
+        if (options.img_zone) {
+            if (typeof(options.img_zone) == "string") {
+                that.img_zone = document.getElementById(options.img_zone);
+                if (!that.img_zone) throw("img_zone element not found: " + options.img_zone );
+            }
+            else {
+                that.img_zone = options.img_zone;
+            }
+        }
+        else {
+            throw("img_zone element not found: " + options.img_zone);
+        }
+
         //Canvas
         if (options.canvas) {
             if (typeof(options.canvas) == "string") {
@@ -165,6 +181,15 @@
         that.current_img_id = 0;
         that.entities[that.current_img_id] = [];
 
+        //Get all buttons
+        var button_removeSelection = document.getElementById("editor_removeSelection");
+        var button_cleanSelection = document.getElementById("editor_cleanSelection");
+        var button_addText = document.getElementById("editor_addText");
+
+        //Button handlers
+
+
+        //Other handlers
         this._handle_mouseup = handle_mouseup.bind(this);
         this._handle_mousemove_resize = handle_mousemove_resize.bind(this);
         this._handle_mousemove_rotate = handle_mousemove_rotate.bind(this);
