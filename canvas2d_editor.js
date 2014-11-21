@@ -99,16 +99,32 @@
     }
 
     function _augmentEvent(event) {
-        if (event.offsetX === undefined) {
-            event.offsetX = event.layerX;
-            event.offsetY = event.layerY;
-            event.x = event.clientX;
-            event.y = event.clientY;
+        //if (event.offsetX === undefined) {
+        //    event.offsetX = event.layerX;
+        //    event.offsetY = event.layerY;
+        //    event.x = event.clientX;
+        //    event.y = event.clientY;
+        //}
+        //else if(event.x != event.clientX || event.y != event.clientY) {
+        //    event.x = event.clientX;
+        //    event.y = event.clientY;
+        //}
+        event.globalX = event.clientX;
+        event.globalY = event.clientY;
+
+        if(event.offsetX && (event.offsetX != event.layerX || event.offsetY != event.layerY)) {
+            event.localX = event.offsetX;
+            event.localY = event.offsetY;
         }
-        event.deltaX = event.x - lastX;
-        event.deltaY = event.y - lastY;
-        lastX = event.x;
-        lastY = event.y;
+        else {
+            event.localX = event.layerX;
+            event.localY = event.layerY;
+        }
+
+        event.deltaX = event.globalX - lastX;
+        event.deltaY = event.globalY - lastY;
+        lastX = event.globalX;
+        lastY = event.globalY;
     }
 
     function _createCanvas(width, height) {
@@ -930,8 +946,8 @@
         if (this.selectedEntity) {
             this._checkCorners(event);
             if (anchor.resizing) {
-                offsetX = event.x - event.offsetX;
-                offsetY = event.y - event.offsetY;
+                offsetX = event.globalX - event.localX;
+                offsetY = event.globalY - event.localY;
                 _global.addEventListener("mousemove", this._handle_mousemove_resize, false);
                 _global.addEventListener("mouseup", this._handle_mouseup, false);
                 this.draw();
@@ -939,9 +955,9 @@
             }
             else if (anchor.rotating) {
                 tempAngle = this.selectedEntity.angle;
-                offsetX = event.x - event.offsetX;
-                offsetY = event.y - event.offsetY;
-                vec2.set(vec_tmp2, event.x - offsetX, event.y - offsetY);
+                offsetX = event.globalX - event.localX;
+                offsetY = event.globalY - event.localY;
+                vec2.set(vec_tmp2, event.globalX - offsetX, event.globalY - offsetY);
                 vec2.subtract(vec_tmp2, vec_tmp2, this.selectedEntity.position);
                 vec2.normalize(vec_tmp2, vec_tmp2);
                 _global.addEventListener("mousemove", this._handle_mousemove_rotate, false);
@@ -952,10 +968,10 @@
         }
 
         //if not resizing, check if selecting
-        this.selectedEntity = this._mouseInsideEntity(event.offsetX, event.offsetY);
+        this.selectedEntity = this._mouseInsideEntity(event.localX, event.localY);
         if(this.selectedEntity) {
-            offsetX = event.x - this.selectedEntity.x;
-            offsetY = event.y - this.selectedEntity.y;
+            offsetX = event.globalX - this.selectedEntity.x;
+            offsetY = event.globalY - this.selectedEntity.y;
             _global.addEventListener("mousemove", this._handle_mousemove_move_clicked, false);
             _global.addEventListener("mouseup", this._handle_mouseup, false);
             this.draw();
@@ -1168,7 +1184,7 @@
         var w = this.selectedEntity.width;
         var h = this.selectedEntity.height;
         mat3.invert(mat_tmp, this.selectedEntity.model);
-        vec2.set(vec_tmp1, event.offsetX, event.offsetY);
+        vec2.set(vec_tmp1, event.localX, event.localY);
         vec2.transformMat3(vec_tmp1, vec_tmp1, mat_tmp);
         var x = vec_tmp1[0];
         var y = vec_tmp1[1];
@@ -1298,7 +1314,7 @@
 
         //translate mouse to local
         mat3.invert(mat_tmp, entity.model);
-        vec2.set(vec_tmp2, event.x - offsetX, event.y - offsetY);
+        vec2.set(vec_tmp2, event.globalX - offsetX, event.globalY - offsetY);
         vec2.transformMat3(vec_tmp2, vec_tmp2, mat_tmp);
 
         //get width and height
@@ -1471,7 +1487,7 @@
     };
 
     CanvasEditor.prototype._rotateEntity = function(event) {
-        vec2.set(vec_tmp1, event.x - offsetX, event.y - offsetY);
+        vec2.set(vec_tmp1, event.globalX - offsetX, event.globalY - offsetY);
         vec2.subtract(vec_tmp1, vec_tmp1, this.selectedEntity.position);
         vec2.normalize(vec_tmp1, vec_tmp1);
         var angle = vec2.computeSignedAngle(vec_tmp1, vec_tmp2);
@@ -1491,11 +1507,11 @@
     };
 
     CanvasEditor.prototype._setNewPosition = function(event) {
-        this.moveTo(event.x - offsetX, event.y - offsetY);
+        this.moveTo(event.globalX - offsetX, event.globalY - offsetY);
     };
 
     CanvasEditor.prototype._check_mouseOverEntity = function(event) {
-        var entity = this._mouseInsideEntity(event.offsetX, event.offsetY);
+        var entity = this._mouseInsideEntity(event.localX, event.localY);
         if (entity) {
             this.entityMouseOver = entity;
             this.ctx.save();
@@ -1608,7 +1624,7 @@
         event.stopPropagation();
         event.preventDefault();
         _augmentEvent(event);
-        console.log(event.x, event.y);
+        console.log(event.globalX, event.globalY);
         if (this.selectedEntity) this._checkCorners(event);
         if(this.current_img_id !== null) this._check_mouseOverEntity(event);
     }
