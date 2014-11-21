@@ -1206,7 +1206,7 @@
         }
     };
 
-    CanvasEditor.prototype.__resizeEntity = function(event) {
+    /*CanvasEditor.prototype.__resizeEntity = function(event) {
         var entity = this.selectedEntity;
         var min = this.minimumSize;
         var aspect = this.selectedEntity.width / this.selectedEntity.height;
@@ -1331,7 +1331,7 @@
         }
         this._updateMatrices(entity);
         this._updateEntityNormals(entity, this.ctx.canvas.width, this.ctx.canvas.height);
-    };
+    };*/
 
     CanvasEditor.prototype._resizeEntity = function(event) {
         mat3.invert(mat_tmp, this.selectedEntity.rotation);
@@ -1503,10 +1503,10 @@
             case 40:
                 if (this.selectedEntity) this.translate(0,1);
                 break;
-            case 13: //ENTER
+            /*case 13: //ENTER
                 this._resizeInCanvas(this.selectedEntity);
                 this.draw();
-                break;
+                break;*/
         }
     };
 
