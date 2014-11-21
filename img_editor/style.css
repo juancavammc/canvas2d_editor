@@ -71,6 +71,10 @@ body {
     width: 150px;
 }
 
+#div_editor_entityButtons {
+    padding: 5px;
+}
+
 #canvas_tools_zone_content {
     position: absolute;
     bottom: 0;

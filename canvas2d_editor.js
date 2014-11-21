@@ -201,20 +201,54 @@
         var button_removeSelection = document.getElementById("editor_removeSelection");
         var button_cleanSelection = document.getElementById("editor_cleanSelection");
         var button_addText = document.getElementById("editor_addText");
+        var button_move = document.getElementById("editor_move");
+        var button_scale = document.getElementById("editor_scale");
+        var button_rotate = document.getElementById("editor_rotate");
+        var button_move_left = document.getElementById("editor_move_left");
+        var button_move_right = document.getElementById("editor_move_right");
+        var button_move_up = document.getElementById("editor_move_up");
+        var button_move_down = document.getElementById("editor_move_down");
+        var button_scale_v_shrink = document.getElementById("editor_scale_v_shrink");
+        var button_scale_v_expand = document.getElementById("editor_scale_v_expand");
+        var button_scale_h_shrink = document.getElementById("editor_scale_h_shrink");
+        var button_scale_h_expand = document.getElementById("editor_scale_h_expand");
+        var button_rotate_left = document.getElementById("editor_rotate_left");
+        var button_rotate_right = document.getElementById("editor_rotate_right");
 
+        //Get divs
+        var div_canvas_tools_zone_content = document.getElementById("canvas_tools_zone_content");
+        var div_editor_mainButtons =  document.getElementById("div_editor_mainButtons");
+        var div_editor_moveButtons =  document.getElementById("div_editor_moveButtons");
+        var div_editor_scaleButtons =  document.getElementById("div_editor_scaleButtons");
+        var div_editor_rotateButtons =  document.getElementById("div_editor_rotateButtons");
+
+        div_editor_mainButtons.style.display = "none";
+        div_editor_moveButtons.style.display = "none";
+        div_editor_scaleButtons.style.display = "none";
+        div_editor_rotateButtons.style.display = "none";
+        //div_canvas_tools_zone_content.style.display = "none";
+
+        this.manageDivs = function() {
+            if(that.current_img_id === null) {
+                div_editor_mainButtons.style.display = "none";
+                div_editor_moveButtons.style.display = "none";
+                div_editor_scaleButtons.style.display = "none";
+                div_editor_rotateButtons.style.display = "none";
+            }
+            else {
+                if (that.selectedEntity) {
+                    div_editor_mainButtons.style.display = "block";
+                }
+                else {
+                    div_editor_mainButtons.style.display = "none";
+                    div_editor_moveButtons.style.display = "none";
+                    div_editor_scaleButtons.style.display = "none";
+                    div_editor_rotateButtons.style.display = "none";
+                }
+            }
+        };
         //Button handlers
 
-
-        function switchImage(id_image) {
-            if(that.current_img_id !== id_image) {
-                if(that.current_img_id !== null) that._updateNormals();
-                that.current_img_id = id_image;
-                that.selectedEntity = null;
-                //that.manageDivs();
-                that.resizeCanvas(that.canvas_zone.offsetWidth, that.canvas_zone.offsetHeight);
-                that.draw();
-            }
-        }
 
         //JSON
         //json-->javascript
@@ -230,7 +264,7 @@
                 html_image.dataset.id = json[i].id;
 
                 html_image.addEventListener("click", function(event) {
-                    switchImage(event.target.dataset.id);
+                    that._switchImage(event.target.dataset.id);
                 },false);
 
 
@@ -238,7 +272,6 @@
                 img.addEventListener("load", (function(event) {
                     //TODO: call this._updateEntity(entity);
                     var _id = event.target.dataset.id;
-                    console.log(event.target.width);
                     that.product_images[_id] = createEntity(true, event.target, 0.5, 0.5, 1, 1, event.target.naturalWidth, event.target.naturalHeight, 0, that.strokeColor);
                     that.entities[_id] = [];
                     //load existent zones
@@ -252,7 +285,7 @@
                 }).bind(json[i]), false);
 
                 img.addEventListener("click", function(event) {
-                    switchImage(event.target.dataset.id);
+                    that._switchImage(event.target.dataset.id);
                 },false);
 
                 img.dataset.id = json[i].id;
@@ -276,7 +309,6 @@
                 };
                 xmlhttp.open("GET", url, true);
                 xmlhttp.send();
-                console.log(_global.localStorage);
             }
             else {
                 configureJSON(JSON.parse(_global.localStorage.json));
@@ -383,6 +415,7 @@
         var button_deleteZone = document.getElementById("editor_remove_zone");
         var button_save = document.getElementById("editor_save");
 
+        //Get divs
         var div_editor_addzone = document.getElementById("div_editor_addzone");
         var div_editor_mainButtons =  document.getElementById("div_editor_mainButtons");
         var div_editor_moveButtons =  document.getElementById("div_editor_moveButtons");
@@ -520,16 +553,6 @@
         button_deleteZone.addEventListener("mousedown", handle_button_click_deleteZone, false);
         button_save.addEventListener("mousedown", handle_button_click_save, false);
 
-        function switchImage(id_image) {
-            if(that.current_img_id !== id_image) {
-                if(that.current_img_id !== null) that._updateNormals();
-                that.current_img_id = id_image;
-                that.selectedEntity = null;
-                that.manageDivs();
-                that.resizeCanvas(that.canvas_zone.offsetWidth, that.canvas_zone.offsetHeight);
-                that.draw();
-            }
-        }
 
         //JSON
         //json-->javascript
@@ -539,14 +562,14 @@
             for(var i = 0; i < json.length; ++i) {
 
 
-                var html_image = document.createElement("input");
-                html_image.setAttribute("type", "image");
+                var html_image = document.createElement("img");
+                //html_image.setAttribute("type", "image");
                 html_image.setAttribute("src", json[i].url);
                 html_image.setAttribute("class", "thumb");
                 html_image.dataset.id = json[i].id;
 
                 html_image.addEventListener("click", function(event) {
-                    switchImage(event.target.dataset.id);
+                    that._switchImage(event.target.dataset.id);
                 },false);
 
 
@@ -554,7 +577,6 @@
                 img.addEventListener("load", (function(event) {
                     //TODO: call this._updateEntity(entity);
                     var _id = event.target.dataset.id;
-                    console.log(event.target.width);
                     that.product_images[_id] = createEntity(true, event.target, 0.5, 0.5, 1, 1, event.target.naturalWidth, event.target.naturalHeight, 0, that.strokeColor);
                     that.entities[_id] = [];
                     //load existent zones
@@ -568,7 +590,7 @@
                 }).bind(json[i]), false);
 
                 img.addEventListener("click", function(event) {
-                    switchImage(event.target.dataset.id);
+                    that._switchImage(event.target.dataset.id);
                 },false);
 
                 img.dataset.id = json[i].id;
@@ -622,7 +644,6 @@
                 };
                 xmlhttp.open("GET", url, true);
                 xmlhttp.send();
-                console.log(_global.localStorage);
             }
             else {
                 configureJSON(JSON.parse(_global.localStorage.json));
@@ -893,6 +914,17 @@
     };
 
     //*** START INTERNAL FUNCTIONS ***
+    CanvasEditor.prototype._switchImage = function(id_image) {
+        if(this.current_img_id !== id_image) {
+            if(this.current_img_id !== null) this._updateNormals();
+            this.current_img_id = id_image;
+            this.selectedEntity = null;
+            this.manageDivs();
+            this.resizeCanvas(this.canvas_zone.offsetWidth, this.canvas_zone.offsetHeight);
+            this.draw();
+        }
+    };
+
     CanvasEditor.prototype._mouseDown = function(event) {
         //Check if is resizing
         if (this.selectedEntity) {
@@ -1576,6 +1608,7 @@
         event.stopPropagation();
         event.preventDefault();
         _augmentEvent(event);
+        console.log(event.x, event.y);
         if (this.selectedEntity) this._checkCorners(event);
         if(this.current_img_id !== null) this._check_mouseOverEntity(event);
     }
