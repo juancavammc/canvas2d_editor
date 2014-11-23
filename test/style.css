@@ -1,0 +1,154 @@
+html {
+    background-color: #d9d9d9;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    font:  14px 'Tahoma';
+}
+
+#all {
+    width: 100%;
+    height: 100%;
+}
+#wrap {
+    position: absolute;
+    top: 50px;
+    left: 50px;
+    right: 50px;
+    bottom: 50px;
+}
+
+#img_zone {
+    background-color: #787878;
+    width: 250px;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    float: left;
+    overflow-y: scroll;
+}
+
+#editor_zone {
+    height: 100%;
+    margin-left: 260px;
+    padding: 0;
+    /*float: right;*/
+}
+
+#tools_zone {
+    background-color: #787878;
+    height: 100%;
+    width: 300px;
+    float: right;
+    margin: 0;
+    padding: 0;
+}
+
+#canvas_zone {
+    padding: 0;
+    background-color: #e8e8e8;
+    height: 100%;
+    margin-right: 300px;
+    #float: left;
+}
+
+#drop_zone {
+    height: 100%;
+    width: 100%;
+}
+
+#div_editor_addzone {
+    height: 50px
+}
+
+#div_editor_entityButtons {
+    height: 120px;
+}
+
+#div_editor_tools {
+    height: 80px;
+}
+
+#div_editor_SaveButton {
+    height: 50px;
+}
+
+.thumb {
+    max-width:100%;
+    max-height:100%;
+    border: 0;
+    margin: 0;
+    padding: 0;
+}
+
+input {
+	border: 0;
+	margin: 3px;
+	background-color: #d9d9d9;
+	color: #000;
+	padding-left: 5px;
+}
+
+input[type="text"] {
+	font-size: 14px;
+    font-family: ‘Lucida Console’, Monaco, monospace;
+    width: 30px;
+    /*height: 14px;*/
+    border: 2px solid black;
+}
+
+input[type="image"] {
+    border: 0;
+    margin: 0;
+    padding: 0;
+}
+
+input[type="button"] {
+    background: #42A0FF;
+    color: #FFFFFF;
+    height: 30px;
+}
+
+input[type="button"].size1 {
+    width: 125px;
+}
+
+input[type="button"]:hover:not(:disabled) {
+    background: #a2a2a2;
+}
+
+input[type="button"]:active:not(:disabled) {
+    background: #a6a6a6;
+}
+
+input[type="button"].blue {
+    background: #3d77d2;
+}
+
+input[type="button"]:hover:not(:disabled).blue {
+    background: #42A0FF;
+}
+
+input[type="button"].red {
+    background: #d25656;
+}
+
+input[type="button"]:hover:not(:disabled).red {
+    background: #ff6464;
+}
+
+input[type="button"].green {
+    background: #20af57;
+}
+
+input[type="button"]:hover:not(:disabled).green {
+    background: #21dc81;
+}
