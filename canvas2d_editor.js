@@ -1002,10 +1002,11 @@
         var length;
         var i;
         if(this.product_images) {
-            length = this.product_images.length;
-            for(i = 0; i < length; ++i) {
-                this._updateEntity(this.product_images[i]);
-            }
+            //length = this.product_images.length;
+            //for(i = 0; i < length; ++i) {
+            //    this._updateEntity(this.product_images[i]);
+            //}
+            if(this.current_img_id) this._updateEntity(this.product_images[this.current_img_id]);
         }
 
         if(this.current_img_id !== null) {

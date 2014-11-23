@@ -106,6 +106,43 @@
             this.model = undefined;
     }
 
+    Entity.prototype.update = function(containerWidth, containerHeight) {
+        this.width = this.normal_width * containerWidth;
+        this.height = this.normal_height * containerHeight;
+        this.x = this.normal_x * containerWidth;
+        this.y = this.normal_y * containerHeight;
+
+        this.updateMatrices();
+
+        if(this.children) {
+            var length = this.children.length;
+            for(var i = 0; i < length; ++i) {
+                this.children[i].update(containerWidth, containerHeight);
+            }
+        }
+    };
+
+    Entity.prototype.updateNormals = function(containerWidth, containerHeight) {
+        this.normal_width = this.width/containerWidth;
+        this.normal_height = this.height/containerHeight;
+        this.normal_x = this.x/containerWidth;
+        this.normal_y= this.y/containerHeight;
+
+        if(this.children) {
+            var length = this.children.length;
+            for(var i = 0; i < length; ++i) {
+                this.children[i].updateNormals(containerWidth, containerHeight);
+            }
+        }
+    };
+
+    Entity.prototype.updateMatrices = function() {
+        vec2.set(this.position, this.x, this.y);
+        mat3.translate(this.translation, identity, this.position);
+        mat3.rotate(this.rotation, identity, this.angle);
+        mat3.multiply(this.model, this.translation, this.rotation);
+    };
+
     Entity.prototype.draw = function(obj) {
 
     };
@@ -123,8 +160,8 @@
     Entity.prototype.drawModifiers = function(obj) {
         var ctx = obj.ctx;
         ctx.save();
-        ctx.strokeStyle = obj.strokeStyle;
-        ctx.fillStyle = obj.strokeStyle;
+        ctx.strokeStyle = this.strokeColor;
+        ctx.fillStyle = this.strokeColor;
         ctx.lineWidth = obj.lineWidth;
         var x = this.x;
         var y = this.y;
@@ -135,7 +172,7 @@
         ctx.translate(x, y);
         ctx.rotate(this.angle);
 
-        //ctx.strokeRect(-w / 2, -h / 2, w, h);
+        ctx.strokeRect(-w / 2, -h / 2, w, h);
 
         this.fillSquare(ctx, -w / 2, -h / 2, size);
         this.fillSquare(ctx, w / 2, -h / 2, size);
@@ -197,7 +234,7 @@
     /** EntityProduct **/
     function EntityProduct() {
         this.image = undefined;
-        this.childs = [];
+        this.childen = [];
     }
 
     EntityProduct.prototype = new Entity;
@@ -209,24 +246,33 @@
         ctx.rotate(this.angle);
         if(this.image) ctx.drawImage(this.image, -Math.abs(this.width) / 2, -Math.abs(this.height) / 2, Math.abs(this.width), Math.abs(this.height));
         ctx.restore();
-        var length = this.childs.length;
+        var length = this.childen.length;
         for(var i = 0; i < length; ++i) {
-            this.childs[i].draw(obj);
+            this.childen[i].draw(obj);
         }
+    };
+
+    EntityProduct.prototype.push = function(entity) {
+        this.childen.push(entity);
     };
 
     /** EntityCanvas **/
     function EntityCanvas() {
         this.ctx = undefined;
-        this.childs = [];
+        this.childen = [];
     }
 
     EntityCanvas.prototype = new Entity;
 
-    EntityProduct.prototype.draw = function(obj) {
+    EntityCanvas.prototype.draw = function(obj) {
 
     };
 
+    EntityCanvas.prototype.push = function(entity) {
+        this.childen.push(entity);
+    };
+
+    /** ************************************* **/
 
     _global.CanvasEditor = CanvasEditor;
     _global.Entity = Entity;
@@ -349,7 +395,6 @@
         that.type = type.IMAGE;
 
         that.current_img_id = null;
-        that.product_images = [];
         that.logos_images = [];
         //that.entities[that.current_img_id] = [];
 
@@ -428,7 +473,7 @@
                 img.addEventListener("load", (function(event) {
                     //TODO: call this._updateEntity(entity);
                     var _id = event.target.dataset.id;
-                    that.product_images[_id] = createEntity(true, event.target, 0.5, 0.5, 1, 1, event.target.naturalWidth, event.target.naturalHeight, 0, that.strokeColor);
+                    that.entities[_id] = createEntity(true, event.target, 0.5, 0.5, 1, 1, event.target.naturalWidth, event.target.naturalHeight, 0, that.strokeColor);
                     that.entities[_id] = [];
                     //load existent zones
                     //for(var j = 0; j < this.zone.length; ++j) {
@@ -550,7 +595,6 @@
         that.type = type.ZONE;
 
         that.current_img_id = null;
-        that.product_images = [];
 
 
         //Get all buttons
@@ -733,13 +777,13 @@
                 img.addEventListener("load", (function(event) {
                     //TODO: call this._updateEntity(entity);
                     var _id = event.target.dataset.id;
-                    that.product_images[_id] = createEntity(true, event.target, 0.5, 0.5, 1, 1, event.target.naturalWidth, event.target.naturalHeight, 0, that.strokeColor);
-                    that.entities[_id] = [];
+                    that.entities[_id] = createEntity("product", true, event.target, 0.5, 0.5, 1, 1, event.target.naturalWidth, event.target.naturalHeight, 0, that.strokeColor);
+
                     //load existent zones
                     for(var j = 0; j < this.zone.length; ++j) {
                         var o = this.zone[j].config;
 
-                        var entity = createEntity(false, null, o.x, o.y, o.width, o.height, event.target.naturalWidth, event.target.naturalHeight, DEGtoRAD(o.angle), that.getRandomColor());
+                        var entity = createEntity("zone", false, null, o.x, o.y, o.width, o.height, event.target.naturalWidth, event.target.naturalHeight, DEGtoRAD(o.angle), that.getRandomColor());
                         entity.id = this.zone[j].id;
                         that.entities[_id].push(entity);
                     }
@@ -765,7 +809,7 @@
             var json = [];
             for (var i = 0; i < that.entities.length; ++i) {
                 if(!that.entities[i]) continue;
-                var img = that.product_images[i].image;
+                var img = that.entities[i].image;
                 json[i] = {"id": i, "url": img.dataset.url, "zone": []};
                 for(var j = 0; j < that.entities[i].length; ++j) {
                     if(!that.entities[i][j]) continue;
@@ -820,7 +864,7 @@
             that.manageDivs();
         }
 
-        this._handle_mouseup = handle_mouseup.bind(this);
+        /*this._handle_mouseup = handle_mouseup.bind(this);
         this._handle_mousemove_resize = handle_mousemove_resize.bind(this);
         this._handle_mousemove_rotate = handle_mousemove_rotate.bind(this);
         this._handle_mousemove_move_notClicked = handle_mousemove_move_notClicked.bind(this);
@@ -833,7 +877,7 @@
         document.body.addEventListener("dragover", stop_default_drop.bind(this), false); //TODO: remove?
         document.body.addEventListener("drop", stop_default_drop.bind(this), false); //TODO: remove?
         this.ctx.canvas.addEventListener("mousedown", handle_mousedown, false);
-        this.ctx.canvas.addEventListener("mousemove", this._handle_mousemove_move_notClicked, false);
+        this.ctx.canvas.addEventListener("mousemove", this._handle_mousemove_move_notClicked, false);*/
 
         loadProduct(1);
     };
@@ -850,103 +894,34 @@
 
     CanvasEditor.prototype.resizeCanvas = function(width, height) {
         if(this.current_img_id !== null) {
-            this._updateEntity(this.product_images[this.current_img_id]);
+            this.entities[this.current_img_id].update(width, height);
             //this._updateNormals();
-            adjustCanvasTo(this.ctx.canvas, this.product_images[this.current_img_id], width, height, this.minimumSize);
+            adjustCanvasTo(this.ctx.canvas, this.entities[this.current_img_id], width, height, this.minimumSize);
         }
         this.update();
         this.draw();
     };
 
-    CanvasEditor.prototype.__draw = function () {
+    CanvasEditor.prototype.draw = function() {
         this.ctx.clearRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height);
-    };
-
-    CanvasEditor.prototype.draw = function () {
-        this.ctx.clearRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height);
-        var entity;
-        if(this.product_images) {
-            if(this.product_images[this.current_img_id]) {
-                entity = this.product_images[this.current_img_id];
-                this.ctx.save();
-                this.ctx.translate(entity.x, entity.y);
-                this.ctx.drawImage(entity.image, -Math.abs(entity.width) / 2, -Math.abs(entity.height) / 2, Math.abs(entity.width), Math.abs(entity.height));
-                this.ctx.restore();
-            }
-        }
-
         if(this.current_img_id !== null) {
-            var l = this.entities[this.current_img_id].length;
-            for (var i = 0; i < l; ++i) {
-                if (this.entities[this.current_img_id][i]) {
-                    this.ctx.save();
-                    entity = this.entities[this.current_img_id][i];
-                    this.ctx.translate(entity.x, entity.y);
-                    this.ctx.rotate(entity.angle);
-                    if (entity.image) {
-                        this.ctx.drawImage(entity.image, -Math.abs(entity.width) / 2, -Math.abs(entity.height) / 2, Math.abs(entity.width), Math.abs(entity.height));
-                        if (this.entityMouseOver === entity && this.selectedEntity !== entity) {
-                            this.ctx.lineWidth = this.lineWidth * 1.5;
-                            this.ctx.strokeStyle = entity.strokeColor;
-                            this.ctx.strokeRect(-Math.abs(entity.width) / 2, -Math.abs(entity.height) / 2, Math.abs(entity.width), Math.abs(entity.height));
-                        }
-                    }
-                    else {
-                        if(this.selectedEntity !== entity) {
-                            if (this.entityMouseOver === entity) this.ctx.lineWidth = this.lineWidth * 1.5;
-                            else this.ctx.lineWidth = this.lineWidth;
-                            this.ctx.strokeStyle = entity.strokeColor;
-                            this.ctx.strokeRect(-Math.abs(entity.width) / 2, -Math.abs(entity.height) / 2, Math.abs(entity.width), Math.abs(entity.height));
-                        }
-
-                    }
-
-                    this.ctx.restore();
-                }
+            var obj = {
+                ctx: this.ctx,
+                selectedEntity: this.selectedEntity,
+                entityMouseOver: this.entityMouseOver,
+                lineWidth: this.lineWidth,
+                squareSize: this.squareSize
+            };
+            this.entities[this.current_img_id].draw(obj);
+            if(this.selectedEntity) {
+                obj.lineWidth = obj.lineWidth*2;
+                this.selectedEntity.drawModifiers(obj);
             }
-            if (this.selectedEntity) this._drawSelection();
+            if(this.entityMouseOver && (this.entityMouseOver !== this.selectedEntity) ) {
+                obj.lineWidth = obj.lineWidth*1.5;
+                this.selectedEntity.drawBorder(obj);
+            }
         }
-    };
-
-    CanvasEditor.prototype._drawSelection = function () {
-        this.ctx.save();
-        var entity = this.selectedEntity;
-        this.ctx.strokeStyle = entity.strokeColor;
-        this.ctx.fillStyle = entity.strokeColor;
-        this.ctx.lineWidth = this.lineWidth*1.5;
-        var x = entity.x;
-        var y = entity.y;
-        var w = entity.width;
-        var h = entity.height;
-        var size = this.squaresSize;
-
-        this.ctx.translate(x, y);
-        this.ctx.rotate(entity.angle);
-
-        this.ctx.strokeRect(-w / 2, -h / 2, w, h);
-
-        this._fillSquare(-w / 2, -h / 2, size);
-        this._fillSquare(w / 2, -h / 2, size);
-        this._fillSquare(-w / 2, h / 2, size);
-        this._fillSquare(w / 2, h / 2, size);
-
-        this._fillSquare(0, -h / 2, size);
-        this._fillSquare(-w / 2, 0, size);
-        this._fillSquare(0, h / 2, size);
-        this._fillSquare(w / 2, 0, size);
-
-        this.ctx.beginPath();
-        this.ctx.moveTo(0, -h / 2);
-        this.ctx.lineTo(0, -this.sizeLine - h / 2);
-        this.ctx.stroke();
-        this.ctx.closePath();
-
-        this.ctx.beginPath();
-        this.ctx.arc(0, -this.sizeLine - h / 2, size, 0, 2 * Math.PI);
-        this.ctx.fill();
-        this.ctx.stroke();
-
-        this.ctx.restore();
     };
 
     CanvasEditor.prototype._fillSquare = function (x, y, halfsize) {
@@ -1018,28 +993,9 @@
             this.moveTo(this.selectedEntity.x + x, this.selectedEntity.y + y);
     };
 
-    /*CanvasEditor.prototype.translate = function (x, y) {
-        if(this.selectedEntity) {
-            this.selectedEntity.x += x;
-            this.selectedEntity.y += y;
-            this._checkBoundingBox(this.selectedEntity);
-            this.draw();
-        }
-    };*/
-
     CanvasEditor.prototype.rotateDEG = function (angle) {
         this.rotateRAD(DEGtoRAD(angle));
     };
-
-    /*CanvasEditor.prototype.rotateDEG = function (angle) {
-        if (this.selectedEntity) {
-            angle = DEGtoRAD(angle);
-            this.selectedEntity.angle += angle;
-            this.selectedEntity.angle = this.selectedEntity.angle % (Math.PI * 2);
-            this._updateMatrices(this.selectedEntity);
-            this.draw();
-        }
-    };*/
 
     CanvasEditor.prototype.rotateRAD = function (angle) {
         if (this.selectedEntity) {
@@ -1060,8 +1016,8 @@
 
     CanvasEditor.prototype.addZone = function() {
         var aspect = this.ctx.canvas.width /this.ctx.canvas.height;
-        var container_width = this.product_images[this.current_img_id].width;
-        var container_height = this.product_images[this.current_img_id].height;
+        var container_width = this.entities[this.current_img_id].width;
+        var container_height = this.entities[this.current_img_id].height;
         var entity = createEntity(true, null, 0.5, 0.5, 0.2, 0.2*aspect, container_width, container_height, 0, this.getRandomColor());
         this._updateEntity(entity);
         this.entities[this.current_img_id].push(entity);
@@ -1143,50 +1099,19 @@
     };
 
     CanvasEditor.prototype.update = function() {
-        var length;
-        var i;
-        if(this.product_images) {
-            length = this.product_images.length;
-            for(i = 0; i < length; ++i) {
-                this._updateEntity(this.product_images[i]);
-            }
-        }
-
-        if(this.current_img_id !== null) {
-            length = this.entities[this.current_img_id].length;
-            for (i = 0; i < length; ++i) {
-                this._updateEntity(this.entities[this.current_img_id][i]);
-            }
-        }
-    };
-
-    CanvasEditor.prototype._updateEntity = function(entity) {
-        entity.width = entity.normal_width * this.ctx.canvas.width;
-        entity.height = entity.normal_height * this.ctx.canvas.height;
-        entity.x = entity.normal_x * this.ctx.canvas.width;
-        entity.y = entity.normal_y * this.ctx.canvas.height;
-        this._updateMatrices(entity);
-    };
-
-     CanvasEditor.prototype._updateNormals = function() {
-        var length = this.entities[this.current_img_id].length;
+        var length = this.entities.length;
         for(var i = 0; i < length; ++i) {
-            this._updateEntityNormals(this.entities[this.current_img_id][i], this.ctx.canvas.width, this.ctx.canvas.height);
+            this.entities[i].update(this.ctx.canvas.width, this.ctx.canvas.height);
         }
+        //this.entities[this.current_img_id].update(this.ctx.canvas.width, this.ctx.canvas.height);
     };
 
-    CanvasEditor.prototype._updateEntityNormals = function(entity, container_width, container_height) {
-        entity.normal_width = entity.width/container_width;
-        entity.normal_height = entity.height/container_height;
-        entity.normal_x = entity.x/container_width;
-        entity.normal_y= entity.y/container_height;
-    };
-
-    CanvasEditor.prototype._updateMatrices = function (entity) {
-        vec2.set(entity.position, entity.x, entity.y);
-        mat3.translate(entity.translation, identity, entity.position);
-        mat3.rotate(entity.rotation, identity, entity.angle);
-        mat3.multiply(entity.model, entity.translation, entity.rotation);
+    CanvasEditor.prototype._updateNormals = function() {
+        var length = this.entities.length;
+        for(var i = 0; i < length; ++i) {
+            this.entities[i].updateNormals(this.ctx.canvas.width, this.ctx.canvas.height);
+        }
+        //this.entities[this.current_img_id].updateNormals(this.ctx.canvas.width, this.ctx.canvas.height);
     };
 
     CanvasEditor.prototype._deleteSelectedEntity = function() {
@@ -1266,9 +1191,28 @@
 
     //if normalized === true : x, y , width, height are normalized
     //else: x, y, width, height are not normalized
-    function createEntity(normalized, img, _x, _y, _width, _height, container_width, container_height, angle_rad, strokeColor) {
+    function createEntity(type, normalized, img, _x, _y, _width, _height, container_width, container_height, angle_rad, strokeColor) {
         var x, y, width, height, normal_x, normal_y, normal_width, normal_height;
 
+        var entity;
+        switch(type) {
+            case "zone":
+                entity = new EntityZone();
+                break;
+            case "image":
+                entity = new EntityImage();
+                entity.image = img;
+                break;
+            case "product":
+                entity = new EntityProduct();
+                entity.image = img;
+                break;
+            case "canvas":
+                entity = new EntityCanvas();
+                break;
+            default:
+                return false;
+        }
         if(normalized) {
             normal_x = _x;
             normal_y = _y;
@@ -1302,25 +1246,25 @@
             mat3.rotate(mat_rot, mat_rot, angle_rad);
             model = mat3.multiply(mat3.create(), mat_trans, mat_rot);
         }
-        return {
-            image: img,
-            x: x,
-            y: y,
-            width: width,
-            height: height,
-            normal_x: normal_x,
-            normal_y: normal_y,
-            normal_width: normal_width,
-            normal_height: normal_height,
-            container_width: container_width,
-            container_height: container_height,
-            angle: angle_rad,
-            strokeColor: strokeColor,
-            position: pos,
-            translation: mat_trans,
-            rotation: mat_rot,
-            model: model
-        };
+
+        entity.x = x;
+        entity.y = y;
+        entity.width = width;
+        entity.height = height;
+        entity.normal_x = normal_x;
+        entity.normal_y = normal_y;
+        entity.normal_width = normal_width;
+        entity.normal_height = normal_height;
+        entity.container_width = container_width;
+        entity.container_height = container_height;
+        entity.angle = angle_rad;
+        entity.strokeColor = strokeColor;
+        entity.position = pos;
+        entity.translation = mat_trans;
+        entity.rotation = mat_rot;
+        entity.model = model;
+
+        return entity;
     }
 
     //TODO: Change cursors according to the angle
@@ -1768,7 +1712,6 @@
         event.stopPropagation();
         event.preventDefault();
         _augmentEvent(event);
-        console.log(event.globalX, event.globalY);
         if (this.selectedEntity) this._checkCorners(event);
         if(this.current_img_id !== null) this._check_mouseOverEntity(event);
     }
