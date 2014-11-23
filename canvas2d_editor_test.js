@@ -202,6 +202,29 @@
         ctx.fillRect(x - halfsize, y - halfsize, halfsize * 2, halfsize * 2);
     };
 
+    Entity.prototype.computeHalfSize = function() {
+        var v = [];
+        var w = this.width/2;
+        var h = this.height/2;
+        var halfsize = {};
+        halfsize.x = 0;
+        halfsize.y = 0;
+        var t;
+        v[0] = vec2.fromValues(-w,-h);
+        v[1] = vec2.fromValues( w,-h);
+        v[2] = vec2.fromValues( w, h);
+        v[3] = vec2.fromValues(-w, h);
+        mat3.invert(mat_tmp, this.rotation);
+        for(var i = 0; i < v.length; ++i) {
+            vec2.transformMat3(v[i], v[i], mat_tmp);
+            t = Math.abs(v[i][0]);
+            if(t > halfsize.x) halfsize.x = t;
+            t = Math.abs(v[i][1]);
+            if(t > halfsize.y) halfsize.y = t;
+        }
+        return halfsize;
+    };
+
     /** EntityZone **/
     function EntityZone() {
 
@@ -772,10 +795,8 @@
                     that._switchImage(event.target.dataset.id);
                 },false);
 
-
                 var img = new Image();
                 img.addEventListener("load", (function(event) {
-                    //TODO: call this._updateEntity(entity);
                     var _id = event.target.dataset.id;
                     that.entities[_id] = createEntity("product", true, event.target, 0.5, 0.5, 1, 1, event.target.naturalWidth, event.target.naturalHeight, 0, that.strokeColor);
 
@@ -855,16 +876,16 @@
         }
 
         //Other handlers
-        function handle_mousedown(event) {
-            event.stopPropagation();
-            event.preventDefault();
-            _augmentEvent(event);
-            that.ctx.canvas.removeEventListener("mousemove", that._handle_mousemove_move_notClicked, false);
-            that._mouseDown(event);
-            that.manageDivs();
-        }
+        //function handle_mousedown(event) {
+        //    event.stopPropagation();
+        //    event.preventDefault();
+        //    _augmentEvent(event);
+        //    that.ctx.canvas.removeEventListener("mousemove", that._handle_mousemove_move_notClicked, false);
+        //    that._mouseDown(event);
+        //    that.manageDivs();
+        //}
 
-        /*this._handle_mouseup = handle_mouseup.bind(this);
+        this._handle_mouseup = handle_mouseup.bind(this);
         this._handle_mousemove_resize = handle_mousemove_resize.bind(this);
         this._handle_mousemove_rotate = handle_mousemove_rotate.bind(this);
         this._handle_mousemove_move_notClicked = handle_mousemove_move_notClicked.bind(this);
@@ -876,8 +897,8 @@
         _global.addEventListener("keyup", handle_keyup.bind(this), false);
         document.body.addEventListener("dragover", stop_default_drop.bind(this), false); //TODO: remove?
         document.body.addEventListener("drop", stop_default_drop.bind(this), false); //TODO: remove?
-        this.ctx.canvas.addEventListener("mousedown", handle_mousedown, false);
-        this.ctx.canvas.addEventListener("mousemove", this._handle_mousemove_move_notClicked, false);*/
+        this.ctx.canvas.addEventListener("mousedown", handle_mousedown.bind(this), false);
+        this.ctx.canvas.addEventListener("mousemove", this._handle_mousemove_move_notClicked, false);
 
         loadProduct(1);
     };
@@ -924,10 +945,6 @@
         }
     };
 
-    CanvasEditor.prototype._fillSquare = function (x, y, halfsize) {
-        this.ctx.fillRect(x - halfsize, y - halfsize, halfsize * 2, halfsize * 2);
-    };
-
     CanvasEditor.prototype.resize = function (width, height) {
         if (this.selectedEntity) {
             this.selectedEntity.width = width;
@@ -937,7 +954,7 @@
             if (this.selectedEntity.width < this.minimumSize) this.selectedEntity.width = this.minimumSize;
             if (this.selectedEntity.height < this.minimumSize) this.selectedEntity.height = this.minimumSize;
 
-            this._updateEntityNormals(this.selectedEntity, this.ctx.canvas.width, this.ctx.canvas.height);
+            this.selectedEntity.updateNormals(this.ctx.canvas.width, this.ctx.canvas.height);
             this.draw();
         }
     };
@@ -946,38 +963,15 @@
         this.resize(this.selectedEntity.width + width, this.selectedEntity.height + height);
     };
 
-    CanvasEditor.prototype._computeHalfSize = function(entity) {
-        var v = [];
-        var w = entity.width/2;
-        var h = entity.height/2;
-        var halfsize = {};
-        halfsize.x = 0;
-        halfsize.y = 0;
-        var t;
-        v[0] = vec2.fromValues(-w,-h);
-        v[1] = vec2.fromValues( w,-h);
-        v[2] = vec2.fromValues( w, h);
-        v[3] = vec2.fromValues(-w, h);
-        mat3.invert(mat_tmp, entity.rotation);
-        for(var i = 0; i < v.length; ++i) {
-            vec2.transformMat3(v[i], v[i], mat_tmp);
-            t = Math.abs(v[i][0]);
-            if(t > halfsize.x) halfsize.x = t;
-            t = Math.abs(v[i][1]);
-            if(t > halfsize.y) halfsize.y = t;
-        }
-        return halfsize;
-    };
-
     CanvasEditor.prototype._checkBoundingBox = function(entity) {
-        this._updateMatrices(this.selectedEntity);
-        var halfsize = this._computeHalfSize(entity);
+        entity.updateMatrices(); //TODO: remove
+        var halfsize = entity.computeHalfSize();
         var canvas = this.ctx.canvas;
-        if (this.selectedEntity.x + halfsize.x > canvas.width) this.selectedEntity.x = canvas.width - halfsize.x;
-        else if (this.selectedEntity.x - halfsize.x < 0) this.selectedEntity.x = halfsize.x;
-        if (this.selectedEntity.y + halfsize.y > canvas.height) this.selectedEntity.y = canvas.height - halfsize.y;
-        else if (this.selectedEntity.y - halfsize.y < 0) this.selectedEntity.y = halfsize.y;
-        this._updateMatrices(this.selectedEntity);
+        if (entity.x + halfsize.x > canvas.width) entity.x = canvas.width - halfsize.x;
+        else if (entity.x - halfsize.x < 0) entity.x = halfsize.x;
+        if (entity.y + halfsize.y > canvas.height) entity.y = canvas.height - halfsize.y;
+        else if (entity.y - halfsize.y < 0) entity.y = halfsize.y;
+        entity.updateMatrices();
     };
 
     CanvasEditor.prototype.moveTo = function (x, y) {
@@ -985,7 +979,7 @@
             this.selectedEntity.x = x;
             this.selectedEntity.y = y;
             this._checkBoundingBox(this.selectedEntity);
-            this._updateEntityNormals(this.selectedEntity, this.ctx.canvas.width, this.ctx.canvas.height);
+            this.selectedEntity.updateNormals(this.ctx.canvas.width, this.ctx.canvas.height);
             this.draw();
         }
     };
@@ -993,17 +987,17 @@
             this.moveTo(this.selectedEntity.x + x, this.selectedEntity.y + y);
     };
 
-    CanvasEditor.prototype.rotateDEG = function (angle) {
-        this.rotateRAD(DEGtoRAD(angle));
-    };
-
     CanvasEditor.prototype.rotateRAD = function (angle) {
         if (this.selectedEntity) {
             this.selectedEntity.angle += angle;
             this.selectedEntity.angle = this.selectedEntity.angle % (Math.PI * 2);
-            this._updateMatrices(this.selectedEntity);
+            this.selectedEntity.updateMatrices();
             this.draw();
         }
+    };
+
+    CanvasEditor.prototype.rotateDEG = function (angle) {
+        this.rotateRAD(DEGtoRAD(angle));
     };
 
     CanvasEditor.prototype.resetRotation = function () {
@@ -1018,8 +1012,8 @@
         var aspect = this.ctx.canvas.width /this.ctx.canvas.height;
         var container_width = this.entities[this.current_img_id].width;
         var container_height = this.entities[this.current_img_id].height;
-        var entity = createEntity(true, null, 0.5, 0.5, 0.2, 0.2*aspect, container_width, container_height, 0, this.getRandomColor());
-        this._updateEntity(entity);
+        var entity = createEntity("zone", true, null, 0.5, 0.5, 0.2, 0.2*aspect, container_width, container_height, 0, this.getRandomColor());
+        entity.update(container_width, container_height);
         this.entities[this.current_img_id].push(entity);
         this.draw();
         return entity;
@@ -1074,8 +1068,8 @@
             offsetY = event.globalY - this.selectedEntity.y;
             _global.addEventListener("mousemove", this._handle_mousemove_move_clicked, false);
             _global.addEventListener("mouseup", this._handle_mouseup, false);
-            this.draw();
         }
+        this.draw();
     };
 
     CanvasEditor.prototype._mouseInsideEntity = function(x, y) {
@@ -1562,8 +1556,8 @@
 
         this.selectedEntity.x += width;
         this.selectedEntity.y += height;
-        this._updateMatrices(this.selectedEntity);
-        this._updateEntityNormals(this.selectedEntity, this.ctx.canvas.width, this.ctx.canvas.height);
+        this.selectedEntity.updateMatrices();
+        this.selectedEntity.updateNormals(this.ctx.canvas.width, this.ctx.canvas.height);
         this.draw();
     };
 
@@ -1599,6 +1593,7 @@
         this.moveTo(event.globalX - offsetX, event.globalY - offsetY);
     };
 
+    //TODO: draw no necesario si entityMouseOver ya era null
     CanvasEditor.prototype._check_mouseOverEntity = function(event) {
         var entity = this._mouseInsideEntity(event.localX, event.localY);
         if (entity) {
@@ -1620,8 +1615,10 @@
             this.draw();
         }
         else {
-            this.entityMouseOver = null;
-            this.draw();
+            if(this.entityMouseOver) {
+                this.entityMouseOver = null;
+                this.draw();
+            }
         }
     };
 
@@ -1742,14 +1739,22 @@
         _global.removeEventListener("mousemove", this._handle_mousemove_rotate, false);
     }
 
+    //function handle_mousedown(event) {
+    //    event.stopPropagation();
+    //    event.preventDefault();
+    //    _augmentEvent(event);
+    //    this.ctx.canvas.removeEventListener("mousemove", this._handle_mousemove_move_notClicked, false);
+    //    this._mouseDown(event);
+    //}
+
     function handle_mousedown(event) {
         event.stopPropagation();
         event.preventDefault();
         _augmentEvent(event);
         this.ctx.canvas.removeEventListener("mousemove", this._handle_mousemove_move_notClicked, false);
         this._mouseDown(event);
+        this.manageDivs();
     }
-
 
     function handle_keydown(event) {
         this._keyDown(event);

@@ -851,14 +851,14 @@
     };
 
     CanvasEditor.prototype._checkBoundingBox = function(entity) {
-        this._updateMatrices(this.selectedEntity);
+        this._updateMatrices(entity);
         var halfsize = this._computeHalfSize(entity);
         var canvas = this.ctx.canvas;
-        if (this.selectedEntity.x + halfsize.x > canvas.width) this.selectedEntity.x = canvas.width - halfsize.x;
-        else if (this.selectedEntity.x - halfsize.x < 0) this.selectedEntity.x = halfsize.x;
-        if (this.selectedEntity.y + halfsize.y > canvas.height) this.selectedEntity.y = canvas.height - halfsize.y;
-        else if (this.selectedEntity.y - halfsize.y < 0) this.selectedEntity.y = halfsize.y;
-        this._updateMatrices(this.selectedEntity);
+        if (entity.x + halfsize.x > canvas.width) entity.x = canvas.width - halfsize.x;
+        else if (entity.x - halfsize.x < 0) entity.x = halfsize.x;
+        if (entity.y + halfsize.y > canvas.height) entity.y = canvas.height - halfsize.y;
+        else if (entity.y - halfsize.y < 0) entity.y = halfsize.y;
+        this._updateMatrices(entity);
     };
 
     CanvasEditor.prototype.moveTo = function (x, y) {
@@ -974,8 +974,8 @@
             offsetY = event.globalY - this.selectedEntity.y;
             _global.addEventListener("mousemove", this._handle_mousemove_move_clicked, false);
             _global.addEventListener("mouseup", this._handle_mouseup, false);
-            this.draw();
         }
+        this.draw();
     };
 
     CanvasEditor.prototype._mouseInsideEntity = function(x, y) {
@@ -1532,8 +1532,10 @@
             this.draw();
         }
         else {
-            this.entityMouseOver = null;
-            this.draw();
+            if(this.entityMouseOver) {
+                this.entityMouseOver = null;
+                this.draw();
+            }
         }
     };
 
