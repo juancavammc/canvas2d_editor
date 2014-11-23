@@ -710,7 +710,7 @@
 
     CanvasEditor.prototype.resizeCanvas = function(width, height) {
         if(this.current_img_id !== null) {
-            this._updateEntity(this.product_images[this.current_img_id]);
+            //this._updateEntity(this.product_images[this.current_img_id]);
             //this._updateNormals();
             adjustCanvasTo(this.ctx.canvas, this.product_images[this.current_img_id], width, height, this.minimumSize);
         }
@@ -937,7 +937,7 @@
             this.selectedEntity = null;
             this.manageDivs();
             this.resizeCanvas(this.canvas_zone.offsetWidth, this.canvas_zone.offsetHeight);
-            this.draw();
+            //this.draw();
         }
     };
 

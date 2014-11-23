@@ -152,7 +152,7 @@
         obj.ctx.translate(this.x, this.y);
         obj.ctx.rotate(this.angle);
         obj.ctx.lineWidth = obj.lineWidth;
-        obj.ctx.strokeStyle = obj.strokeStyle;
+        obj.ctx.strokeStyle = this.strokeColor;
         obj.ctx.strokeRect(-Math.abs(this.width) / 2, -Math.abs(this.height) / 2, Math.abs(this.width), Math.abs(this.height));
         obj.ctx.restore();
     };
@@ -234,7 +234,7 @@
     /** EntityProduct **/
     function EntityProduct() {
         this.image = undefined;
-        this.childen = [];
+        this.children = [];
     }
 
     EntityProduct.prototype = new Entity;
@@ -246,20 +246,20 @@
         ctx.rotate(this.angle);
         if(this.image) ctx.drawImage(this.image, -Math.abs(this.width) / 2, -Math.abs(this.height) / 2, Math.abs(this.width), Math.abs(this.height));
         ctx.restore();
-        var length = this.childen.length;
+        var length = this.children.length;
         for(var i = 0; i < length; ++i) {
-            this.childen[i].draw(obj);
+            this.children[i].draw(obj);
         }
     };
 
     EntityProduct.prototype.push = function(entity) {
-        this.childen.push(entity);
+        this.children.push(entity);
     };
 
     /** EntityCanvas **/
     function EntityCanvas() {
         this.ctx = undefined;
-        this.childen = [];
+        this.children = [];
     }
 
     EntityCanvas.prototype = new Entity;
@@ -269,7 +269,7 @@
     };
 
     EntityCanvas.prototype.push = function(entity) {
-        this.childen.push(entity);
+        this.children.push(entity);
     };
 
     /** ************************************* **/
@@ -883,7 +883,7 @@
     };
 
     function adjustCanvasTo(canvas, entity, width, height, minimumSize) {
-        var aspect = entity.image.width/entity.image.height;
+        var aspect = entity.image.naturalWidth/entity.image.naturalHeight;
         canvas.height = height || minimumSize;
         canvas.width = (height * aspect) || minimumSize*aspect;
         if(canvas.width > width) {
@@ -894,7 +894,7 @@
 
     CanvasEditor.prototype.resizeCanvas = function(width, height) {
         if(this.current_img_id !== null) {
-            this.entities[this.current_img_id].update(width, height);
+            //this.entities[this.current_img_id].update(width, height);
             //this._updateNormals();
             adjustCanvasTo(this.ctx.canvas, this.entities[this.current_img_id], width, height, this.minimumSize);
         }
@@ -1037,7 +1037,7 @@
             this.selectedEntity = null;
             this.manageDivs();
             this.resizeCanvas(this.canvas_zone.offsetWidth, this.canvas_zone.offsetHeight);
-            this.draw();
+            //this.draw();
         }
     };
 
@@ -1099,19 +1099,19 @@
     };
 
     CanvasEditor.prototype.update = function() {
-        var length = this.entities.length;
-        for(var i = 0; i < length; ++i) {
-            this.entities[i].update(this.ctx.canvas.width, this.ctx.canvas.height);
-        }
-        //this.entities[this.current_img_id].update(this.ctx.canvas.width, this.ctx.canvas.height);
+        //var length = this.entities.length;
+        //for(var i = 0; i < length; ++i) {
+        //    this.entities[i].update(this.ctx.canvas.width, this.ctx.canvas.height);
+        //}
+        if(this.current_img_id) this.entities[this.current_img_id].update(this.ctx.canvas.width, this.ctx.canvas.height);
     };
 
     CanvasEditor.prototype._updateNormals = function() {
-        var length = this.entities.length;
-        for(var i = 0; i < length; ++i) {
-            this.entities[i].updateNormals(this.ctx.canvas.width, this.ctx.canvas.height);
-        }
-        //this.entities[this.current_img_id].updateNormals(this.ctx.canvas.width, this.ctx.canvas.height);
+        //var length = this.entities.length;
+        //for(var i = 0; i < length; ++i) {
+        //    this.entities[i].updateNormals(this.ctx.canvas.width, this.ctx.canvas.height);
+        //}
+        if(this.current_img_id) this.entities[this.current_img_id].updateNormals(this.ctx.canvas.width, this.ctx.canvas.height);
     };
 
     CanvasEditor.prototype._deleteSelectedEntity = function() {
@@ -1249,6 +1249,7 @@
 
         entity.x = x;
         entity.y = y;
+        entity.width = width;
         entity.width = width;
         entity.height = height;
         entity.normal_x = normal_x;
