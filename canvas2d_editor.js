@@ -1163,6 +1163,44 @@
                         that.draw();
                     }
                 }, false);
+                img.addEventListener("drag", function(event) {
+                    console.log("drag");
+                    //event.stopPropagation();
+                    //event.preventDefault();
+                }, false);
+                img.addEventListener("dragend", function(event) {
+                    console.log("dragend");
+                    event.stopPropagation();
+                    event.preventDefault();
+                    console.log(that.drop_zone);
+                    if(event.target === that.drop_zone) { console.log("Miau"); }
+                }, false);
+                img.addEventListener("dragenter", function(event) {
+                    //console.log("dragenter");
+                    event.stopPropagation();
+                    event.preventDefault();
+                }, false);
+                img.addEventListener("dragleave", function(event) {
+                    //console.log("dragleave");
+                    event.stopPropagation();
+                    event.preventDefault();
+                }, false);
+                img.addEventListener("dragover", function(event) {
+                    //console.log("dragover");
+                    event.stopPropagation();
+                    event.preventDefault();
+                }, false);
+                img.addEventListener("dragstart", function(event) {
+                    console.log("dragstart");
+                    //event.stopPropagation();
+                    //event.preventDefault();
+                }, false);
+                img.addEventListener("drop", function(event) {
+                    console.log("drop");
+                    //event.stopPropagation();
+                    //event.preventDefault();
+                }, false);
+                //img.addEventListener("drop", handle_drop.bind(this), false);
                 img.src = this.result;
                 img.dataset.filename = this._filename;
                 img.setAttribute("class", "thumb");
