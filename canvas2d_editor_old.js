@@ -935,6 +935,7 @@
             if(this.current_img_id !== null) this._updateNormals();
             this.current_img_id = id_image;
             this.selectedEntity = null;
+            this.entityMouseOver = null;
             this.manageDivs();
             this.resizeCanvas(this.canvas_zone.offsetWidth, this.canvas_zone.offsetHeight);
             //this.draw();

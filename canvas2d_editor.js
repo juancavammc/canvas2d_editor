@@ -541,7 +541,6 @@
             console.log(json);
             that.json_content = json;
             for(var i = 0; i < json.length; ++i) {
-
                 var html_image = document.createElement("input");
                 html_image.setAttribute("type", "image");
                 html_image.setAttribute("src", json[i].url);
@@ -552,17 +551,15 @@
                     that._switchImage(event.target.dataset.id);
                 },false);
 
-
                 var img = new Image();
                 img.addEventListener("load", (function(event) {
                     var _id = event.target.dataset.id;
-                    that.entities[_id] = createEntity(true, event.target, 0.5, 0.5, 1, 1, event.target.naturalWidth, event.target.naturalHeight, 0, that.strokeColor);
-                    that.entities[_id] = [];
+                    that.entities[_id] = createEntity("product", true, event.target, 0.5, 0.5, 1, 1, event.target.naturalWidth, event.target.naturalHeight, 0, that.strokeColor);
                     //load existent zones
                     //for(var j = 0; j < this.zone.length; ++j) {
                     //    var o = this.zone[j].config;
                     //
-                    //    var entity = createEntity(false, null, o.x, o.y, o.width, o.height, event.target.naturalWidth, event.target.naturalHeight, DEGtoRAD(o.angle), that.getRandomColor());
+                    //    var entity = createEntity("zone", false, null, o.x, o.y, o.width, o.height, event.target.naturalWidth, event.target.naturalHeight, DEGtoRAD(o.angle), that.getRandomColor());
                     //    entity.id = this.zone[j].id;
                     //    that.entities[_id].push(entity);
                     //}
@@ -845,8 +842,6 @@
             console.log(json);
             that.json_content = json;
             for(var i = 0; i < json.length; ++i) {
-
-
                 var html_image = document.createElement("img");
                 //html_image.setAttribute("type", "image");
                 html_image.setAttribute("src", json[i].url);
@@ -1080,9 +1075,11 @@
     //*** START INTERNAL FUNCTIONS ***
     CanvasEditor.prototype._switchImage = function(id_image) {
         if(this.current_img_id !== id_image) {
+            console.log("switch");
             if(this.current_img_id !== null) this._updateNormals();
             this.current_img_id = id_image;
             this.selectedEntity = null;
+            this.entityMouseOver = null;
             this.manageDivs();
             this.resizeCanvas(this.canvas_zone.offsetWidth, this.canvas_zone.offsetHeight);
         }
