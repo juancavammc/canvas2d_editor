@@ -938,15 +938,6 @@
         }
 
         //Other handlers
-        //function handle_mousedown(event) {
-        //    event.stopPropagation();
-        //    event.preventDefault();
-        //    _augmentEvent(event);
-        //    that.ctx.canvas.removeEventListener("mousemove", that._handle_mousemove_move_notClicked, false);
-        //    that._mouseDown(event);
-        //    that.manageDivs();
-        //}
-
         this._handle_mouseup = handle_mouseup.bind(this);
         this._handle_mousemove_resize = handle_mousemove_resize.bind(this);
         this._handle_mousemove_rotate = handle_mousemove_rotate.bind(this);
@@ -1027,7 +1018,7 @@
     };
 
     CanvasEditor.prototype._checkBoundingBox = function(entity) {
-        entity.updateMatrices(); //TODO: remove
+        entity.updateMatrices();
         var halfsize = entity.computeHalfSize();
         var canvas = this.ctx.canvas;
         if (entity.x + halfsize.x > canvas.width) entity.x = canvas.width - halfsize.x;
@@ -1094,7 +1085,6 @@
             this.selectedEntity = null;
             this.manageDivs();
             this.resizeCanvas(this.canvas_zone.offsetWidth, this.canvas_zone.offsetHeight);
-            //this.draw();
         }
     };
 
@@ -1188,7 +1178,7 @@
                 var img = new Image();
                 img.addEventListener("load", function () {
                     if(that.current_img_id) { //TODO: TEST, remove
-                        var entity = createEntity(false, img, that.ctx.canvas.width / 2, that.ctx.canvas.height / 2, img.naturalWidth, img.naturalHeight, that.ctx.canvas.width, that.ctx.canvas.height, 0, that.strokeColor);
+                        var entity = createEntity("image", false, img, that.ctx.canvas.width / 2, that.ctx.canvas.height / 2, img.naturalWidth, img.naturalHeight, that.ctx.canvas.width, that.ctx.canvas.height, 0, that.strokeColor);
                         that.entities[that.current_img_id].push(entity);
                         that.draw();
                     }
@@ -1767,14 +1757,6 @@
         _global.removeEventListener("mousemove", this._handle_mousemove_resize, false);
         _global.removeEventListener("mousemove", this._handle_mousemove_rotate, false);
     }
-
-    //function handle_mousedown(event) {
-    //    event.stopPropagation();
-    //    event.preventDefault();
-    //    _augmentEvent(event);
-    //    this.ctx.canvas.removeEventListener("mousemove", this._handle_mousemove_move_notClicked, false);
-    //    this._mouseDown(event);
-    //}
 
     function handle_mousedown(event) {
         event.stopPropagation();

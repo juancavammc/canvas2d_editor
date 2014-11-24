@@ -671,14 +671,14 @@
         }
 
         //Other handlers
-        function handle_mousedown(event) {
-            event.stopPropagation();
-            event.preventDefault();
-            _augmentEvent(event);
-            that.ctx.canvas.removeEventListener("mousemove", that._handle_mousemove_move_notClicked, false);
-            that._mouseDown(event);
-            that.manageDivs();
-        }
+        //function handle_mousedown(event) {
+        //    event.stopPropagation();
+        //    event.preventDefault();
+        //    _augmentEvent(event);
+        //    that.ctx.canvas.removeEventListener("mousemove", that._handle_mousemove_move_notClicked, false);
+        //    that._mouseDown(event);
+        //    that.manageDivs();
+        //}
 
         this._handle_mouseup = handle_mouseup.bind(this);
         this._handle_mousemove_resize = handle_mousemove_resize.bind(this);
@@ -692,7 +692,7 @@
         _global.addEventListener("keyup", handle_keyup.bind(this), false);
         document.body.addEventListener("dragover", stop_default_drop.bind(this), false); //TODO: remove?
         document.body.addEventListener("drop", stop_default_drop.bind(this), false); //TODO: remove?
-        this.ctx.canvas.addEventListener("mousedown", handle_mousedown, false);
+        this.ctx.canvas.addEventListener("mousedown", handle_mousedown.bind(this), false);
         this.ctx.canvas.addEventListener("mousemove", this._handle_mousemove_move_notClicked, false);
 
         loadProduct(1);
@@ -1663,8 +1663,8 @@
         _augmentEvent(event);
         this.ctx.canvas.removeEventListener("mousemove", this._handle_mousemove_move_notClicked, false);
         this._mouseDown(event);
+        this.manageDivs();
     }
-
 
     function handle_keydown(event) {
         this._keyDown(event);
