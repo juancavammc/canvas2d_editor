@@ -299,7 +299,7 @@
         return null;
     };
 
-    EntityProduct.prototype.deleteSelectedEntity = function(entity) {
+    EntityProduct.prototype.deleteChild = function(entity) {
         var l = this.children.length;
         for (var i = 0; i < l; ++i) {
             if (this.children[i] === entity) {
@@ -312,7 +312,7 @@
         }
     };
 
-    EntityProduct.prototype.promoteSelectedEntity = function(entity) {
+    EntityProduct.prototype.promoteChild = function(entity) {
         var l = this.children.length;
         for (var i = 0; i < l; ++i) {
             if (this.children[i] === entity) {
@@ -326,7 +326,7 @@
         }
     };
 
-    EntityProduct.prototype.demoteSelectedEntity = function(entity) {
+    EntityProduct.prototype.demoteChild = function(entity) {
         var l = this.children.length;
         for (var i = 0; i < l; ++i) {
             if (this.children[i] === entity) {
@@ -765,12 +765,7 @@
         }
 
         function handle_button_click_deleteZone() {
-            if(that.current_img_id !== null && that.selectedEntity) {
-                that.entities[that.current_img_id].deleteSelectedEntity(that.selectedEntity);
-                that.selectedEntity = null;
-                that.draw();
-                that.manageDivs();
-            }
+            if(that.selectedEntity) that._deleteSelectedEntity();
         }
 
         function handle_button_click_move_left() {
@@ -1630,30 +1625,43 @@
         }
     };
 
+    CanvasEditor.prototype._deleteSelectedEntity = function() {
+        if (this.selectedEntity && this.current_img_id !== null) {
+            this.entities[this.current_img_id].deleteChild(this.selectedEntity);
+            if(this.entityMouseOver === this.selectedEntity) this.entityMouseOver = null;
+            this.selectedEntity = null;
+            this.draw();
+            if(this.manageDivs) this.manageDivs();
+        }
+    };
+
+    CanvasEditor.prototype._promoteSelectedEntity = function() {
+        if (this.selectedEntity && this.current_img_id !== null) {
+            this.entities[this.current_img_id].promoteChild(this.selectedEntity);
+            this.draw();
+        }
+    };
+
+    CanvasEditor.prototype._demoteSelectedEntity = function() {
+        if (this.selectedEntity && this.current_img_id !== null) {
+            this.entities[this.current_img_id].demoteChild(this.selectedEntity);
+            this.draw();
+        }
+    };
+
     CanvasEditor.prototype._keyDown = function(event) {
         //console.log(event.keyCode);
         switch(event.keyCode) {
             case 46: //DEL
-                if (this.selectedEntity && this.current_img_id !== null) {
-                    this.entities[this.current_img_id].deleteSelectedEntity(this.selectedEntity);
-                    this.selectedEntity = null;
-                    this.draw();
-                    if(this.manageDivs) this.manageDivs();
-                }
+                if (this.selectedEntity) this._deleteSelectedEntity();
                 break;
             case 107: //+
             case 187:
-                if (this.selectedEntity && this.current_img_id !== null) {
-                    this.entities[this.current_img_id].promoteSelectedEntity(this.selectedEntity);
-                    this.draw();
-                }
+                if (this.selectedEntity) this._promoteSelectedEntity();
                 break;
             case 109: //-
             case 189:
-                if (this.selectedEntity && this.current_img_id !== null) {
-                    this.entities[this.current_img_id].demoteSelectedEntity(this.selectedEntity);
-                    this.draw();
-                }
+                if (this.selectedEntity) this._demoteSelectedEntity();
                 break;
             case 16: //shift
                 if (!shiftPressed) { //shift
