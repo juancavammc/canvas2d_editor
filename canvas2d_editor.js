@@ -365,45 +365,6 @@
     _global.EntityProduct = EntityProduct;
     _global.EntityCanvas = EntityCanvas;
 
-
-
-    ///////////////////////////////////////////////////////////////////
-    ///////////////////////////////////////////////////////////////////
-
-    function sign(num) {
-        return num > 0 ? 1 : num < 0 ? -1 : 1;
-    }
-
-    function pointerInside(x, y, originX, originY, width, height) {
-        return (x >= originX && y >= originY && x <= (originX + width) && y <= (originY + height));
-    }
-
-    function _augmentEvent(event) {
-        event.globalX = event.clientX;
-        event.globalY = event.clientY;
-
-        if(event.offsetX && (event.offsetX != event.layerX || event.offsetY != event.layerY)) {
-            event.localX = event.offsetX;
-            event.localY = event.offsetY;
-        }
-        else {
-            event.localX = event.layerX;
-            event.localY = event.layerY;
-        }
-
-        event.deltaX = event.globalX - lastX;
-        event.deltaY = event.globalY - lastY;
-        lastX = event.globalX;
-        lastY = event.globalY;
-    }
-
-    function _createCanvas(width, height) {
-        var canvas = document.createElement('canvas');
-        canvas.width = width;
-        canvas.height = height;
-        return canvas;
-    }
-
     //TODO: if drop_zone != canvas ---> canvas->drag->preventdefault
     //TODO: if click outside canvas ---> unselect
 
@@ -1059,7 +1020,6 @@
         var entity = createEntity("zone", true, null, 0.5, 0.5, 0.2, 0.2*aspect, container_width, container_height, 0, this.getRandomColor());
         entity.update(container_width, container_height);
         this.entities[this.current_img_id].push(entity);
-        //this.draw();
         return entity;
     };
 
@@ -1070,7 +1030,6 @@
     //*** START INTERNAL FUNCTIONS ***
     CanvasEditor.prototype._switchImage = function(id_image) {
         if(this.current_img_id !== id_image) {
-            console.log("switch");
             if(this.current_img_id !== null) this._updateNormals();
             this.current_img_id = id_image;
             this.selectedEntity = null;
@@ -1139,19 +1098,25 @@
         return null;
     };
 
+    CanvasEditor.prototype.updateAll = function() {
+        var length = this.entities.length;
+        for(var i = 0; i < length; ++i) {
+            this.entities[i].update(this.ctx.canvas.width, this.ctx.canvas.height);
+        }
+    };
+
     CanvasEditor.prototype.update = function() {
-        //var length = this.entities.length;
-        //for(var i = 0; i < length; ++i) {
-        //    this.entities[i].update(this.ctx.canvas.width, this.ctx.canvas.height);
-        //}
         if(this.current_img_id) this.entities[this.current_img_id].update(this.ctx.canvas.width, this.ctx.canvas.height);
     };
 
+    CanvasEditor.prototype._updateNormalsAll = function() {
+        var length = this.entities.length;
+        for(var i = 0; i < length; ++i) {
+            this.entities[i].updateNormals(this.ctx.canvas.width, this.ctx.canvas.height);
+        }
+    };
+
     CanvasEditor.prototype._updateNormals = function() {
-        //var length = this.entities.length;
-        //for(var i = 0; i < length; ++i) {
-        //    this.entities[i].updateNormals(this.ctx.canvas.width, this.ctx.canvas.height);
-        //}
         if(this.current_img_id) this.entities[this.current_img_id].updateNormals(this.ctx.canvas.width, this.ctx.canvas.height);
     };
 
@@ -1788,6 +1753,40 @@
     //*** END HANDLERS ***
 
     //*** OTHER FUNCTIONS ***
+    function pointerInside(x, y, originX, originY, width, height) {
+        return (x >= originX && y >= originY && x <= (originX + width) && y <= (originY + height));
+    }
+
+    function _augmentEvent(event) {
+        event.globalX = event.clientX;
+        event.globalY = event.clientY;
+
+        if(event.offsetX && (event.offsetX != event.layerX || event.offsetY != event.layerY)) {
+            event.localX = event.offsetX;
+            event.localY = event.offsetY;
+        }
+        else {
+            event.localX = event.layerX;
+            event.localY = event.layerY;
+        }
+
+        event.deltaX = event.globalX - lastX;
+        event.deltaY = event.globalY - lastY;
+        lastX = event.globalX;
+        lastY = event.globalY;
+    }
+
+    function _createCanvas(width, height) {
+        var canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        return canvas;
+    }
+
+    function sign(num) {
+        return num > 0 ? 1 : num < 0 ? -1 : 1;
+    }
+
     vec2.perpdot = function (a, b) {
         return a[1] * b[0] + -a[0] * b[1];
     };
@@ -1795,7 +1794,6 @@
     vec2.computeSignedAngle = function (a, b) {
         return Math.atan2(vec2.perpdot(a, b), vec2.dot(a, b));
     };
-
 
     /**
      *
