@@ -88,22 +88,23 @@
     }
     /** Entity **/
     function Entity() {
-            this.x = undefined;
-            this.y = undefined;
-            this.width = undefined;
-            this.height = undefined;
-            this.normal_x = undefined;
-            this.normal_y = undefined;
-            this.normal_width = undefined;
-            this.normal_height = undefined;
-            //this.container_width = undefined;
-            //this.container_height = undefined;
-            this.angle = undefined;
-            this.strokeColor = undefined;
-            this.position = undefined;
-            this.translation = undefined;
-            this.rotation = undefined;
-            this.model = undefined;
+        this.x = undefined;
+        this.y = undefined;
+        this.width = undefined;
+        this.height = undefined;
+        this.normal_x = undefined;
+        this.normal_y = undefined;
+        this.normal_width = undefined;
+        this.normal_height = undefined;
+        //this.container_width = undefined;
+        //this.container_height = undefined;
+        this.angle = undefined;
+        this.strokeColor = undefined;
+        this.position = undefined;
+        this.translation = undefined;
+        this.rotation = undefined;
+        this.model = undefined;
+        this.parent = null;
     }
 
     Entity.prototype.update = function(containerWidth, containerHeight) {
@@ -276,6 +277,7 @@
     };
 
     EntityProduct.prototype.push = function(entity) {
+        entity.parent = this;
         this.children.push(entity);
     };
 
@@ -295,6 +297,47 @@
                 if (pointerInside(xx, yy, -w / 2, -h / 2, w, h)) return entity;
             }
         return null;
+    };
+
+    EntityProduct.prototype.deleteSelectedEntity = function(entity) {
+        var l = this.children.length;
+        for (var i = 0; i < l; ++i) {
+            if (this.children[i] === entity) {
+                this.children[i] = null;
+                this.children = this.children.filter(function (n) {
+                    return n != undefined
+                });
+                break;
+            }
+        }
+    };
+
+    EntityProduct.prototype.promoteSelectedEntity = function(entity) {
+        var l = this.children.length;
+        for (var i = 0; i < l; ++i) {
+            if (this.children[i] === entity) {
+                if (i < l - 1) {
+                    var temp = this.children[i + 1];
+                    this.children[i + 1] = this.children[i];
+                    this.children[i] = temp;
+                    break;
+                }
+            }
+        }
+    };
+
+    EntityProduct.prototype.demoteSelectedEntity = function(entity) {
+        var l = this.children.length;
+        for (var i = 0; i < l; ++i) {
+            if (this.children[i] === entity) {
+                if (i > 0) {
+                    var temp = this.children[i - 1];
+                    this.children[i - 1] = this.children[i];
+                    this.children[i] = temp;
+                    break;
+                }
+            }
+        }
     };
 
     /** EntityCanvas **/
@@ -725,8 +768,12 @@
         }
 
         function handle_button_click_deleteZone() {
-            that._deleteSelectedEntity();
-            that.manageDivs();
+            if(that.current_img_id !== null && that.selectedEntity) {
+                that.entities[that.current_img_id].deleteSelectedEntity(that.selectedEntity);
+                that.selectedEntity = null;
+                that.draw();
+                that.manageDivs();
+            }
         }
 
         function handle_button_click_move_left() {
@@ -1124,51 +1171,6 @@
         //    this.entities[i].updateNormals(this.ctx.canvas.width, this.ctx.canvas.height);
         //}
         if(this.current_img_id) this.entities[this.current_img_id].updateNormals(this.ctx.canvas.width, this.ctx.canvas.height);
-    };
-
-    CanvasEditor.prototype._deleteSelectedEntity = function() {
-        var l = this.entities[this.current_img_id].length;
-        for (var i = 0; i < l; ++i) {
-            if (this.entities[this.current_img_id][i] === this.selectedEntity) {
-                this.selectedEntity = null;
-                this.entities[this.current_img_id][i] = null;
-                this.entities[this.current_img_id] = this.entities[this.current_img_id].filter(function (n) {
-                    return n != undefined
-                });
-                this.draw();
-                break;
-            }
-        }
-    };
-
-    CanvasEditor.prototype._promoteSelectedEntity = function() {
-        var l = this.entities[this.current_img_id].length;
-        for (var i = 0; i < l; ++i) {
-            if (this.entities[this.current_img_id][i] === this.selectedEntity) {
-                if (i < l - 1) {
-                    var temp = this.entities[this.current_img_id][i + 1];
-                    this.entities[this.current_img_id][i + 1] = this.entities[this.current_img_id][i];
-                    this.entities[this.current_img_id][i] = temp;
-                    this.draw();
-                    break;
-                }
-            }
-        }
-    };
-
-    CanvasEditor.prototype._demoteSelectedEntity = function() {
-        var l = this.entities[this.current_img_id].length;
-        for (var i = 0; i < l; ++i) {
-            if (this.entities[this.current_img_id][i] === this.selectedEntity) {
-                if (i > 0) {
-                    var temp = this.entities[this.current_img_id][i - 1];
-                    this.entities[this.current_img_id][i - 1] = this.entities[this.current_img_id][i];
-                    this.entities[this.current_img_id][i] = temp;
-                    this.draw();
-                    break;
-                }
-            }
-        }
     };
 
     CanvasEditor.prototype._createNewImages = function(event) {
@@ -1645,18 +1647,26 @@
         //console.log(event.keyCode);
         switch(event.keyCode) {
             case 46: //DEL
-                if (this.selectedEntity) {
-                    this._deleteSelectedEntity();
+                if (this.selectedEntity && this.current_img_id !== null) {
+                    this.entities[this.current_img_id].deleteSelectedEntity(this.selectedEntity);
+                    this.selectedEntity = null;
+                    this.draw();
                     if(this.manageDivs) this.manageDivs();
                 }
                 break;
             case 107: //+
             case 187:
-                if (this.selectedEntity) this._promoteSelectedEntity();
+                if (this.selectedEntity && this.current_img_id !== null) {
+                    this.entities[this.current_img_id].promoteSelectedEntity(this.selectedEntity);
+                    this.draw();
+                }
                 break;
             case 109: //-
             case 189:
-                if (this.selectedEntity) this._demoteSelectedEntity();
+                if (this.selectedEntity && this.current_img_id !== null) {
+                    this.entities[this.current_img_id].demoteSelectedEntity(this.selectedEntity);
+                    this.draw();
+                }
                 break;
             case 16: //shift
                 if (!shiftPressed) { //shift
