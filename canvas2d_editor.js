@@ -1137,6 +1137,8 @@
     };
 
     CanvasEditor.prototype._createNewImages = function(event) {
+        var data = event.dataTransfer.getData("text");
+        console.log(data);
         var files = event.dataTransfer.files;
         var that = this;
         for (var i in files) {
@@ -1163,47 +1165,17 @@
                         that.draw();
                     }
                 }, false);
-                img.addEventListener("drag", function(event) {
-                    console.log("drag");
-                    //event.stopPropagation();
-                    //event.preventDefault();
+                img.addEventListener("dragstart", function(e) {
+                    console.log(e.target);
+                    console.log(e.target.id);
+                    e.dataTransfer.setData("text", e.target.id);
                 }, false);
-                img.addEventListener("dragend", function(event) {
-                    console.log("dragend");
-                    event.stopPropagation();
-                    event.preventDefault();
-                    console.log(that.drop_zone);
-                    if(event.target === that.drop_zone) { console.log("Miau"); }
-                }, false);
-                img.addEventListener("dragenter", function(event) {
-                    //console.log("dragenter");
-                    event.stopPropagation();
-                    event.preventDefault();
-                }, false);
-                img.addEventListener("dragleave", function(event) {
-                    //console.log("dragleave");
-                    event.stopPropagation();
-                    event.preventDefault();
-                }, false);
-                img.addEventListener("dragover", function(event) {
-                    //console.log("dragover");
-                    event.stopPropagation();
-                    event.preventDefault();
-                }, false);
-                img.addEventListener("dragstart", function(event) {
-                    console.log("dragstart");
-                    //event.stopPropagation();
-                    //event.preventDefault();
-                }, false);
-                img.addEventListener("drop", function(event) {
-                    console.log("drop");
-                    //event.stopPropagation();
-                    //event.preventDefault();
-                }, false);
-                //img.addEventListener("drop", handle_drop.bind(this), false);
+
                 img.src = this.result;
+                img.id = this._filename;
                 img.dataset.filename = this._filename;
                 img.setAttribute("class", "thumb");
+                //img.draggable = "true";
                 that.logos_images.push(img); //TODO: check if image already exists
                 that.drop_zone.appendChild(img);
             }),false);
