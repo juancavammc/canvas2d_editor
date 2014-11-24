@@ -86,25 +86,32 @@
             'white'
         ];
     }
+
+    function cloneProto(A, B) {
+        for(var i in A.prototype) {
+            B.prototype[i] = A.prototype[i];
+        }
+    }
+
     /** Entity **/
     function Entity() {
-        this.x = undefined;
-        this.y = undefined;
-        this.width = undefined;
-        this.height = undefined;
-        this.normal_x = undefined;
-        this.normal_y = undefined;
-        this.normal_width = undefined;
-        this.normal_height = undefined;
-        //this.container_width = undefined;
-        //this.container_height = undefined;
-        this.angle = undefined;
-        this.strokeColor = undefined;
-        this.position = undefined;
-        this.translation = undefined;
-        this.rotation = undefined;
-        this.model = undefined;
-        this.parent = null;
+        //this.x = undefined;
+        //this.y = undefined;
+        //this.width = undefined;
+        //this.height = undefined;
+        //this.normal_x = undefined;
+        //this.normal_y = undefined;
+        //this.normal_width = undefined;
+        //this.normal_height = undefined;
+        ////this.container_width = undefined;
+        ////this.container_height = undefined;
+        //this.angle = undefined;
+        //this.strokeColor = undefined;
+        //this.position = undefined;
+        //this.translation = undefined;
+        //this.rotation = undefined;
+        //this.model = undefined;
+        //this.parent = null;
     }
 
     Entity.prototype.update = function(containerWidth, containerHeight) {
@@ -231,7 +238,7 @@
 
     }
 
-    EntityZone.prototype = new Entity;
+    cloneProto(Entity, EntityZone);
 
     EntityZone.prototype.draw = function(obj) {
         if(this !== obj.selectedEntity && this !== obj.entityMouseOver) this.drawBorder(obj);
@@ -242,7 +249,7 @@
         this.image = undefined;
     }
 
-    EntityImage.prototype = new Entity;
+    cloneProto(Entity, EntityImage);
 
     EntityImage.prototype.draw = function(obj) {
         if(this.image) {
@@ -261,7 +268,8 @@
         this.children = [];
     }
 
-    EntityProduct.prototype = new Entity;
+    //EntityProduct.prototype = new Entity;
+    cloneProto(Entity, EntityProduct);
 
     EntityProduct.prototype.draw = function(obj) {
         var ctx = obj.ctx;
@@ -346,7 +354,7 @@
         this.children = [];
     }
 
-    EntityCanvas.prototype = new Entity;
+    cloneProto(Entity, EntityCanvas);
 
     EntityCanvas.prototype.draw = function(obj) {
 
@@ -1120,6 +1128,14 @@
         if(this.current_img_id) this.entities[this.current_img_id].updateNormals(this.ctx.canvas.width, this.ctx.canvas.height);
     };
 
+    CanvasEditor.prototype.imageAlreadyUploaded = function(name) {
+        var length = this.logos_images.length;
+        for(var i = 0; i < length; ++i) {
+            if(this.logos_images[i].dataset.filename === name) return true;
+        }
+        return false;
+    };
+
     CanvasEditor.prototype._createNewImages = function(event) {
         var files = event.dataTransfer.files;
         var that = this;
@@ -1130,8 +1146,15 @@
                 console.log("File is not an image: " + file.type);
                 continue;
             }
+
+            if(this.imageAlreadyUploaded(file.name)) {
+                console.log("Image already exists: " + file.name);
+                continue;
+            }
+
             var reader = new FileReader();
-            reader.onloadend = function () {
+            reader._filename = file.name;
+            reader.addEventListener("loadend", (function() {
                 var img = new Image();
                 img.addEventListener("load", function () {
                     if(that.current_img_id) { //TODO: TEST, remove
@@ -1141,10 +1164,11 @@
                     }
                 }, false);
                 img.src = this.result;
+                img.dataset.filename = this._filename;
                 img.setAttribute("class", "thumb");
                 that.logos_images.push(img); //TODO: check if image already exists
                 that.drop_zone.appendChild(img);
-            };
+            }),false);
             reader.readAsDataURL(file);
         }
         this.draw();
