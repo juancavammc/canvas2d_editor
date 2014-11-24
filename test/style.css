@@ -14,6 +14,10 @@ body {
     font:  14px 'Tahoma';
 }
 
+#all {
+    width: 100%;
+    height: 100%;
+}
 #wrap {
     position: absolute;
     top: 50px;
@@ -22,10 +26,9 @@ body {
     bottom: 50px;
 }
 
-
-#logos_zone {
+#img_zone {
     background-color: #787878;
-    width: 225px;
+    width: 250px;
     height: 100%;
     margin: 0;
     padding: 0;
@@ -33,57 +36,49 @@ body {
     overflow-y: scroll;
 }
 
+#editor_zone {
+    height: 100%;
+    margin-left: 260px;
+    padding: 0;
+    /*float: right;*/
+}
+
 #tools_zone {
     background-color: #787878;
     height: 100%;
-    width: 225px;
+    width: 300px;
     float: right;
     margin: 0;
     padding: 0;
 }
 
-#product_zone {
+#canvas_zone {
     padding: 0;
+    background-color: #e8e8e8;
     height: 100%;
-    margin-left: 235px;
-    margin-right: 235px;
+    margin-right: 300px;
+    #float: left;
 }
 
-#product_thumbs_zone {
-    background-color: #787878;
-    height: 140px;
-    text-align: center;
-    /*overflow-x: scroll;
-    overflow-y: hidden;*/
-}
-
-#editor_zone {
-    background-color: #787878;
-    margin-top: 10px;
-    height: calc(100% - 150px);
-}
-
-#canvas_tools_zone {
-    position: relative;
-    background-color: #787878;
+#drop_zone {
     height: 100%;
-    float: right;
-    width: 150px;
+    width: 100%;
+}
+
+#div_editor_addzone {
+    height: 50px
 }
 
 #div_editor_entityButtons {
-    padding: 5px;
+    height: 120px;
 }
 
-#canvas_tools_zone_content {
-    position: absolute;
-    bottom: 0;
-    padding: 5px;
+#div_editor_tools {
+    height: 80px;
 }
 
-#canvas_zone {
-    height: 100%;
-    margin-right: 150px;
+#div_editor_SaveButton {
+    height: 50px;
 }
 
 .thumb {
@@ -106,7 +101,7 @@ input[type="text"] {
 	font-size: 14px;
     font-family: ‘Lucida Console’, Monaco, monospace;
     width: 30px;
-    //height: 14px;
+    /*height: 14px;*/
     border: 2px solid black;
 }
 
