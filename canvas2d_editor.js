@@ -392,21 +392,25 @@
     EntityCanvas.prototype.push = EntityProduct.prototype.push;
     EntityCanvas.prototype.deleteChild = EntityProduct.prototype.deleteChild;
     EntityCanvas.prototype.mouseInsideChildren = EntityProduct.prototype.mouseInsideChildren;
+    EntityCanvas.prototype.createChild = EntityProduct.prototype.createChild;
 
     EntityCanvas.prototype.draw = function(obj) {
         this.drawBorder(obj);
+
         var ctx = obj.ctx;
-        ctx.save();
-        ctx.translate(this.x, this.y);
-        ctx.rotate(this.angle);
-        if(this.image) ctx.drawImage(this.image, -Math.abs(this.width) / 2, -Math.abs(this.height) / 2, Math.abs(this.width), Math.abs(this.height));
-        ctx.restore();
+
         var length = this.children.length;
         obj.ctx = this.ctx;
         for(var i = 0; i < length; ++i) {
             this.children[i].draw(obj);
         }
         obj.ctx = ctx;
+
+        ctx.save();
+        ctx.translate(this.x, this.y);
+        ctx.rotate(this.angle);
+        if(this.ctx) ctx.drawImage(this.ctx.canvas, -Math.abs(this.width) / 2, -Math.abs(this.height) / 2, Math.abs(this.width), Math.abs(this.height));
+        ctx.restore();
     };
 
     EntityCanvas.prototype.push = function(entity) {
@@ -1259,7 +1263,9 @@
                         console.log("in");
                         //entity = createEntity("image", false, image, this.ctx.canvas.width / 2, this.ctx.canvas.height / 2, image.naturalWidth, image.naturalHeight, this.ctx.canvas.width, this.ctx.canvas.height, 0, this.strokeColor);
                         //parent.push(entity);
-                        this.entities[this.current_img_id].createChild("image", false, image, this.ctx.canvas.width / 2, this.ctx.canvas.height / 2, image.naturalWidth, image.naturalHeight, 0, this.strokeColor);
+                        //this.entities[this.current_img_id].createChild("image", false, image, this.ctx.canvas.width / 2, this.ctx.canvas.height / 2, image.naturalWidth, image.naturalHeight, 0, this.strokeColor);
+                        console.log(parent);
+                        parent.createChild("image", false, image, this.ctx.canvas.width / 2, this.ctx.canvas.height / 2, image.naturalWidth, image.naturalHeight, 0, this.strokeColor);
                         this.draw();
                     }
                 }
