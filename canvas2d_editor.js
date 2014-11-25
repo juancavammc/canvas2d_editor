@@ -289,7 +289,7 @@
         this.children.push(entity);
     };
 
-    EntityProduct.prototype.mouseInsideChildren = function(x, y) {
+    EntityProduct.prototype.mouseInsideChildren = function(x, y, noRecursive) {
             for (var i = this.children.length - 1; i >= 0; i--) {
                 var entity = this.children[i];
                 if (!entity) continue;
@@ -303,7 +303,7 @@
                 var yy = vec_tmp1[1];
 
                 if (pointerInside(xx, yy, -w / 2, -h / 2, w, h)) {
-                    if(entity instanceof EntityCanvas) entity.mouseInsideChildren(x, y);
+                    if(entity instanceof EntityCanvas && !noRecursive) entity.mouseInsideChildren(x, y);
                     else return entity;
                 }
             }
@@ -351,6 +351,83 @@
         }
     };
 
+    EntityProduct.prototype.createChild = function (type, normalized, img, _x, _y, _width, _height, angle_rad, strokeColor) {
+        var x, y, width, height, normal_x, normal_y, normal_width, normal_height;
+
+        var entity;
+        switch(type) {
+            case "zone":
+                entity = new EntityZone();
+                break;
+            case "image":
+                entity = new EntityImage();
+                entity.image = img;
+                break;
+            case "product":
+                entity = new EntityProduct();
+                entity.image = img;
+                break;
+            case "canvas":
+                entity = new EntityCanvas();
+                break;
+            default:
+                return false;
+        }
+        if(normalized) {
+            normal_x = _x;
+            normal_y = _y;
+            normal_width = _width;
+            normal_height = _height;
+            x = normal_x * this.width;
+            y = normal_y * this.height;
+            width = normal_width * this.width;
+            height = normal_height * this.height;
+        }
+        else {
+            x = _x;
+            y = _y;
+            width = _width;
+            height = _height;
+            normal_x = x / this.width;
+            normal_y = y / this.height;
+            normal_width = width / this.width;
+            normal_height = height / this.height;
+        }
+
+        var pos = vec2.fromValues(x, y);
+        var mat_trans = mat3.create();
+        mat3.translate(mat_trans, mat_trans, pos);
+        var mat_rot = mat3.create();
+        var model;
+        if(!angle_rad) {
+            model = mat3.clone(mat_trans);
+        }
+        else {
+            mat3.rotate(mat_rot, mat_rot, angle_rad);
+            model = mat3.multiply(mat3.create(), mat_trans, mat_rot);
+        }
+
+        entity.x = x;
+        entity.y = y;
+        entity.width = width;
+        entity.width = width;
+        entity.height = height;
+        entity.normal_x = normal_x;
+        entity.normal_y = normal_y;
+        entity.normal_width = normal_width;
+        entity.normal_height = normal_height;
+        entity.container_width = this.width;
+        entity.container_height = this.height;
+        entity.angle = angle_rad;
+        entity.strokeColor = strokeColor;
+        entity.position = pos;
+        entity.translation = mat_trans;
+        entity.rotation = mat_rot;
+        entity.model = model;
+
+        return entity;
+    }
+
     /** EntityCanvas **/
     function EntityCanvas() {
         this.ctx = undefined;
@@ -358,6 +435,9 @@
     }
 
     cloneProto(Entity, EntityCanvas);
+    EntityCanvas.prototype.push = EntityProduct.prototype.push;
+    EntityCanvas.prototype.deleteChild = EntityProduct.prototype.deleteChild;
+    EntityCanvas.prototype.mouseInsideChildren = EntityProduct.prototype.mouseInsideChildren;
 
     EntityCanvas.prototype.draw = function(obj) {
         this.drawBorder(obj);
@@ -1203,8 +1283,11 @@
             image = this.searchImage(data.text);
             if(image) {
                 if(this.current_img_id) {
-                    entity = createEntity("image", false, image, this.ctx.canvas.width / 2, this.ctx.canvas.height / 2, image.naturalWidth, image.naturalHeight, this.ctx.canvas.width, this.ctx.canvas.height, 0, this.strokeColor);
-                    this.entities[this.current_img_id].push(entity);
+                    var parent = this.entities[this.current_img_id].mouseInsideChildren(event.localY, event.localY, true);
+                    if(parent) {
+                        entity = createEntity("image", false, image, this.ctx.canvas.width / 2, this.ctx.canvas.height / 2, image.naturalWidth, image.naturalHeight, this.ctx.canvas.width, this.ctx.canvas.height, 0, this.strokeColor);
+                        parent.push(entity);
+                    }
                     this.draw();
                 }
             }
