@@ -354,79 +354,10 @@
     EntityProduct.prototype.createChild = function (type, normalized, img, _x, _y, _width, _height, angle_rad, strokeColor) {
         var x, y, width, height, normal_x, normal_y, normal_width, normal_height;
 
-        var entity;
-        switch(type) {
-            case "zone":
-                entity = new EntityZone();
-                break;
-            case "image":
-                entity = new EntityImage();
-                entity.image = img;
-                break;
-            case "product":
-                entity = new EntityProduct();
-                entity.image = img;
-                break;
-            case "canvas":
-                entity = new EntityCanvas();
-                break;
-            default:
-                return false;
-        }
-        if(normalized) {
-            normal_x = _x;
-            normal_y = _y;
-            normal_width = _width;
-            normal_height = _height;
-            x = normal_x * this.width;
-            y = normal_y * this.height;
-            width = normal_width * this.width;
-            height = normal_height * this.height;
-        }
-        else {
-            x = _x;
-            y = _y;
-            width = _width;
-            height = _height;
-            normal_x = x / this.width;
-            normal_y = y / this.height;
-            normal_width = width / this.width;
-            normal_height = height / this.height;
-        }
-
-        var pos = vec2.fromValues(x, y);
-        var mat_trans = mat3.create();
-        mat3.translate(mat_trans, mat_trans, pos);
-        var mat_rot = mat3.create();
-        var model;
-        if(!angle_rad) {
-            model = mat3.clone(mat_trans);
-        }
-        else {
-            mat3.rotate(mat_rot, mat_rot, angle_rad);
-            model = mat3.multiply(mat3.create(), mat_trans, mat_rot);
-        }
-
-        entity.x = x;
-        entity.y = y;
-        entity.width = width;
-        entity.width = width;
-        entity.height = height;
-        entity.normal_x = normal_x;
-        entity.normal_y = normal_y;
-        entity.normal_width = normal_width;
-        entity.normal_height = normal_height;
-        entity.container_width = this.width;
-        entity.container_height = this.height;
-        entity.angle = angle_rad;
-        entity.strokeColor = strokeColor;
-        entity.position = pos;
-        entity.translation = mat_trans;
-        entity.rotation = mat_rot;
-        entity.model = model;
-
+        var entity = createEntity(type, normalized, img, _x, _y, _width, _height, this.width, this.height, angle_rad, strokeColor);
+        this.push(entity);
         return entity;
-    }
+    };
 
     /** EntityCanvas **/
     function EntityCanvas() {
@@ -920,9 +851,8 @@
                     for(var j = 0; j < this.zone.length; ++j) {
                         var o = this.zone[j].config;
 
-                        var entity = createEntity("zone", false, null, o.x, o.y, o.width, o.height, event.target.naturalWidth, event.target.naturalHeight, DEGtoRAD(o.angle), that.getRandomColor());
+                        var entity = that.entities[_id].createChild("zone", false, null, o.x, o.y, o.width, o.height, DEGtoRAD(o.angle), that.getRandomColor());
                         entity.id = this.zone[j].id;
-                        that.entities[_id].push(entity);
                     }
                 }).bind(json[i]), false);
 
@@ -1118,12 +1048,13 @@
 
     CanvasEditor.prototype.addZone = function() {
         var aspect = this.ctx.canvas.width /this.ctx.canvas.height;
-        var container_width = this.entities[this.current_img_id].width;
-        var container_height = this.entities[this.current_img_id].height;
-        var entity = createEntity("zone", true, null, 0.5, 0.5, 0.2, 0.2*aspect, container_width, container_height, 0, this.getRandomColor());
-        entity.update(container_width, container_height);
-        this.entities[this.current_img_id].push(entity);
-        return entity;
+        //var container_width = this.entities[this.current_img_id].width;
+        //var container_height = this.entities[this.current_img_id].height;
+        //var entity = createEntity("zone", true, null, 0.5, 0.5, 0.2, 0.2*aspect, container_width, container_height, 0, this.getRandomColor());
+        //entity.update(container_width, container_height);
+        //this.entities[this.current_img_id].push(entity);
+       //return entity;
+        return this.entities[this.current_img_id].createChild("zone", true, null, 0.5, 0.5, 0.2, 0.2*aspect, 0, this.getRandomColor());
     };
 
     CanvasEditor.prototype.getRandomColor = function() {
@@ -1244,8 +1175,10 @@
     function imageLoadedEvent (event) {
         //console.log(event.target);
         if(this.current_img_id) {
-            var entity = createEntity("image", false, event.target, this.ctx.canvas.width / 2, this.ctx.canvas.height / 2, event.target.naturalWidth, event.target.naturalHeight, this.ctx.canvas.width, this.ctx.canvas.height, 0, this.strokeColor);
-            this.entities[this.current_img_id].push(entity);
+            //var entity = createEntity("image", false, event.target, this.ctx.canvas.width / 2, this.ctx.canvas.height / 2, event.target.naturalWidth, event.target.naturalHeight, this.ctx.canvas.width, this.ctx.canvas.height, 0, this.strokeColor);
+            //this.entities[this.current_img_id].push(entity);
+            this.entities[this.current_img_id].createChild("image", false, event.target, this.ctx.canvas.width / 2, this.ctx.canvas.height / 2, event.target.naturalWidth, event.target.naturalHeight, 0, this.strokeColor);
+
             this.draw();
         }
     }
@@ -1271,8 +1204,9 @@
             image = this.searchImage(data.files[i].name);
             if(image) {
                 if(this.current_img_id) {
-                    entity = createEntity("image", false, image, this.ctx.canvas.width / 2, this.ctx.canvas.height / 2, image.naturalWidth, image.naturalHeight, this.ctx.canvas.width, this.ctx.canvas.height, 0, this.strokeColor);
-                    this.entities[this.current_img_id].push(entity);
+                    //entity = createEntity("image", false, image, this.ctx.canvas.width / 2, this.ctx.canvas.height / 2, image.naturalWidth, image.naturalHeight, this.ctx.canvas.width, this.ctx.canvas.height, 0, this.strokeColor);
+                    //this.entities[this.current_img_id].push(entity);
+                    this.entities[this.current_img_id].createChild("image", false, image, this.ctx.canvas.width / 2, this.ctx.canvas.height / 2, image.naturalWidth, image.naturalHeight, 0, this.strokeColor);
                     this.draw();
                 }
             }
@@ -1285,10 +1219,12 @@
                 if(this.current_img_id) {
                     var parent = this.entities[this.current_img_id].mouseInsideChildren(event.localY, event.localY, true);
                     if(parent) {
-                        entity = createEntity("image", false, image, this.ctx.canvas.width / 2, this.ctx.canvas.height / 2, image.naturalWidth, image.naturalHeight, this.ctx.canvas.width, this.ctx.canvas.height, 0, this.strokeColor);
-                        parent.push(entity);
+                        console.log("in");
+                        //entity = createEntity("image", false, image, this.ctx.canvas.width / 2, this.ctx.canvas.height / 2, image.naturalWidth, image.naturalHeight, this.ctx.canvas.width, this.ctx.canvas.height, 0, this.strokeColor);
+                        //parent.push(entity);
+                        this.entities[this.current_img_id].createChild("image", false, image, this.ctx.canvas.width / 2, this.ctx.canvas.height / 2, image.naturalWidth, image.naturalHeight, 0, this.strokeColor);
+                        this.draw();
                     }
-                    this.draw();
                 }
             }
         }
