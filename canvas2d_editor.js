@@ -444,11 +444,12 @@
         }
 
         canvas.style.position = "relative";
-        that.ctx = canvas.getContext("2d");
-        that.type = type.IMAGE;
+        this.ctx = canvas.getContext("2d");
+        this.type = type.IMAGE;
 
-        that.current_img_id = null;
-        that.logos_images = [];
+        this.current_img_id = null;
+        this.logos_images = []; //html images
+        this.images = []; //images
         //that.entities[that.current_img_id] = [];
 
         //Get all buttons
@@ -577,9 +578,10 @@
         document.body.addEventListener("dragover", stop_default_drop.bind(this), false);
         document.body.addEventListener("drop", stop_default_drop.bind(this), false);
         this.drop_zone.addEventListener("dragover", handle_dragover.bind(this), false);
-        this.drop_zone.addEventListener("drop", handle_drop.bind(this), false);
+        this.drop_zone.addEventListener("drop", handle_drop_inLogoZone.bind(this), false);
         this.ctx.canvas.addEventListener("mousedown", handle_mousedown.bind(this), false);
         this.ctx.canvas.addEventListener("mousemove", this._handle_mousemove_move_notClicked, false);
+        this.ctx.canvas.addEventListener("drop", handle_drop_inCanvas.bind(this), false);
 
         loadProduct(1);
     };
@@ -1128,16 +1130,108 @@
         if(this.current_img_id) this.entities[this.current_img_id].updateNormals(this.ctx.canvas.width, this.ctx.canvas.height);
     };
 
-    CanvasEditor.prototype.imageAlreadyUploaded = function(name) {
-        var length = this.logos_images.length;
-        for(var i = 0; i < length; ++i) {
-            if(this.logos_images[i].dataset.filename === name) return true;
+    //CanvasEditor.prototype.imageAlreadyUploaded = function(name) {
+    //    var length = this.logos_images.length;
+    //    for(var i = 0; i < length; ++i) {
+    //        if(this.logos_images[i].dataset.filename === name) return true;
+    //    }
+    //    return false;
+    //};
+
+    CanvasEditor.prototype.getDropData = function(event) {
+        var data = {};
+        if( event.hasOwnProperty("dataTransfer") ) {
+            data.text = event.dataTransfer.getData("text");
+            data.files = event.dataTransfer.files;
+            return data;
         }
-        return false;
+        else return null;
+    };
+
+    CanvasEditor.prototype.searchImage = function(name) {
+        var length = this.images.length;
+        for(var i = 0; i < length; ++i) {
+            if(this.images[i].dataset.filename === name) return this.images[i];
+        }
+        return null;
+    };
+
+    //CanvasEditor.prototype._searchImage = function(data) {
+    //    if(this.current_img_id) {
+    //        var logo = this.searchImage(data);
+    //        if(logo !== null) {
+    //            var that = this;
+    //            var img = new Image();
+    //            img.addEventListener("load", function () {
+    //                if(that.current_img_id) {
+    //                    var entity = createEntity("image", false, this, that.ctx.canvas.width / 2, that.ctx.canvas.height / 2, this.naturalWidth, this.naturalHeight, that.ctx.canvas.width, that.ctx.canvas.height, 0, that.strokeColor);
+    //                    that.entities[that.current_img_id].push(entity);
+    //                    that.draw();
+    //                }
+    //            }, false);
+    //            img.src = logo.src;
+    //        }
+    //    }
+    //};
+
+    CanvasEditor.prototype._drop_inLogoZone = function(event) {
+        var data = this.getDropData(event);
+        if(data === null) return false;
+
+        for(var i = 0; i < data.files.length; ++i) {
+            this._createNewLogo(data.files[i]);
+        }
+    };
+
+    CanvasEditor.prototype._drop_inCanvas = function(event) {
+
+    };
+
+    CanvasEditor.prototype._createNewLogo = function(file) {
+        var that = this;
+        if (!(file instanceof File)) return null;
+        if (file.type.substring(0, 6) !== "image/") {
+            console.log("File is not an image: " + file.type);
+            return null;
+        }
+
+        var img = this.searchImage(file.name);
+        if(img) {
+            //console.log("Image already exists: " + file.name);
+            return img;
+        }
+
+        img = new Image();
+        var html_img = document.createElement("img");
+
+        var reader = new FileReader();
+        reader._filename = file.name;
+        reader.addEventListener("loadend", (function() {
+            html_img.addEventListener("dragstart", function(e) {
+                console.log(e.target);
+                console.log(e.target.dataset.filename);
+                e.dataTransfer.setData("text", e.target.dataset.filename);
+            }, false);
+
+
+            html_img.src = this.result;
+            img.src = this.result;
+            html_img.dataset.filename = this._filename;
+            img.dataset.filename = this._filename;
+            html_img.setAttribute("class", "thumb");
+        }),false);
+        reader.readAsDataURL(file);
+
+        that.logos_images.push(html_img);
+        that.drop_zone.appendChild(html_img);
+        that.images.push(img);
+
+        return img;
     };
 
     CanvasEditor.prototype._createNewImages = function(event) {
         var data = event.dataTransfer.getData("text");
+        if(data) this._searchImage(data);
         console.log(data);
         var files = event.dataTransfer.files;
         var that = this;
@@ -1157,22 +1251,25 @@
             var reader = new FileReader();
             reader._filename = file.name;
             reader.addEventListener("loadend", (function() {
-                var img = new Image();
+
+                var img = document.createElement("img");
+                //var img = new Image();
                 img.addEventListener("load", function () {
                     if(that.current_img_id) { //TODO: TEST, remove
-                        var entity = createEntity("image", false, img, that.ctx.canvas.width / 2, that.ctx.canvas.height / 2, img.naturalWidth, img.naturalHeight, that.ctx.canvas.width, that.ctx.canvas.height, 0, that.strokeColor);
+                        console.log(this);
+                        var entity = createEntity("image", false, this, that.ctx.canvas.width / 2, that.ctx.canvas.height / 2, this.naturalWidth, this.naturalHeight, that.ctx.canvas.width, that.ctx.canvas.height, 0, that.strokeColor);
                         that.entities[that.current_img_id].push(entity);
                         that.draw();
                     }
                 }, false);
                 img.addEventListener("dragstart", function(e) {
                     console.log(e.target);
-                    console.log(e.target.id);
-                    e.dataTransfer.setData("text", e.target.id);
+                    console.log(e.target.dataset.filename);
+                    e.dataTransfer.setData("text", e.target.dataset.filename);
                 }, false);
 
                 img.src = this.result;
-                img.id = this._filename;
+                //img.id = this._filename;
                 img.dataset.filename = this._filename;
                 img.setAttribute("class", "thumb");
                 //img.draggable = "true";
@@ -1715,11 +1812,20 @@
         _augmentEvent(event);
     }
 
-    function handle_drop(event) {
+    function handle_drop_inLogoZone(event) {
         event.stopPropagation();
         event.preventDefault();
         _augmentEvent(event);
-        this._createNewImages(event);
+        //this._createNewImages(event);
+        this._drop_inLogoZone(event);
+    }
+
+    function handle_drop_inCanvas(event) {
+        console.log("drop in canvas");
+        event.stopPropagation();
+        event.preventDefault();
+        _augmentEvent(event);
+        this._drop_inCanvas(event);
     }
 
     function handle_mousemove_move_clicked(event) {
