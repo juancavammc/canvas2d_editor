@@ -950,11 +950,11 @@
             };
             this.entities[this.current_img_id].draw(obj);
             if(this.selectedEntity) {
-                obj.lineWidth = this.lineWidth*2;
+                obj.lineWidth = this.lineWidth*1.5;
                 this.selectedEntity.drawModifiers(obj);
             }
             if(this.entityMouseOver && (this.entityMouseOver !== this.selectedEntity) ) {
-                obj.lineWidth = this.lineWidth*1.5;
+                obj.lineWidth = this.lineWidth*1.2;
                 this.entityMouseOver.drawBorder(obj);
             }
         }
@@ -1130,13 +1130,13 @@
         if(this.current_img_id) this.entities[this.current_img_id].updateNormals(this.ctx.canvas.width, this.ctx.canvas.height);
     };
 
-    //CanvasEditor.prototype.imageAlreadyUploaded = function(name) {
-    //    var length = this.logos_images.length;
-    //    for(var i = 0; i < length; ++i) {
-    //        if(this.logos_images[i].dataset.filename === name) return true;
-    //    }
-    //    return false;
-    //};
+    CanvasEditor.prototype.searchImage = function(name) {
+        var length = this.images.length;
+        for(var i = 0; i < length; ++i) {
+            if(this.images[i].dataset.filename === name) return this.images[i];
+        }
+        return null;
+    };
 
     CanvasEditor.prototype.getDropData = function(event) {
         var data = {};
@@ -1148,31 +1148,32 @@
         else return null;
     };
 
-    CanvasEditor.prototype.searchImage = function(name) {
-        var length = this.images.length;
-        for(var i = 0; i < length; ++i) {
-            if(this.images[i].dataset.filename === name) return this.images[i];
+    CanvasEditor.prototype._searchImage = function(data) {
+        if(this.current_img_id) {
+            var logo = this.searchImage(data);
+            if(logo !== null) {
+                var that = this;
+                var img = new Image();
+                img.addEventListener("load", function () {
+                    if(that.current_img_id) {
+                        var entity = createEntity("image", false, this, that.ctx.canvas.width / 2, that.ctx.canvas.height / 2, this.naturalWidth, this.naturalHeight, that.ctx.canvas.width, that.ctx.canvas.height, 0, that.strokeColor);
+                        that.entities[that.current_img_id].push(entity);
+                        that.draw();
+                    }
+                }, false);
+                img.src = logo.src;
+            }
         }
-        return null;
     };
 
-    //CanvasEditor.prototype._searchImage = function(data) {
-    //    if(this.current_img_id) {
-    //        var logo = this.searchImage(data);
-    //        if(logo !== null) {
-    //            var that = this;
-    //            var img = new Image();
-    //            img.addEventListener("load", function () {
-    //                if(that.current_img_id) {
-    //                    var entity = createEntity("image", false, this, that.ctx.canvas.width / 2, that.ctx.canvas.height / 2, this.naturalWidth, this.naturalHeight, that.ctx.canvas.width, that.ctx.canvas.height, 0, that.strokeColor);
-    //                    that.entities[that.current_img_id].push(entity);
-    //                    that.draw();
-    //                }
-    //            }, false);
-    //            img.src = logo.src;
-    //        }
-    //    }
-    //};
+    function imageLoadedEvent (event) {
+        //console.log(event.target);
+        if(this.current_img_id) {
+            var entity = createEntity("image", false, event.target, this.ctx.canvas.width / 2, this.ctx.canvas.height / 2, event.target.naturalWidth, event.target.naturalHeight, this.ctx.canvas.width, this.ctx.canvas.height, 0, this.strokeColor);
+            this.entities[this.current_img_id].push(entity);
+            this.draw();
+        }
+    }
 
     CanvasEditor.prototype._drop_inLogoZone = function(event) {
         var data = this.getDropData(event);
@@ -1184,10 +1185,50 @@
     };
 
     CanvasEditor.prototype._drop_inCanvas = function(event) {
+        var data = this.getDropData(event);
+        if(data === null) return false;
+
+        //var images = [];
+        var image;
+        var entity;
+        var i;
+
+        for(i = 0; i < data.files.length; ++i) {
+            image = this.searchImage(data.files[i].name);
+            if(image) {
+                if(this.current_img_id) {
+                    entity = createEntity("image", false, image, this.ctx.canvas.width / 2, this.ctx.canvas.height / 2, image.naturalWidth, image.naturalHeight, this.ctx.canvas.width, this.ctx.canvas.height, 0, this.strokeColor);
+                    this.entities[this.current_img_id].push(entity);
+                    this.draw();
+                }
+            }
+            else image = this._createNewLogo(data.files[i], imageLoadedEvent.bind(this));
+        }
+
+        if(data.text) {
+            image = this.searchImage(data.text);
+            if(image) {
+                if(this.current_img_id) {
+                    entity = createEntity("image", false, image, this.ctx.canvas.width / 2, this.ctx.canvas.height / 2, image.naturalWidth, image.naturalHeight, this.ctx.canvas.width, this.ctx.canvas.height, 0, this.strokeColor);
+                    this.entities[this.current_img_id].push(entity);
+                    this.draw();
+                }
+            }
+        }
+
+        //////////////////
+        //for(var i in images) {
+        //    if (this.current_img_id) {
+        //        var entity = createEntity("image", false, images[i], this.ctx.canvas.width / 2, this.ctx.canvas.height / 2, images[i].naturalWidth, images[i].naturalHeight, this.ctx.canvas.width, this.ctx.canvas.height, 0, this.strokeColor);
+        //        this.entities[this.current_img_id].push(entity);
+        //        this.draw();
+        //    }
+        //}
+        //////////////////
 
     };
 
-    CanvasEditor.prototype._createNewLogo = function(file) {
+    CanvasEditor.prototype._createNewLogo = function(file, onloadImage) {
         var that = this;
         if (!(file instanceof File)) return null;
         if (file.type.substring(0, 6) !== "image/") {
@@ -1203,16 +1244,16 @@
 
         img = new Image();
         var html_img = document.createElement("img");
+        if(onloadImage) {
+            img.addEventListener("load", onloadImage, false);
+        }
 
         var reader = new FileReader();
         reader._filename = file.name;
         reader.addEventListener("loadend", (function() {
             html_img.addEventListener("dragstart", function(e) {
-                console.log(e.target);
-                console.log(e.target.dataset.filename);
                 e.dataTransfer.setData("text", e.target.dataset.filename);
             }, false);
-
 
             html_img.src = this.result;
             img.src = this.result;
@@ -1229,7 +1270,7 @@
         return img;
     };
 
-    CanvasEditor.prototype._createNewImages = function(event) {
+    CanvasEditor.prototype.___createNewImages = function(event) {
         var data = event.dataTransfer.getData("text");
         if(data) this._searchImage(data);
         console.log(data);
