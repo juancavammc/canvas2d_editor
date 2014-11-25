@@ -244,6 +244,20 @@
         if(this !== obj.selectedEntity && this !== obj.entityMouseOver) this.drawBorder(obj);
     };
 
+    EntityZone.prototype.serializeJSON = function() {
+
+        var json = {};
+        if(this.id !== undefined) json.id = this.id;
+        var  config = {};
+        config.x = this.normal_x * this.parent.image.naturalWidth;
+        config.y = this.normal_y * this.parent.image.naturalHeight;
+        config.width = this.normal_width * this.parent.image.naturalWidth;
+        config.height = this.normal_height * this.parent.image.naturalHeight;
+        config.angle = RADtoDEG(this.angle);
+        json.config = config;
+        return json;
+    };
+
     /** EntityImage **/
     function EntityImage() {
         this.image = undefined;
@@ -359,10 +373,19 @@
         return entity;
     };
 
+    EntityProduct.prototype.serializeJSON = function() {
+        var json = {"id": this.image.dataset.id, "url": this.image.dataset.url, "zone": []};
+        for(var i = 0; i < this.children.length; ++i) {
+            if(this.children[i] instanceof EntityZone) json.zone[i] = this.children[i].serializeJSON();
+        }
+        return json;
+    };
+
     /** EntityCanvas **/
     function EntityCanvas() {
-        this.ctx = undefined;
         this.children = [];
+        var canvas = document.createElement("canvas");
+        this.ctx = canvas.getContext("2d");
     }
 
     cloneProto(Entity, EntityCanvas);
@@ -379,9 +402,11 @@
         if(this.image) ctx.drawImage(this.image, -Math.abs(this.width) / 2, -Math.abs(this.height) / 2, Math.abs(this.width), Math.abs(this.height));
         ctx.restore();
         var length = this.children.length;
+        obj.ctx = this.ctx;
         for(var i = 0; i < length; ++i) {
             this.children[i].draw(obj);
         }
+        obj.ctx = ctx;
     };
 
     EntityCanvas.prototype.push = function(entity) {
@@ -875,6 +900,17 @@
         function serializeJSON() {
             var json = [];
             for (var i = 0; i < that.entities.length; ++i) {
+                if (!that.entities[i]) continue;
+                json[i] = that.entities[i].serializeJSON();
+            }
+            console.log(json);
+            console.log(JSON.stringify(json));
+            return json;
+        }
+
+        function _serializeJSON() {
+            var json = [];
+            for (var i = 0; i < that.entities.length; ++i) {
                 if(!that.entities[i]) continue;
                 var img = that.entities[i].image;
                 json[i] = {"id": i, "url": img.dataset.url, "zone": []};
@@ -899,6 +935,7 @@
         }
 
         function loadProduct(id) {
+            //delete _global.localStorage.json;
             if(!_global.localStorage.json) {
                 var xmlhttp = new XMLHttpRequest();
                 var url = "assets/test.json";
