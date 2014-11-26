@@ -1385,18 +1385,20 @@
             height = normal_height * container_height;
         }
         else {
+
             x = _x;
             y = _y;
             width = _width;
             height = _height;
+
+            var aspect = width/height;
             if(width > container_width) {
-                var aspect = width/height;
                 width = container_width;
                 height = width/aspect;
-                if(height > container_height) {
-                    height = container_height;
-                    width = height*aspect;
-                }
+            }
+            if(height > container_height) {
+                height = container_height;
+                width = height*aspect;
             }
             normal_x = x / container_width;
             normal_y = y / container_height;
