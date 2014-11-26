@@ -1249,14 +1249,10 @@
     };
 
     function imageLoadedEvent (event) {
-        //console.log(event.target);
-        if(this.current_img_id) {
-            //var entity = createEntity("image", false, event.target, this.ctx.canvas.width / 2, this.ctx.canvas.height / 2, event.target.naturalWidth, event.target.naturalHeight, this.ctx.canvas.width, this.ctx.canvas.height, 0, this.strokeColor);
-            //this.entities[this.current_img_id].push(entity);
-            this.entities[this.current_img_id].createChild("image", false, event.target, this.ctx.canvas.width / 2, this.ctx.canvas.height / 2, event.target.naturalWidth, event.target.naturalHeight, 0, this.strokeColor);
-
-            this.draw();
-        }
+        var that = this.that;
+        var parent = this.parent;
+        parent.createChild("image", false, event.target, parent.width/2, parent.height/2, event.target.naturalWidth, event.target.naturalHeight, 0, that.strokeColor);
+        if(that.current_img_id) that.draw();
     }
 
     CanvasEditor.prototype._drop_inLogoZone = function(event) {
@@ -1272,34 +1268,37 @@
         var data = this.getDropData(event);
         if(data === null) return false;
 
-        var image;
-        var entity;
-        var i;
+        var image, entity, parent, i;
 
         for(i = 0; i < data.files.length; ++i) {
             image = this.searchImage(data.files[i].name);
             if(image) {
                 if(this.current_img_id) {
-                    //entity = createEntity("image", false, image, this.ctx.canvas.width / 2, this.ctx.canvas.height / 2, image.naturalWidth, image.naturalHeight, this.ctx.canvas.width, this.ctx.canvas.height, 0, this.strokeColor);
-                    //this.entities[this.current_img_id].push(entity);
-                    this.entities[this.current_img_id].createChild("image", false, image, this.ctx.canvas.width / 2, this.ctx.canvas.height / 2, image.naturalWidth, image.naturalHeight, 0, this.strokeColor);
-                    this.draw();
+                    parent = this.entities[this.current_img_id].mouseInsideChildren(event.localX, event.localY, true);
+                    if(parent) {
+                        parent.createChild("image", false, image, parent.width/2, parent.height/2, image.naturalWidth, image.naturalHeight, 0, this.strokeColor);
+                        this.draw();
+                    }
                 }
             }
-            else image = this._createNewLogo(data.files[i], imageLoadedEvent.bind(this));
+            else {
+                console.log("ehehehe");
+
+                if(this.current_img_id) {
+                    parent = this.entities[this.current_img_id].mouseInsideChildren(event.localX, event.localY, true);
+                    if(parent) {
+                        image = this._createNewLogo(data.files[i], imageLoadedEvent.bind({that:this, parent:parent}));
+                    }
+                }
+            }
         }
 
         if(data.text) {
             image = this.searchImage(data.text);
             if(image) {
                 if(this.current_img_id) {
-                    var parent = this.entities[this.current_img_id].mouseInsideChildren(event.localX, event.localY, true);
+                    parent = this.entities[this.current_img_id].mouseInsideChildren(event.localX, event.localY, true);
                     if(parent) {
-                        console.log("in");
-                        //entity = createEntity("image", false, image, this.ctx.canvas.width / 2, this.ctx.canvas.height / 2, image.naturalWidth, image.naturalHeight, this.ctx.canvas.width, this.ctx.canvas.height, 0, this.strokeColor);
-                        //parent.push(entity);
-                        //this.entities[this.current_img_id].createChild("image", false, image, this.ctx.canvas.width / 2, this.ctx.canvas.height / 2, image.naturalWidth, image.naturalHeight, 0, this.strokeColor);
-                        console.log(parent);
                         parent.createChild("image", false, image, parent.width/2, parent.height/2, image.naturalWidth, image.naturalHeight, 0, this.strokeColor);
                         this.draw();
                     }
