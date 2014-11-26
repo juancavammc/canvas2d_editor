@@ -86,25 +86,32 @@
             'white'
         ];
     }
+
+    function cloneProto(A, B) {
+        for(var i in A.prototype) {
+            B.prototype[i] = A.prototype[i];
+        }
+    }
+
     /** Entity **/
     function Entity() {
-        this.x = undefined;
-        this.y = undefined;
-        this.width = undefined;
-        this.height = undefined;
-        this.normal_x = undefined;
-        this.normal_y = undefined;
-        this.normal_width = undefined;
-        this.normal_height = undefined;
-        //this.container_width = undefined;
-        //this.container_height = undefined;
-        this.angle = undefined;
-        this.strokeColor = undefined;
-        this.position = undefined;
-        this.translation = undefined;
-        this.rotation = undefined;
-        this.model = undefined;
-        this.parent = null;
+        //this.x = undefined;
+        //this.y = undefined;
+        //this.width = undefined;
+        //this.height = undefined;
+        //this.normal_x = undefined;
+        //this.normal_y = undefined;
+        //this.normal_width = undefined;
+        //this.normal_height = undefined;
+        ////this.container_width = undefined;
+        ////this.container_height = undefined;
+        //this.angle = undefined;
+        //this.strokeColor = undefined;
+        //this.position = undefined;
+        //this.translation = undefined;
+        //this.rotation = undefined;
+        //this.model = undefined;
+        //this.parent = null;
     }
 
     Entity.prototype.update = function(containerWidth, containerHeight) {
@@ -231,10 +238,24 @@
 
     }
 
-    EntityZone.prototype = new Entity;
+    cloneProto(Entity, EntityZone);
 
     EntityZone.prototype.draw = function(obj) {
         if(this !== obj.selectedEntity && this !== obj.entityMouseOver) this.drawBorder(obj);
+    };
+
+    EntityZone.prototype.serializeJSON = function() {
+
+        var json = {};
+        if(this.id !== undefined) json.id = this.id;
+        var  config = {};
+        config.x = this.normal_x * this.parent.image.naturalWidth;
+        config.y = this.normal_y * this.parent.image.naturalHeight;
+        config.width = this.normal_width * this.parent.image.naturalWidth;
+        config.height = this.normal_height * this.parent.image.naturalHeight;
+        config.angle = RADtoDEG(this.angle);
+        json.config = config;
+        return json;
     };
 
     /** EntityImage **/
@@ -242,7 +263,7 @@
         this.image = undefined;
     }
 
-    EntityImage.prototype = new Entity;
+    cloneProto(Entity, EntityImage);
 
     EntityImage.prototype.draw = function(obj) {
         if(this.image) {
@@ -261,7 +282,8 @@
         this.children = [];
     }
 
-    EntityProduct.prototype = new Entity;
+    //EntityProduct.prototype = new Entity;
+    cloneProto(Entity, EntityProduct);
 
     EntityProduct.prototype.draw = function(obj) {
         var ctx = obj.ctx;
@@ -281,21 +303,24 @@
         this.children.push(entity);
     };
 
-    EntityProduct.prototype.mouseInsideChildren = function(x, y) {
-            for (var i = this.children.length - 1; i >= 0; i--) {
-                var entity = this.children[i];
-                if (!entity) continue;
+    EntityProduct.prototype.mouseInsideChildren = function(x, y, noRecursive) {
+        for (var i = this.children.length - 1; i >= 0; i--) {
+            var entity = this.children[i];
+            if (!entity) continue;
 
-                var w = entity.width;
-                var h = entity.height;
-                mat3.invert(mat_tmp, entity.model);
-                vec2.set(vec_tmp1, x, y);
-                vec2.transformMat3(vec_tmp1, vec_tmp1, mat_tmp);
-                var xx = vec_tmp1[0];
-                var yy = vec_tmp1[1];
+            var w = entity.width;
+            var h = entity.height;
+            mat3.invert(mat_tmp, entity.model);
+            vec2.set(vec_tmp1, x, y);
+            vec2.transformMat3(vec_tmp1, vec_tmp1, mat_tmp);
+            var xx = vec_tmp1[0];
+            var yy = vec_tmp1[1];
 
-                if (pointerInside(xx, yy, -w / 2, -h / 2, w, h)) return entity;
+            if (pointerInside(xx, yy, -w / 2, -h / 2, w, h)) {
+                if(entity instanceof EntityCanvas && !noRecursive) entity.mouseInsideChildren(x, y);
+                else return entity;
             }
+        }
         return null;
     };
 
@@ -340,16 +365,86 @@
         }
     };
 
+    EntityProduct.prototype.createChild = function (type, normalized, img, _x, _y, _width, _height, angle_rad, strokeColor) {
+        var x, y, width, height, normal_x, normal_y, normal_width, normal_height;
+
+        var entity = createEntity(type, normalized, img, _x, _y, _width, _height, this.width, this.height, angle_rad, strokeColor);
+        this.push(entity);
+        return entity;
+    };
+
+    EntityProduct.prototype.serializeJSON = function() {
+        var json = {"id": this.image.dataset.id, "url": this.image.dataset.url, "zone": []};
+        for(var i = 0; i < this.children.length; ++i) {
+            if(this.children[i] instanceof EntityZone) json.zone[i] = this.children[i].serializeJSON();
+        }
+        return json;
+    };
+
     /** EntityCanvas **/
     function EntityCanvas() {
-        this.ctx = undefined;
         this.children = [];
+        var canvas = document.createElement("canvas");
+        this.ctx = canvas.getContext("2d");
     }
 
-    EntityCanvas.prototype = new Entity;
+    cloneProto(Entity, EntityCanvas);
+    EntityCanvas.prototype.push = EntityProduct.prototype.push;
+    EntityCanvas.prototype.deleteChild = EntityProduct.prototype.deleteChild;
+    EntityCanvas.prototype.mouseInsideChildren = EntityProduct.prototype.mouseInsideChildren;
+    EntityCanvas.prototype.createChild = EntityProduct.prototype.createChild;
 
     EntityCanvas.prototype.draw = function(obj) {
+        this.drawBorder(obj);
 
+        var ctx = obj.ctx;
+
+        //this.ctx.canvas.width = this.width;
+        //this.ctx.canvas.height = this.height;
+        var length = this.children.length;
+        obj.ctx = this.ctx;
+        for(var i = 0; i < length; ++i) {
+            this.children[i].draw(obj);
+        }
+        obj.ctx = ctx;
+
+        ctx.save();
+        ctx.translate(this.x, this.y);
+        ctx.rotate(this.angle);
+        if(this.ctx) ctx.drawImage(this.ctx.canvas, -Math.abs(this.width) / 2, -Math.abs(this.height) / 2, Math.abs(this.width), Math.abs(this.height));
+        ctx.restore();
+    };
+
+    EntityCanvas.prototype.update = function(containerWidth, containerHeight) {
+        this.width = this.normal_width * containerWidth;
+        this.height = this.normal_height * containerHeight;
+        this.x = this.normal_x * containerWidth;
+        this.y = this.normal_y * containerHeight;
+        this.ctx.canvas.width = this.width;
+        this.ctx.canvas.height = this.height;
+
+        this.updateMatrices();
+
+        if(this.children) {
+            var length = this.children.length;
+            for(var i = 0; i < length; ++i) {
+                this.children[i].update(this.width, this.height);
+            }
+        }
+    };
+
+    EntityCanvas.prototype.updateNormals = function(containerWidth, containerHeight) {
+        this.normal_width = this.width/containerWidth;
+        this.normal_height = this.height/containerHeight;
+        this.normal_x = this.x/containerWidth;
+        this.normal_y= this.y/containerHeight;
+
+        if(this.children) {
+            var length = this.children.length;
+            for(var i = 0; i < length; ++i) {
+                this.children[i].updateNormals(this.width, this.height);
+            }
+        }
     };
 
     EntityCanvas.prototype.push = function(entity) {
@@ -436,11 +531,12 @@
         }
 
         canvas.style.position = "relative";
-        that.ctx = canvas.getContext("2d");
-        that.type = type.IMAGE;
+        this.ctx = canvas.getContext("2d");
+        this.type = type.IMAGE;
 
-        that.current_img_id = null;
-        that.logos_images = [];
+        this.current_img_id = null;
+        this.logos_images = []; //html images
+        this.images = []; //images
         //that.entities[that.current_img_id] = [];
 
         //Get all buttons
@@ -517,13 +613,13 @@
                     var _id = event.target.dataset.id;
                     that.entities[_id] = createEntity("product", true, event.target, 0.5, 0.5, 1, 1, event.target.naturalWidth, event.target.naturalHeight, 0, that.strokeColor);
                     //load existent zones
-                    //for(var j = 0; j < this.zone.length; ++j) {
-                    //    var o = this.zone[j].config;
-                    //
-                    //    var entity = createEntity("zone", false, null, o.x, o.y, o.width, o.height, event.target.naturalWidth, event.target.naturalHeight, DEGtoRAD(o.angle), that.getRandomColor());
-                    //    entity.id = this.zone[j].id;
-                    //    that.entities[_id].push(entity);
-                    //}
+                    for(var j = 0; j < this.zone.length; ++j) {
+                        var o = this.zone[j].config;
+
+                        var entity = createEntity("canvas", false, null, o.x, o.y, o.width, o.height, event.target.naturalWidth, event.target.naturalHeight, DEGtoRAD(o.angle), that.getRandomColor());
+                        entity.id = this.zone[j].id;
+                        that.entities[_id].push(entity);
+                    }
                 }).bind(json[i]), false);
 
                 img.addEventListener("click", function(event) {
@@ -569,9 +665,10 @@
         document.body.addEventListener("dragover", stop_default_drop.bind(this), false);
         document.body.addEventListener("drop", stop_default_drop.bind(this), false);
         this.drop_zone.addEventListener("dragover", handle_dragover.bind(this), false);
-        this.drop_zone.addEventListener("drop", handle_drop.bind(this), false);
+        this.drop_zone.addEventListener("drop", handle_drop_inLogoZone.bind(this), false);
         this.ctx.canvas.addEventListener("mousedown", handle_mousedown.bind(this), false);
         this.ctx.canvas.addEventListener("mousemove", this._handle_mousemove_move_notClicked, false);
+        this.ctx.canvas.addEventListener("drop", handle_drop_inCanvas.bind(this), false);
 
         loadProduct(1);
     };
@@ -817,9 +914,8 @@
                     for(var j = 0; j < this.zone.length; ++j) {
                         var o = this.zone[j].config;
 
-                        var entity = createEntity("zone", false, null, o.x, o.y, o.width, o.height, event.target.naturalWidth, event.target.naturalHeight, DEGtoRAD(o.angle), that.getRandomColor());
+                        var entity = that.entities[_id].createChild("zone", false, null, o.x, o.y, o.width, o.height, DEGtoRAD(o.angle), that.getRandomColor());
                         entity.id = this.zone[j].id;
-                        that.entities[_id].push(entity);
                     }
                 }).bind(json[i]), false);
 
@@ -840,6 +936,17 @@
 
         //javascript-->json
         function serializeJSON() {
+            var json = [];
+            for (var i = 0; i < that.entities.length; ++i) {
+                if (!that.entities[i]) continue;
+                json[i] = that.entities[i].serializeJSON();
+            }
+            console.log(json);
+            console.log(JSON.stringify(json));
+            return json;
+        }
+
+        function _serializeJSON() {
             var json = [];
             for (var i = 0; i < that.entities.length; ++i) {
                 if(!that.entities[i]) continue;
@@ -866,6 +973,7 @@
         }
 
         function loadProduct(id) {
+            //delete _global.localStorage.json;
             if(!_global.localStorage.json) {
                 var xmlhttp = new XMLHttpRequest();
                 var url = "assets/test.json";
@@ -940,11 +1048,11 @@
             };
             this.entities[this.current_img_id].draw(obj);
             if(this.selectedEntity) {
-                obj.lineWidth = this.lineWidth*2;
+                obj.lineWidth = this.lineWidth*1.5;
                 this.selectedEntity.drawModifiers(obj);
             }
             if(this.entityMouseOver && (this.entityMouseOver !== this.selectedEntity) ) {
-                obj.lineWidth = this.lineWidth*1.5;
+                obj.lineWidth = this.lineWidth*1.3;
                 this.entityMouseOver.drawBorder(obj);
             }
         }
@@ -1015,12 +1123,13 @@
 
     CanvasEditor.prototype.addZone = function() {
         var aspect = this.ctx.canvas.width /this.ctx.canvas.height;
-        var container_width = this.entities[this.current_img_id].width;
-        var container_height = this.entities[this.current_img_id].height;
-        var entity = createEntity("zone", true, null, 0.5, 0.5, 0.2, 0.2*aspect, container_width, container_height, 0, this.getRandomColor());
-        entity.update(container_width, container_height);
-        this.entities[this.current_img_id].push(entity);
-        return entity;
+        //var container_width = this.entities[this.current_img_id].width;
+        //var container_height = this.entities[this.current_img_id].height;
+        //var entity = createEntity("zone", true, null, 0.5, 0.5, 0.2, 0.2*aspect, container_width, container_height, 0, this.getRandomColor());
+        //entity.update(container_width, container_height);
+        //this.entities[this.current_img_id].push(entity);
+       //return entity;
+        return this.entities[this.current_img_id].createChild("zone", true, null, 0.5, 0.5, 0.2, 0.2*aspect, 0, this.getRandomColor());
     };
 
     CanvasEditor.prototype.getRandomColor = function() {
@@ -1120,34 +1229,119 @@
         if(this.current_img_id) this.entities[this.current_img_id].updateNormals(this.ctx.canvas.width, this.ctx.canvas.height);
     };
 
-    CanvasEditor.prototype._createNewImages = function(event) {
-        var files = event.dataTransfer.files;
-        var that = this;
-        for (var i in files) {
-            if (!(files[i] instanceof File)) continue;
-            var file = files[i];
-            if (file.type.substring(0, 6) !== "image/") {
-                console.log("File is not an image: " + file.type);
-                continue;
-            }
-            var reader = new FileReader();
-            reader.onloadend = function () {
-                var img = new Image();
-                img.addEventListener("load", function () {
-                    if(that.current_img_id) { //TODO: TEST, remove
-                        var entity = createEntity("image", false, img, that.ctx.canvas.width / 2, that.ctx.canvas.height / 2, img.naturalWidth, img.naturalHeight, that.ctx.canvas.width, that.ctx.canvas.height, 0, that.strokeColor);
-                        that.entities[that.current_img_id].push(entity);
-                        that.draw();
-                    }
-                }, false);
-                img.src = this.result;
-                img.setAttribute("class", "thumb");
-                that.logos_images.push(img); //TODO: check if image already exists
-                that.drop_zone.appendChild(img);
-            };
-            reader.readAsDataURL(file);
+    CanvasEditor.prototype.searchImage = function(name) {
+        var length = this.images.length;
+        for(var i = 0; i < length; ++i) {
+            if(this.images[i].dataset.filename === name) return this.images[i];
         }
-        this.draw();
+        return null;
+    };
+
+    CanvasEditor.prototype.getDropData = function(event) {
+        var data = {};
+        if( event.hasOwnProperty("dataTransfer") ) {
+            data.text = event.dataTransfer.getData("text");
+            data.files = event.dataTransfer.files;
+            return data;
+        }
+        else return null;
+    };
+
+    function imageLoadedEvent (event) {
+        var that = this.that;
+        var parent = this.parent;
+        parent.createChild("image", false, event.target, parent.width/2, parent.height/2, event.target.naturalWidth, event.target.naturalHeight, 0, that.strokeColor);
+        if(that.current_img_id) that.draw();
+    }
+
+    CanvasEditor.prototype._drop_inLogoZone = function(event) {
+        var data = this.getDropData(event);
+        if(data === null) return false;
+
+        for(var i = 0; i < data.files.length; ++i) {
+            this._createNewLogo(data.files[i]);
+        }
+    };
+
+    CanvasEditor.prototype._drop_inCanvas = function(event) {
+        var data = this.getDropData(event);
+        if(data === null) return false;
+
+        var image, entity, parent, i;
+
+        for(i = 0; i < data.files.length; ++i) {
+            image = this.searchImage(data.files[i].name);
+            if(image) {
+                if(this.current_img_id) {
+                    parent = this.entities[this.current_img_id].mouseInsideChildren(event.localX, event.localY, true);
+                    if(parent) {
+                        parent.createChild("image", false, image, parent.width/2, parent.height/2, image.naturalWidth, image.naturalHeight, 0, this.strokeColor);
+                        this.draw();
+                    }
+                }
+            }
+            else {
+                if(this.current_img_id) {
+                    parent = this.entities[this.current_img_id].mouseInsideChildren(event.localX, event.localY, true);
+                    if(parent) image = this._createNewLogo(data.files[i], imageLoadedEvent.bind( {that:this, parent:parent} ));
+                }
+            }
+        }
+
+        if(data.text) {
+            image = this.searchImage(data.text);
+            if(image) {
+                if(this.current_img_id) {
+                    parent = this.entities[this.current_img_id].mouseInsideChildren(event.localX, event.localY, true);
+                    if(parent) {
+                        parent.createChild("image", false, image, parent.width/2, parent.height/2, image.naturalWidth, image.naturalHeight, 0, this.strokeColor);
+                        this.draw();
+                    }
+                }
+            }
+        }
+    };
+
+    CanvasEditor.prototype._createNewLogo = function(file, onloadImage) {
+        var that = this;
+        if (!(file instanceof File)) return null;
+        if (file.type.substring(0, 6) !== "image/") {
+            console.log("File is not an image: " + file.type);
+            return null;
+        }
+
+        var img = this.searchImage(file.name);
+        if(img) {
+            //console.log("Image already exists: " + file.name);
+            return img;
+        }
+
+        img = new Image();
+        var html_img = document.createElement("img");
+        if(onloadImage) {
+            img.addEventListener("load", onloadImage, false);
+        }
+
+        var reader = new FileReader();
+        reader._filename = file.name;
+        reader.addEventListener("loadend", (function() {
+            html_img.addEventListener("dragstart", function(e) {
+                e.dataTransfer.setData("text", e.target.dataset.filename);
+            }, false);
+
+            html_img.src = this.result;
+            img.src = this.result;
+            html_img.dataset.filename = this._filename;
+            img.dataset.filename = this._filename;
+            html_img.setAttribute("class", "thumb");
+        }),false);
+        reader.readAsDataURL(file);
+
+        that.logos_images.push(html_img);
+        that.drop_zone.appendChild(html_img);
+        that.images.push(img);
+
+        return img;
     };
 
     //if normalized === true : x, y , width, height are normalized
@@ -1185,10 +1379,21 @@
             height = normal_height * container_height;
         }
         else {
+
             x = _x;
             y = _y;
             width = _width;
             height = _height;
+
+            var aspect = width/height;
+            if(width > container_width) {
+                width = container_width;
+                height = width/aspect;
+            }
+            if(height > container_height) {
+                height = container_height;
+                width = height*aspect;
+            }
             normal_x = x / container_width;
             normal_y = y / container_height;
             normal_width = width / container_width;
@@ -1681,11 +1886,19 @@
         _augmentEvent(event);
     }
 
-    function handle_drop(event) {
+    function handle_drop_inLogoZone(event) {
         event.stopPropagation();
         event.preventDefault();
         _augmentEvent(event);
-        this._createNewImages(event);
+        //this._createNewImages(event);
+        this._drop_inLogoZone(event);
+    }
+
+    function handle_drop_inCanvas(event) {
+        event.stopPropagation();
+        event.preventDefault();
+        _augmentEvent(event);
+        this._drop_inCanvas(event);
     }
 
     function handle_mousemove_move_clicked(event) {
