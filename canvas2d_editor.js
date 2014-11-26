@@ -304,23 +304,23 @@
     };
 
     EntityProduct.prototype.mouseInsideChildren = function(x, y, noRecursive) {
-            for (var i = this.children.length - 1; i >= 0; i--) {
-                var entity = this.children[i];
-                if (!entity) continue;
+        for (var i = this.children.length - 1; i >= 0; i--) {
+            var entity = this.children[i];
+            if (!entity) continue;
 
-                var w = entity.width;
-                var h = entity.height;
-                mat3.invert(mat_tmp, entity.model);
-                vec2.set(vec_tmp1, x, y);
-                vec2.transformMat3(vec_tmp1, vec_tmp1, mat_tmp);
-                var xx = vec_tmp1[0];
-                var yy = vec_tmp1[1];
+            var w = entity.width;
+            var h = entity.height;
+            mat3.invert(mat_tmp, entity.model);
+            vec2.set(vec_tmp1, x, y);
+            vec2.transformMat3(vec_tmp1, vec_tmp1, mat_tmp);
+            var xx = vec_tmp1[0];
+            var yy = vec_tmp1[1];
 
-                if (pointerInside(xx, yy, -w / 2, -h / 2, w, h)) {
-                    if(entity instanceof EntityCanvas && !noRecursive) entity.mouseInsideChildren(x, y);
-                    else return entity;
-                }
+            if (pointerInside(xx, yy, -w / 2, -h / 2, w, h)) {
+                if(entity instanceof EntityCanvas && !noRecursive) entity.mouseInsideChildren(x, y);
+                else return entity;
             }
+        }
         return null;
     };
 
@@ -399,9 +399,12 @@
 
         var ctx = obj.ctx;
 
+        //this.ctx.canvas.width = this.width;
+        //this.ctx.canvas.height = this.height;
         var length = this.children.length;
         obj.ctx = this.ctx;
         for(var i = 0; i < length; ++i) {
+            console.log(obj);
             this.children[i].draw(obj);
         }
         obj.ctx = ctx;
@@ -411,6 +414,38 @@
         ctx.rotate(this.angle);
         if(this.ctx) ctx.drawImage(this.ctx.canvas, -Math.abs(this.width) / 2, -Math.abs(this.height) / 2, Math.abs(this.width), Math.abs(this.height));
         ctx.restore();
+    };
+
+    EntityCanvas.prototype.update = function(containerWidth, containerHeight) {
+        this.width = this.normal_width * containerWidth;
+        this.height = this.normal_height * containerHeight;
+        this.x = this.normal_x * containerWidth;
+        this.y = this.normal_y * containerHeight;
+        this.ctx.canvas.width = this.width;
+        this.ctx.canvas.height = this.height;
+
+        this.updateMatrices();
+
+        if(this.children) {
+            var length = this.children.length;
+            for(var i = 0; i < length; ++i) {
+                this.children[i].update(this.width, this.height);
+            }
+        }
+    };
+
+    EntityCanvas.prototype.updateNormals = function(containerWidth, containerHeight) {
+        this.normal_width = this.width/containerWidth;
+        this.normal_height = this.height/containerHeight;
+        this.normal_x = this.x/containerWidth;
+        this.normal_y= this.y/containerHeight;
+
+        if(this.children) {
+            var length = this.children.length;
+            for(var i = 0; i < length; ++i) {
+                this.children[i].updateNormals(this.width, this.height);
+            }
+        }
     };
 
     EntityCanvas.prototype.push = function(entity) {
@@ -1258,14 +1293,14 @@
             image = this.searchImage(data.text);
             if(image) {
                 if(this.current_img_id) {
-                    var parent = this.entities[this.current_img_id].mouseInsideChildren(event.localY, event.localY, true);
+                    var parent = this.entities[this.current_img_id].mouseInsideChildren(event.localX, event.localY, true);
                     if(parent) {
                         console.log("in");
                         //entity = createEntity("image", false, image, this.ctx.canvas.width / 2, this.ctx.canvas.height / 2, image.naturalWidth, image.naturalHeight, this.ctx.canvas.width, this.ctx.canvas.height, 0, this.strokeColor);
                         //parent.push(entity);
                         //this.entities[this.current_img_id].createChild("image", false, image, this.ctx.canvas.width / 2, this.ctx.canvas.height / 2, image.naturalWidth, image.naturalHeight, 0, this.strokeColor);
                         console.log(parent);
-                        parent.createChild("image", false, image, this.ctx.canvas.width / 2, this.ctx.canvas.height / 2, image.naturalWidth, image.naturalHeight, 0, this.strokeColor);
+                        parent.createChild("image", false, image, parent.width/2, parent.height/2, image.naturalWidth, image.naturalHeight, 0, this.strokeColor);
                         this.draw();
                     }
                 }
@@ -1354,6 +1389,15 @@
             y = _y;
             width = _width;
             height = _height;
+            if(width > container_width) {
+                var aspect = width/height;
+                width = container_width;
+                height = width/aspect;
+                if(height > container_height) {
+                    height = container_height;
+                    width = height*aspect;
+                }
+            }
             normal_x = x / container_width;
             normal_y = y / container_height;
             normal_width = width / container_width;
