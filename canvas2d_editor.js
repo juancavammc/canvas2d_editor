@@ -404,7 +404,6 @@
         var length = this.children.length;
         obj.ctx = this.ctx;
         for(var i = 0; i < length; ++i) {
-            console.log(obj);
             this.children[i].draw(obj);
         }
         obj.ctx = ctx;
@@ -1282,13 +1281,9 @@
                 }
             }
             else {
-                console.log("ehehehe");
-
                 if(this.current_img_id) {
                     parent = this.entities[this.current_img_id].mouseInsideChildren(event.localX, event.localY, true);
-                    if(parent) {
-                        image = this._createNewLogo(data.files[i], imageLoadedEvent.bind({that:this, parent:parent}));
-                    }
+                    if(parent) image = this._createNewLogo(data.files[i], imageLoadedEvent.bind( {that:this, parent:parent} ));
                 }
             }
         }
@@ -1900,7 +1895,6 @@
     }
 
     function handle_drop_inCanvas(event) {
-        console.log("drop in canvas");
         event.stopPropagation();
         event.preventDefault();
         _augmentEvent(event);
