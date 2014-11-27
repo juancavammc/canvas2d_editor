@@ -233,6 +233,12 @@
         return halfsize;
     };
 
+    Entity.prototype.getGlobalMatrix = function() {
+        if(!parent) return this.model;
+        else {
+            return mat4(mat_tmp, this.model, parent.getGlobalMatrix());
+        }
+    };
     /** EntityZone **/
     function EntityZone() {
 
@@ -317,7 +323,10 @@
             var yy = vec_tmp1[1];
 
             if (pointerInside(xx, yy, -w / 2, -h / 2, w, h)) {
-                if(entity instanceof EntityCanvas && !noRecursive) entity.mouseInsideChildren(x, y);
+                if(entity instanceof EntityCanvas && !noRecursive) {
+                    var e = entity.mouseInsideChildren(x, y);
+                    if(e) return e;
+                }
                 else return entity;
             }
         }
@@ -366,8 +375,6 @@
     };
 
     EntityProduct.prototype.createChild = function (type, normalized, img, _x, _y, _width, _height, angle_rad, strokeColor) {
-        var x, y, width, height, normal_x, normal_y, normal_width, normal_height;
-
         var entity = createEntity(type, normalized, img, _x, _y, _width, _height, this.width, this.height, angle_rad, strokeColor);
         this.push(entity);
         return entity;
@@ -395,18 +402,37 @@
     EntityCanvas.prototype.createChild = EntityProduct.prototype.createChild;
 
     EntityCanvas.prototype.draw = function(obj) {
+        this.ctx.clearRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height);
         this.drawBorder(obj);
 
         var ctx = obj.ctx;
+        var lineWidth = obj.lineWidth;
 
-        //this.ctx.canvas.width = this.width;
-        //this.ctx.canvas.height = this.height;
         var length = this.children.length;
         obj.ctx = this.ctx;
+
         for(var i = 0; i < length; ++i) {
             this.children[i].draw(obj);
         }
+
+        if(obj.entityMouseOver) {
+            console.log("!");
+        }
+        if(obj.selectedEntity === this.children[i]) {
+            console.log(obj.selectedEntity);
+            console.log("a", this.children);
+        }
+        if(obj.selectedEntity === this.children[i]) {
+            obj.lineWidth = lineWidth*1.5;
+            obj.selectedEntity.drawModifiers(obj);
+        }
+        if( (obj.entityMouseOver) && (obj.entityMouseOver !== obj.selectedEntity) ) {
+            obj.lineWidth = lineWidth*1.3;
+            obj.entityMouseOver.drawBorder(obj);
+        }
+
         obj.ctx = ctx;
+        obj.lineWidth = lineWidth;
 
         ctx.save();
         ctx.translate(this.x, this.y);
@@ -447,7 +473,32 @@
         }
     };
 
+    EntityCanvas.prototype.mouseInsideChildren = function(x, y, noRecursive) {
+        for (var i = this.children.length - 1; i >= 0; i--) {
+            var entity = this.children[i];
+            if (!entity) continue;
+
+            var w = entity.width;
+            var h = entity.height;
+            mat3.invert(mat_tmp, entity.model);
+            vec2.set(vec_tmp1, x, y);
+            vec2.transformMat3(vec_tmp1, vec_tmp1, mat_tmp);
+            var xx = vec_tmp1[0];
+            var yy = vec_tmp1[1];
+
+            if (pointerInside(xx, yy, -w / 2, -h / 2, w, h)) {
+                if(entity instanceof EntityCanvas && !noRecursive) {
+                    var e = entity.mouseInsideChildren(x, y);
+                    if(e) return e;
+                }
+                else return entity;
+            }
+        }
+        return null;
+    };
+
     EntityCanvas.prototype.push = function(entity) {
+        entity.parent = this;
         this.children.push(entity);
     };
 
@@ -1047,14 +1098,14 @@
                 sizeLine: this.sizeLine
             };
             this.entities[this.current_img_id].draw(obj);
-            if(this.selectedEntity) {
-                obj.lineWidth = this.lineWidth*1.5;
-                this.selectedEntity.drawModifiers(obj);
-            }
-            if(this.entityMouseOver && (this.entityMouseOver !== this.selectedEntity) ) {
-                obj.lineWidth = this.lineWidth*1.3;
-                this.entityMouseOver.drawBorder(obj);
-            }
+            //if(this.selectedEntity) {
+            //    obj.lineWidth = this.lineWidth*1.5;
+            //    this.selectedEntity.drawModifiers(obj);
+            //}
+            //if(this.entityMouseOver && (this.entityMouseOver !== this.selectedEntity) ) {
+            //    obj.lineWidth = this.lineWidth*1.3;
+            //    this.entityMouseOver.drawBorder(obj);
+            //}
         }
     };
 
