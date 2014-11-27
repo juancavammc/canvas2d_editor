@@ -251,11 +251,10 @@
 
         var s = obj.squaresSize + 1;
 
-        console.log(w,h,s,x,y);
+        //console.log(w,h,s,x,y);
 
         //up-left
         if (pointerInside(x, y, (-w / 2) - s, (-h / 2) - s, s * 2, s * 2)) {
-            console.log("ding!");
             anchor.x = false;
             anchor.y = false;
             anchor.width = true;
@@ -348,8 +347,16 @@
     Entity.prototype.getGlobalMatrix = function() {
         if(!this.parent) return this.model;
         else {
+            console.log(this.parent);
             return mat3.multiply(mat_tmp, this.model, this.parent.getGlobalMatrix());
         }
+    };
+
+    Entity.prototype.getLocalXY = function(x,y) {
+        mat3.invert(mat_tmp, this.getGlobalMatrix());
+        vec2.set(vec_tmp1, x, y);
+        vec2.transformMat3(vec_tmp1, vec_tmp1, mat_tmp);
+        return vec_tmp1;
     };
 
     /** EntityZone **/
@@ -412,14 +419,15 @@
         if(this.image) ctx.drawImage(this.image, -Math.abs(this.width) / 2, -Math.abs(this.height) / 2, Math.abs(this.width), Math.abs(this.height));
         ctx.restore();
         var length = this.children.length;
-        for(var i = 0; i < length; ++i) {
+        var i;
+        for(i = 0; i < length; ++i) {
             this.children[i].draw(obj);
         }
 
         var lineWidth = obj.lineWidth;
         var selectedEntity = null;
         var entityMouseOver = null;
-        for(var i = 0; i < length; ++i) {
+        for(i = 0; i < length; ++i) {
             this.children[i].draw(obj);
             if(obj.selectedEntity === this.children[i]) {
                 selectedEntity = this.children[i];
@@ -440,7 +448,7 @@
     };
 
     EntityProduct.prototype.push = function(entity) {
-        entity.parent = this;
+        //entity.parent = this;
         this.children.push(entity);
     };
 
@@ -462,9 +470,15 @@
                     var e = entity.mouseInsideChildren(x, y);
                     if(e) return e;
                 }
-                else return entity;
+                else {
+                    var tmp = entity.getLocalXY(x,y);
+                    console.log(tmp[0], tmp[1]);
+                    return entity;
+                }
             }
         }
+        var tmp2 = this.getLocalXY(x,y);
+        console.log(tmp2[0], tmp2[1]);
         return null;
     };
 
@@ -531,7 +545,6 @@
     }
 
     cloneProto(Entity, EntityCanvas);
-    EntityCanvas.prototype.push = EntityProduct.prototype.push;
     EntityCanvas.prototype.deleteChild = EntityProduct.prototype.deleteChild;
     EntityCanvas.prototype.createChild = EntityProduct.prototype.createChild;
 
@@ -628,7 +641,11 @@
                     var e = entity.mouseInsideChildren(x, y);
                     if(e) return e;
                 }
-                else return entity;
+                else{
+                    var tmp = entity.getLocalXY(x,y);
+                    console.log(tmp[0], tmp[1]);
+                    return entity;
+                }
             }
         }
         return null;
