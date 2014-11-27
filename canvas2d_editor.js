@@ -234,11 +234,12 @@
     };
 
     Entity.prototype.getGlobalMatrix = function() {
-        if(!parent) return this.model;
+        if(!this.parent) return this.model;
         else {
-            return mat4(mat_tmp, this.model, parent.getGlobalMatrix());
+            return mat3.multiply(mat_tmp, this.model, this.parent.getGlobalMatrix());
         }
     };
+
     /** EntityZone **/
     function EntityZone() {
 
@@ -321,8 +322,8 @@
             vec2.transformMat3(vec_tmp1, vec_tmp1, mat_tmp);
             var xx = vec_tmp1[0];
             var yy = vec_tmp1[1];
-
             if (pointerInside(xx, yy, -w / 2, -h / 2, w, h)) {
+                //console.log(xx,yy);
                 if(entity instanceof EntityCanvas && !noRecursive) {
                     var e = entity.mouseInsideChildren(x, y);
                     if(e) return e;
@@ -398,7 +399,6 @@
     cloneProto(Entity, EntityCanvas);
     EntityCanvas.prototype.push = EntityProduct.prototype.push;
     EntityCanvas.prototype.deleteChild = EntityProduct.prototype.deleteChild;
-    EntityCanvas.prototype.mouseInsideChildren = EntityProduct.prototype.mouseInsideChildren;
     EntityCanvas.prototype.createChild = EntityProduct.prototype.createChild;
 
     EntityCanvas.prototype.draw = function(obj) {
@@ -481,7 +481,9 @@
 
             var w = entity.width;
             var h = entity.height;
-            mat3.invert(mat_tmp, entity.model);
+
+            mat3.invert(mat_tmp, entity.parent.model);
+
             vec2.set(vec_tmp1, x, y);
             vec2.transformMat3(vec_tmp1, vec_tmp1, mat_tmp);
             var xx = vec_tmp1[0];
@@ -667,10 +669,8 @@
                     //load existent zones
                     for(var j = 0; j < this.zone.length; ++j) {
                         var o = this.zone[j].config;
-
-                        var entity = createEntity("canvas", false, null, o.x, o.y, o.width, o.height, event.target.naturalWidth, event.target.naturalHeight, DEGtoRAD(o.angle), that.getRandomColor());
+                        var entity = that.entities[_id].createChild("canvas", false, null, o.x, o.y, o.width, o.height, DEGtoRAD(o.angle), that.getRandomColor());
                         entity.id = this.zone[j].id;
-                        that.entities[_id].push(entity);
                     }
                 }).bind(json[i]), false);
 
@@ -1175,12 +1175,6 @@
 
     CanvasEditor.prototype.addZone = function() {
         var aspect = this.ctx.canvas.width /this.ctx.canvas.height;
-        //var container_width = this.entities[this.current_img_id].width;
-        //var container_height = this.entities[this.current_img_id].height;
-        //var entity = createEntity("zone", true, null, 0.5, 0.5, 0.2, 0.2*aspect, container_width, container_height, 0, this.getRandomColor());
-        //entity.update(container_width, container_height);
-        //this.entities[this.current_img_id].push(entity);
-       //return entity;
         return this.entities[this.current_img_id].createChild("zone", true, null, 0.5, 0.5, 0.2, 0.2*aspect, 0, this.getRandomColor());
     };
 
