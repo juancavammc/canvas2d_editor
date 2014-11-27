@@ -25,7 +25,7 @@ body {
 
 #logos_zone {
     background-color: #787878;
-    width: 225px;
+    width: 200px;
     height: 100%;
     margin: 0;
     padding: 0;
@@ -36,7 +36,7 @@ body {
 #tools_zone {
     background-color: #787878;
     height: 100%;
-    width: 225px;
+    width: 200px;
     float: right;
     margin: 0;
     padding: 0;
@@ -45,13 +45,13 @@ body {
 #product_zone {
     padding: 0;
     height: 100%;
-    margin-left: 235px;
-    margin-right: 235px;
+    margin-left: 210px;
+    margin-right: 210px;
 }
 
 #product_thumbs_zone {
     background-color: #787878;
-    height: 140px;
+    height: 100px;
     text-align: center;
     /*overflow-x: scroll;
     overflow-y: hidden;*/
@@ -60,7 +60,7 @@ body {
 #editor_zone {
     background-color: #787878;
     margin-top: 10px;
-    height: calc(100% - 150px);
+    height: calc(100% - 110px);
 }
 
 #canvas_tools_zone {

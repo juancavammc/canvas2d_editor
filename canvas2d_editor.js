@@ -411,24 +411,25 @@
         var length = this.children.length;
         obj.ctx = this.ctx;
 
+        var selectedEntity = null;
+        var entityMouseOver = null;
         for(var i = 0; i < length; ++i) {
             this.children[i].draw(obj);
+            if(obj.selectedEntity === this.children[i]) {
+                selectedEntity = this.children[i];
+            }
+            if(obj.entityMouseOver === this.children[i]) {
+                entityMouseOver = this.children[i];
+            }
         }
 
-        if(obj.entityMouseOver) {
-            console.log("!");
-        }
-        if(obj.selectedEntity === this.children[i]) {
-            console.log(obj.selectedEntity);
-            console.log("a", this.children);
-        }
-        if(obj.selectedEntity === this.children[i]) {
+        if(selectedEntity) {
             obj.lineWidth = lineWidth*1.5;
-            obj.selectedEntity.drawModifiers(obj);
+            selectedEntity.drawModifiers(obj);
         }
-        if( (obj.entityMouseOver) && (obj.entityMouseOver !== obj.selectedEntity) ) {
+        if( entityMouseOver && (entityMouseOver !== selectedEntity) ) {
             obj.lineWidth = lineWidth*1.3;
-            obj.entityMouseOver.drawBorder(obj);
+            entityMouseOver.drawBorder(obj);
         }
 
         obj.ctx = ctx;
@@ -1821,23 +1822,9 @@
             var entity = this.entities[this.current_img_id].mouseInsideChildren(event.localX, event.localY);
             if (entity) {
                 this.entityMouseOver = entity;
-                this.ctx.save();
-                this.ctx.strokeStyle = entity.strokeColor;
-                this.ctx.lineWidth = this.lineWidth;
-                var x = entity.x;
-                var y = entity.y;
-                var w = entity.width;
-                var h = entity.height;
-
-                this.ctx.translate(x, y);
-                this.ctx.rotate(entity.angle);
-
-                this.ctx.strokeRect(-w / 2, -h / 2, w, h);
-                this.ctx.restore();
-
                 this.draw();
             }
-            else {
+             else {
                 if (this.entityMouseOver) {
                     this.entityMouseOver = null;
                     this.draw();
