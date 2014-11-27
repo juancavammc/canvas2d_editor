@@ -134,7 +134,7 @@
         this.normal_width = this.width/containerWidth;
         this.normal_height = this.height/containerHeight;
         this.normal_x = this.x/containerWidth;
-        this.normal_y= this.y/containerHeight;
+        this.normal_y = this.y/containerHeight;
 
         if(this.children) {
             var length = this.children.length;
@@ -233,6 +233,118 @@
         return halfsize;
     };
 
+    //TODO: Change cursors according to the angle
+    /**
+     * obj.squaresSize
+     * obj.ctx
+     * obj.x
+     * obj.y
+     */
+    Entity.prototype.checkCorners = function(obj) {
+        var w = this.width;
+        var h = this.height;
+        mat3.invert(mat_tmp, this.parent.model);
+        vec2.set(vec_tmp1, obj.x, obj.y);
+        vec2.transformMat3(vec_tmp1, vec_tmp1, mat_tmp);
+        var x = vec_tmp1[0];
+        var y = vec_tmp1[1];
+
+        var s = obj.squaresSize + 1;
+
+        console.log(w,h,s,x,y);
+
+        //up-left
+        if (pointerInside(x, y, (-w / 2) - s, (-h / 2) - s, s * 2, s * 2)) {
+            console.log("ding!");
+            anchor.x = false;
+            anchor.y = false;
+            anchor.width = true;
+            anchor.height = true;
+            anchor.resizing = true;
+            anchor.rotating = false;
+            obj.ctx.canvas.style.cursor = "nw-resize";
+        }
+        //up-right
+        else if (pointerInside(x, y, (w / 2) - s, (-h / 2) - s, s * 2, s * 2)) {
+            anchor.x = true;
+            anchor.y = false;
+            anchor.width = true;
+            anchor.height = true;
+            anchor.resizing = true;
+            anchor.rotating = false;
+            obj.ctx.canvas.style.cursor = "ne-resize";
+        }
+        //down-left
+        else if (pointerInside(x, y, (-w / 2) - s, (h / 2) - s, s * 2, s * 2)) {
+            anchor.x = false;
+            anchor.y = true;
+            anchor.width = true;
+            anchor.height = true;
+            anchor.resizing = true;
+            anchor.rotating = false;
+            obj.ctx.canvas.style.cursor = "sw-resize";
+        }
+        //down-right
+        else if (pointerInside(x, y, (w / 2) - s, (h / 2) - s, s * 2, s * 2)) {
+            anchor.x = true;
+            anchor.y = true;
+            anchor.width = true;
+            anchor.height = true;
+            anchor.resizing = true;
+            anchor.rotating = false;
+            obj.ctx.canvas.style.cursor = "se-resize";
+        }
+        //up-center
+        else if (pointerInside(x, y, -s, (-h / 2) - s, s * 2, s * 2)) {
+            anchor.x = true;
+            anchor.y = false;
+            anchor.width = false;
+            anchor.height = true;
+            anchor.resizing = true;
+            anchor.rotating = false;
+            obj.ctx.canvas.style.cursor = "n-resize";
+        }
+        //down-center
+        else if (pointerInside(x, y, -s, (h / 2) - s, s * 2, s * 2)) {
+            anchor.x = true;
+            anchor.y = true;
+            anchor.width = false;
+            anchor.height = true;
+            anchor.resizing = true;
+            anchor.rotating = false;
+            obj.ctx.canvas.style.cursor = "s-resize";
+        }
+        //center-left
+        else if (pointerInside(x, y, (-w / 2) - s, -s, s * 2, s * 2)) {
+            anchor.x = false;
+            anchor.y = true;
+            anchor.width = true;
+            anchor.height = false;
+            anchor.resizing = true;
+            anchor.rotating = false;
+            obj.ctx.canvas.style.cursor = "e-resize";
+        }
+        //center-right
+        else if (pointerInside(x, y, (w / 2) - s, -s, s * 2, s * 2)) {
+            anchor.x = true;
+            anchor.y = true;
+            anchor.width = true;
+            anchor.height = false;
+            anchor.resizing = true;
+            anchor.rotating = false;
+            obj.ctx.canvas.style.cursor = "w-resize";
+        }
+        else if (pointerInside(x, y, -s, (-h / 2) - s - obj.sizeLine, s * 2, s * 2)) {
+            anchor.resizing = false;
+            anchor.rotating = true;
+        }
+        else {
+            obj.ctx.canvas.style.cursor = "default";
+            anchor.resizing = false;
+            anchor.rotating = false;
+        }
+    };
+
     Entity.prototype.getGlobalMatrix = function() {
         if(!this.parent) return this.model;
         else {
@@ -302,6 +414,28 @@
         var length = this.children.length;
         for(var i = 0; i < length; ++i) {
             this.children[i].draw(obj);
+        }
+
+        var lineWidth = obj.lineWidth;
+        var selectedEntity = null;
+        var entityMouseOver = null;
+        for(var i = 0; i < length; ++i) {
+            this.children[i].draw(obj);
+            if(obj.selectedEntity === this.children[i]) {
+                selectedEntity = this.children[i];
+            }
+            if(obj.entityMouseOver === this.children[i]) {
+                entityMouseOver = this.children[i];
+            }
+        }
+
+        if(selectedEntity) {
+            obj.lineWidth = lineWidth*1.7;
+            selectedEntity.drawModifiers(obj);
+        }
+        if( entityMouseOver && (entityMouseOver !== selectedEntity) ) {
+            obj.lineWidth = lineWidth*1.5;
+            entityMouseOver.drawBorder(obj);
         }
     };
 
@@ -666,6 +800,7 @@
                 img.addEventListener("load", (function(event) {
                     var _id = event.target.dataset.id;
                     that.entities[_id] = createEntity("product", true, event.target, 0.5, 0.5, 1, 1, event.target.naturalWidth, event.target.naturalHeight, 0, that.strokeColor);
+                    that.entities[_id].ctx = this.ctx;
                     //load existent zones
                     for(var j = 0; j < this.zone.length; ++j) {
                         var o = this.zone[j].config;
@@ -961,6 +1096,7 @@
                 img.addEventListener("load", (function(event) {
                     var _id = event.target.dataset.id;
                     that.entities[_id] = createEntity("product", true, event.target, 0.5, 0.5, 1, 1, event.target.naturalWidth, event.target.naturalHeight, 0, that.strokeColor);
+                    that.entities[_id].ctx = this.ctx;
 
                     //load existent zones
                     for(var j = 0; j < this.zone.length; ++j) {
@@ -1197,7 +1333,8 @@
     CanvasEditor.prototype._mouseDown = function(event) {
         //Check if is resizing
         if (this.selectedEntity) {
-            this._checkCorners(event);
+            //this._checkCorners(event);
+            this.selectedEntity.checkCorners({x:event.localX, y:event.localY, squaresSize: this.squaresSize, ctx: this.ctx});
             if (anchor.resizing) {
                 offsetX = event.globalX - event.localX;
                 offsetY = event.globalY - event.localY;
@@ -1231,26 +1368,6 @@
             }
             this.draw();
         }
-    };
-
-    CanvasEditor.prototype._mouseInsideEntity = function(x, y) {
-        if(this.current_img_id !== null) {
-            for (var i = this.entities[this.current_img_id].length - 1; i >= 0; i--) {
-                var entity = this.entities[this.current_img_id][i];
-                if (!entity) continue;
-
-                var w = entity.width;
-                var h = entity.height;
-                mat3.invert(mat_tmp, entity.model);
-                vec2.set(vec_tmp1, x, y);
-                vec2.transformMat3(vec_tmp1, vec_tmp1, mat_tmp);
-                var xx = vec_tmp1[0];
-                var yy = vec_tmp1[1];
-
-                if (pointerInside(xx, yy, -w / 2, -h / 2, w, h)) return entity;
-            }
-        }
-        return null;
     };
 
     CanvasEditor.prototype.updateAll = function() {
@@ -1944,7 +2061,10 @@
         event.stopPropagation();
         event.preventDefault();
         _augmentEvent(event);
-        if (this.selectedEntity) this._checkCorners(event);
+        if (this.selectedEntity) {
+            //this._checkCorners(event);
+            this.selectedEntity.checkCorners({x:event.localX, y:event.localY, squaresSize: this.squaresSize, ctx: this.ctx});
+        }
         if(this.current_img_id !== null) this._check_mouseOverEntity(event);
     }
 
