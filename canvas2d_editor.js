@@ -400,12 +400,7 @@
                 mat3.multiply(mat_tmp, this.model, this.parent.getGlobalMatrix());
             }
             return mat_tmp;
-
-            //return mat3.translate(mat_tmp, mat_tmp, vec2.fromValues(-this.parent.height/2, -this.parent.height/2));
         }
-
-        //if(this.parent) return this.parent.model;
-        //else return this.model;
     };
 
     Entity.prototype.transformToLocalXY = function(v) {
@@ -534,15 +529,24 @@
             /////
             else {
 
-                if(entity instanceof EntityImage) console.log("i", xx, yy);
+                if(entity instanceof EntityImage){
+                    console.log("i", xx, yy);
+                }
             }
             /////
         }
         if(this instanceof EntityCanvas) {
-            mat3.invert(mat_tmp, this.getGlobalMatrix());
+           // mat3.invert(mat_tmp, this.getGlobalMatrix());
+            //vec2.set(vec_tmp1, x, y);
+            //vec2.transformMat3(vec_tmp1, vec_tmp1, mat_tmp);
+
+
+            mat3.translate(mat_tmp, identity, vec2.set(vec_tmp1, -this.width/2, -this.height/2));
+            //mat3.multiply(mat_tmp, mat_tmp, this.model);
+            mat3.multiply(mat_tmp, this.model, mat_tmp);
+            mat3.invert(mat_tmp, mat_tmp);
             vec2.set(vec_tmp1, x, y);
             vec2.transformMat3(vec_tmp1, vec_tmp1, mat_tmp);
-
             var xx = vec_tmp1[0];
             var yy = vec_tmp1[1];
 
@@ -618,7 +622,7 @@
     cloneProto(Entity, EntityCanvas);
     EntityCanvas.prototype.deleteChild = EntityProduct.prototype.deleteChild;
     EntityCanvas.prototype.createChild = EntityProduct.prototype.createChild;
-    EntityCanvas.prototype.mouseInsideChildren = EntityProduct.prototype.mouseInsideChildren
+    EntityCanvas.prototype.mouseInsideChildren = EntityProduct.prototype.mouseInsideChildren;
 
     EntityCanvas.prototype.draw = function(obj) {
         this.ctx.clearRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height);
@@ -843,8 +847,84 @@
                 }
             }
         };
-        //Button handlers
 
+
+        //button handlers
+        function handle_button_click_move() {
+            div_editor_moveButtons.style.display = "block";
+            div_editor_scaleButtons.style.display = "none";
+            div_editor_rotateButtons.style.display = "none";
+        }
+
+        function handle_button_click_scale() {
+            div_editor_moveButtons.style.display = "none";
+            div_editor_scaleButtons.style.display = "block";
+            div_editor_rotateButtons.style.display = "none";
+        }
+
+        function handle_button_click_rotate() {
+            div_editor_moveButtons.style.display = "none";
+            div_editor_scaleButtons.style.display = "none";
+            div_editor_rotateButtons.style.display = "block";
+        }
+
+        function handle_button_click_deleteZone() {
+            if(that.selectedEntity) that._deleteSelectedEntity();
+        }
+
+        function handle_button_click_move_left() {
+            if (that.selectedEntity) that.translate(-that.pixels_move,0);
+        }
+
+        function handle_button_click_move_right() {
+            if (that.selectedEntity) that.translate(that.pixels_move,0);
+        }
+
+        function handle_button_click_move_up() {
+            if (that.selectedEntity) that.translate(0,-that.pixels_move);
+        }
+
+        function handle_button_click_move_down() {
+            if (that.selectedEntity) that.translate(0,that.pixels_move);
+        }
+
+        function handle_button_click_scale_v_shrink() {
+            if (that.selectedEntity) that.resizeStep(0,-that.pixels_scale);
+        }
+
+        function handle_button_click_scale_v_expand() {
+            if (that.selectedEntity) that.resizeStep(0,that.pixels_scale);
+        }
+
+        function handle_button_click_scale_h_shrink() {
+            if (that.selectedEntity) that.resizeStep(-that.pixels_scale,0);
+        }
+
+        function handle_button_click_scale_h_expand() {
+            if (that.selectedEntity) that.resizeStep(that.pixels_scale,0);
+        }
+
+        function handle_button_click_rotate_left() {
+            if (that.selectedEntity) that.rotateDEG(-that.degrees_rotate);
+        }
+
+        function handle_button_click_rotate_right() {
+            if (that.selectedEntity) that.rotateDEG(that.degrees_rotate);
+        }
+
+        button_move.addEventListener("mousedown", handle_button_click_move, false);
+        button_scale.addEventListener("mousedown", handle_button_click_scale, false);
+        button_rotate.addEventListener("mousedown", handle_button_click_rotate, false);
+        button_move_left.addEventListener("mousedown", handle_button_click_move_left, false);
+        button_move_right.addEventListener("mousedown", handle_button_click_move_right, false);
+        button_move_up.addEventListener("mousedown", handle_button_click_move_up, false);
+        button_move_down.addEventListener("mousedown", handle_button_click_move_down, false);
+        button_scale_v_shrink.addEventListener("mousedown", handle_button_click_scale_v_shrink, false);
+        button_scale_v_expand.addEventListener("mousedown", handle_button_click_scale_v_expand, false);
+        button_scale_h_shrink.addEventListener("mousedown", handle_button_click_scale_h_shrink, false);
+        button_scale_h_expand.addEventListener("mousedown", handle_button_click_scale_h_expand, false);
+        button_rotate_left.addEventListener("mousedown", handle_button_click_rotate_left, false);
+        button_rotate_right.addEventListener("mousedown", handle_button_click_rotate_right, false);
 
         //JSON
         //json-->javascript
@@ -1421,7 +1501,6 @@
     function imageLoadedEvent (event) {
         var that = this.that;
         var parent = this.parent;
-        //parent.createChild("image", false, event.target, parent.width/2, parent.height/2, event.target.naturalWidth, event.target.naturalHeight, 0, that.strokeColor);
         parent.createChild("image", false, event.target, parent.width/2, parent.height/2, event.target.naturalWidth, event.target.naturalHeight, 0, that.strokeColor);
         if(that.current_img_id) that.draw();
     }
