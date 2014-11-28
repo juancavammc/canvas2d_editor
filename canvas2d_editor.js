@@ -9,6 +9,7 @@
     //Temporal matrices and vectors
     var identity = mat3.create();
     var mat_tmp = mat3.create();
+    var mat_tmp2 = mat3.create();
     var vec_tmp1 = vec2.create();
     var vec_tmp2 = vec2.create();
 
@@ -390,7 +391,16 @@
     Entity.prototype.getGlobalMatrix = function() {
         if(!this.parent) return this.model;
         else {
-            return mat3.multiply(mat_tmp, this.model, this.parent.getGlobalMatrix());
+            if(this.parent instanceof EntityCanvas) {
+                mat3.translate(mat_tmp2, identity, vec2.set(vec_tmp2, -this.parent.width/2, -this.parent.height/2));
+                mat3.multiply(mat_tmp2, this.model, mat_tmp2);
+                mat3.multiply(mat_tmp, mat_tmp2, this.parent.getGlobalMatrix());
+            }
+            else {
+                mat3.multiply(mat_tmp, this.model, this.parent.getGlobalMatrix());
+            }
+            return mat_tmp;
+
             //return mat3.translate(mat_tmp, mat_tmp, vec2.fromValues(-this.parent.height/2, -this.parent.height/2));
         }
 
@@ -517,10 +527,29 @@
                     if(e) return e;
                 }
                 else {
+                    console.log("a",xx,yy);
                     return entity;
                 }
             }
+            /////
+            else {
+
+                if(entity instanceof EntityImage) console.log("i", xx, yy);
+            }
+            /////
         }
+        if(this instanceof EntityCanvas) {
+            mat3.invert(mat_tmp, this.getGlobalMatrix());
+            vec2.set(vec_tmp1, x, y);
+            vec2.transformMat3(vec_tmp1, vec_tmp1, mat_tmp);
+
+            var xx = vec_tmp1[0];
+            var yy = vec_tmp1[1];
+
+            console.log("C", xx, yy);
+        }
+        else if(this instanceof EntityProduct) console.log("p",x,y);
+
         return null;
     };
 
@@ -595,8 +624,8 @@
         this.ctx.clearRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height);
         this.drawBorder(obj);
 
-        this.ctx.save();
-        this.ctx.translate(this.width/2, this.height/2);
+        //this.ctx.save();
+        //this.ctx.translate(this.width/2, this.height/2);
 
         var ctx = obj.ctx;
         var lineWidth = obj.lineWidth;
@@ -635,7 +664,7 @@
         if(this.ctx) ctx.drawImage(this.ctx.canvas, -Math.abs(this.width) / 2, -Math.abs(this.height) / 2, Math.abs(this.width), Math.abs(this.height));
         ctx.restore();
 
-        this.ctx.restore();
+        //this.ctx.restore();
     };
 
     EntityCanvas.prototype.update = function(containerWidth, containerHeight) {
@@ -1393,7 +1422,7 @@
         var that = this.that;
         var parent = this.parent;
         //parent.createChild("image", false, event.target, parent.width/2, parent.height/2, event.target.naturalWidth, event.target.naturalHeight, 0, that.strokeColor);
-        parent.createChild("image", false, event.target, 0, 0, event.target.naturalWidth, event.target.naturalHeight, 0, that.strokeColor);
+        parent.createChild("image", false, event.target, parent.width/2, parent.height/2, event.target.naturalWidth, event.target.naturalHeight, 0, that.strokeColor);
         if(that.current_img_id) that.draw();
     }
 
@@ -1418,7 +1447,7 @@
                 if(this.current_img_id) {
                     parent = this.entities[this.current_img_id].mouseInsideChildren(event.localX, event.localY, true);
                     if(parent) {
-                        parent.createChild("image", false, image, 0, 0, image.naturalWidth, image.naturalHeight, 0, this.strokeColor);
+                        parent.createChild("image", false, image, parent.width/2, parent.height/2, image.naturalWidth, image.naturalHeight, 0, this.strokeColor);
                         this.draw();
                     }
                 }
@@ -1437,7 +1466,7 @@
                 if(this.current_img_id) {
                     parent = this.entities[this.current_img_id].mouseInsideChildren(event.localX, event.localY, true);
                     if(parent) {
-                        parent.createChild("image", false, image, 0, 0, image.naturalWidth, image.naturalHeight, 0, this.strokeColor);
+                        parent.createChild("image", false, image, image.naturalWidth/2, image.naturalHeight/2, image.naturalWidth, image.naturalHeight, 0, this.strokeColor);
                         this.draw();
                     }
                 }
