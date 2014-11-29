@@ -506,21 +506,9 @@
             var w = entity.width;
             var h = entity.height;
 
-           //if(this instanceof EntityProduct) {
-                mat3.invert(mat_tmp, entity.getGlobalMatrix());
-                vec2.set(vec_tmp1, x, y);
-                vec2.transformMat3(vec_tmp1, vec_tmp1, mat_tmp);
-           //}
-           //else {
-           //    mat3.translate(mat_tmp2, identity, vec2.set(vec_tmp2, -this.width/2, -this.height/2));
-           //
-           //    mat3.multiply(mat_tmp, this.model, mat_tmp2);
-           //    mat3.multiply(mat_tmp, mat_tmp, entity.model);
-           //
-           //    mat3.invert(mat_tmp, mat_tmp);
-           //    vec2.set(vec_tmp1, x, y);
-           //    vec2.transformMat3(vec_tmp1, vec_tmp1, mat_tmp);
-           //}
+            mat3.invert(mat_tmp, entity.getGlobalMatrix());
+            vec2.set(vec_tmp1, x, y);
+            vec2.transformMat3(vec_tmp1, vec_tmp1, mat_tmp);
 
             var xx = vec_tmp1[0];
             var yy = vec_tmp1[1];
@@ -531,38 +519,10 @@
                     if(e) return e;
                 }
                 else {
-                    console.log("a",xx,yy);
                     return entity;
                 }
             }
-            /////
-            else {
-
-                if(entity instanceof EntityImage){
-                    console.log("i", xx, yy);
-                }
-            }
-            /////
         }
-        if(this instanceof EntityCanvas) {
-           // mat3.invert(mat_tmp, this.getGlobalMatrix());
-            //vec2.set(vec_tmp1, x, y);
-            //vec2.transformMat3(vec_tmp1, vec_tmp1, mat_tmp);
-
-
-            mat3.translate(mat_tmp, identity, vec2.set(vec_tmp1, -this.width/2, -this.height/2));
-            //mat3.multiply(mat_tmp, mat_tmp, this.model);
-            mat3.multiply(mat_tmp, this.model, mat_tmp);
-            mat3.invert(mat_tmp, mat_tmp);
-            vec2.set(vec_tmp1, x, y);
-            vec2.transformMat3(vec_tmp1, vec_tmp1, mat_tmp);
-            var xx = vec_tmp1[0];
-            var yy = vec_tmp1[1];
-
-            console.log("C", xx, yy);
-        }
-        else if(this instanceof EntityProduct) console.log("p",x,y);
-
         return null;
     };
 
@@ -633,28 +593,9 @@
     EntityCanvas.prototype.createChild = EntityProduct.prototype.createChild;
     EntityCanvas.prototype.mouseInsideChildren = EntityProduct.prototype.mouseInsideChildren;
 
-    EntityCanvas.prototype.test = function(entity) {
-        console.log(entity);
-        var x = entity.width/2;
-        var y = entity.height/2;
-        var v = vec2.fromValues(x, y);
-        var i = mat3.invert(mat3.create(), entity.model);
-        vec2.transformMat3(v, v, i);
-        if(this.ctx) {
-            this.ctx.save();
-            //this.ctx.translate(entity.x, entity.y);
-            //this.ctx.rotate(entity.angle);
-            this.ctx.strokeRect(-v[0], -v[1], entity.width, entity.height);
-            this.ctx.restore();
-        }
-    };
-
     EntityCanvas.prototype.draw = function(obj) {
         this.ctx.clearRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height);
         this.drawBorder(obj);
-
-        //this.ctx.save();
-        //this.ctx.translate(this.width/2, this.height/2);
 
         var ctx = obj.ctx;
         var lineWidth = obj.lineWidth;
@@ -684,13 +625,6 @@
             entityMouseOver.drawBorder(obj);
         }
 
-
-        for(i = 0; i < length; ++i) {
-            this.test(this.children[i]);
-        }
-
-
-
         obj.ctx = ctx;
         obj.lineWidth = lineWidth;
 
@@ -699,8 +633,6 @@
         ctx.rotate(this.angle);
         if(this.ctx) ctx.drawImage(this.ctx.canvas, -Math.abs(this.width) / 2, -Math.abs(this.height) / 2, Math.abs(this.width), Math.abs(this.height));
         ctx.restore();
-
-        //this.ctx.restore();
     };
 
     EntityCanvas.prototype.update = function(containerWidth, containerHeight) {
