@@ -395,60 +395,16 @@
         }
         else {
             if(this.parent instanceof EntityCanvas) {
-                m = mat3.translate(mat3.create(), identity, vec2.set(vec_tmp2, -this.width/2, -this.height/2));
-                mat3.multiply(m, this.model, m);
-                mat3.multiply(m, m, this.parent.getGlobalMatrix());
+                m = mat3.translate(mat3.create(), identity, vec2.fromValues(-this.parent.width/2, -this.parent.height/2));
+                mat3.multiply(m, this.parent.model, m);
+                mat3.multiply(m, m, this.model);
             }
             else {
-                m = mat3.multiply(mat3.create(),this.model, this.parent.getGlobalMatrix());
+                m = mat3.multiply(mat3.create(), this.model, this.parent.getGlobalMatrix());
             }
             return m;
         }
     };
-
-    Entity.prototype.___getGlobalMatrix = function() {
-        var m;
-        if(!this.parent) {
-            if(this instanceof EntityCanvas) {
-                m = mat3.translate(mat3.create(), identity, vec2.set(vec_tmp2, -this.width/2, -this.height/2));
-                return mat3.multiply(m, this.model, m);
-            }
-            else return this.model;
-        }
-        else {
-            if(this instanceof EntityCanvas) {
-                m = mat3.translate(mat3.create(), identity, vec2.set(vec_tmp2, -this.width/2, -this.height/2));
-                mat3.multiply(m, this.model, m);
-                mat3.multiply(m, this.parent.getGlobalMatrix(), m);
-            }
-            else {
-                var m = mat3.multiply(mat3.create(), this.parent.getGlobalMatrix(), this.model);
-            }
-            return m;
-        }
-    };
-
-    /*Entity.prototype.transformToLocalXY = function(v) {
-        if(!this.parent) {
-            if(this instanceof EntityCanvas) {
-                mat3.translate(mat_tmp2, identity, vec2.set(vec_tmp2, -this.width/2, -this.height/2));
-                return mat3.multiply(mat_tmp, this.model, mat_tmp2);
-            }
-            else return this.model;
-        }
-
-
-        /////////////////
-        mat3.translate(mat_tmp2, identity, vec2.set(vec_tmp2, -this.width/2, -this.height/2));
-
-        mat3.multiply(mat_tmp, this.model, mat_tmp2);
-        mat3.multiply(mat_tmp, mat_tmp, entity.model);
-
-        mat3.invert(mat_tmp, mat_tmp);
-        vec2.set(vec_tmp1, x, y);
-        vec2.transformMat3(vec_tmp1, vec_tmp1, mat_tmp);
-        /////////////////
-    };*/
 
     /** EntityZone **/
     function EntityZone() {
@@ -550,21 +506,21 @@
             var w = entity.width;
             var h = entity.height;
 
-           if(this instanceof EntityProduct) {
+           //if(this instanceof EntityProduct) {
                 mat3.invert(mat_tmp, entity.getGlobalMatrix());
                 vec2.set(vec_tmp1, x, y);
                 vec2.transformMat3(vec_tmp1, vec_tmp1, mat_tmp);
-            }
-            else {
-                mat3.translate(mat_tmp2, identity, vec2.set(vec_tmp2, -this.width/2, -this.height/2));
-
-                mat3.multiply(mat_tmp, this.model, mat_tmp2);
-                mat3.multiply(mat_tmp, mat_tmp, entity.model);
-
-                mat3.invert(mat_tmp, mat_tmp);
-                vec2.set(vec_tmp1, x, y);
-                vec2.transformMat3(vec_tmp1, vec_tmp1, mat_tmp);
-            }
+           //}
+           //else {
+           //    mat3.translate(mat_tmp2, identity, vec2.set(vec_tmp2, -this.width/2, -this.height/2));
+           //
+           //    mat3.multiply(mat_tmp, this.model, mat_tmp2);
+           //    mat3.multiply(mat_tmp, mat_tmp, entity.model);
+           //
+           //    mat3.invert(mat_tmp, mat_tmp);
+           //    vec2.set(vec_tmp1, x, y);
+           //    vec2.transformMat3(vec_tmp1, vec_tmp1, mat_tmp);
+           //}
 
             var xx = vec_tmp1[0];
             var yy = vec_tmp1[1];
