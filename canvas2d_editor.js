@@ -389,26 +389,66 @@
     };
 
     Entity.prototype.getGlobalMatrix = function() {
-        if(!this.parent) return this.model;
+        var m;
+        if(!this.parent) {
+                return this.model;
+        }
         else {
             if(this.parent instanceof EntityCanvas) {
-                mat3.translate(mat_tmp2, identity, vec2.set(vec_tmp2, -this.parent.width/2, -this.parent.height/2));
-                mat3.multiply(mat_tmp2, this.model, mat_tmp2);
-                mat3.multiply(mat_tmp, mat_tmp2, this.parent.getGlobalMatrix());
+                m = mat3.translate(mat3.create(), identity, vec2.set(vec_tmp2, -this.width/2, -this.height/2));
+                mat3.multiply(m, this.model, m);
+                mat3.multiply(m, m, this.parent.getGlobalMatrix());
             }
             else {
-                mat3.multiply(mat_tmp, this.model, this.parent.getGlobalMatrix());
+                m = mat3.multiply(mat3.create(),this.model, this.parent.getGlobalMatrix());
             }
-            return mat_tmp;
+            return m;
         }
     };
 
-    Entity.prototype.transformToLocalXY = function(v) {
-        mat3.invert(mat_tmp, this.getGlobalMatrix());
-        vec2.transformMat3(v, v, mat_tmp);
-        //vec2.set(vec_tmp1, vec_tmp1[0] - this.naturalContainer_width/2, vec_tmp1[1] - this.naturalContainer_height/2);
-        return v;
+    Entity.prototype.___getGlobalMatrix = function() {
+        var m;
+        if(!this.parent) {
+            if(this instanceof EntityCanvas) {
+                m = mat3.translate(mat3.create(), identity, vec2.set(vec_tmp2, -this.width/2, -this.height/2));
+                return mat3.multiply(m, this.model, m);
+            }
+            else return this.model;
+        }
+        else {
+            if(this instanceof EntityCanvas) {
+                m = mat3.translate(mat3.create(), identity, vec2.set(vec_tmp2, -this.width/2, -this.height/2));
+                mat3.multiply(m, this.model, m);
+                mat3.multiply(m, this.parent.getGlobalMatrix(), m);
+            }
+            else {
+                var m = mat3.multiply(mat3.create(), this.parent.getGlobalMatrix(), this.model);
+            }
+            return m;
+        }
     };
+
+    /*Entity.prototype.transformToLocalXY = function(v) {
+        if(!this.parent) {
+            if(this instanceof EntityCanvas) {
+                mat3.translate(mat_tmp2, identity, vec2.set(vec_tmp2, -this.width/2, -this.height/2));
+                return mat3.multiply(mat_tmp, this.model, mat_tmp2);
+            }
+            else return this.model;
+        }
+
+
+        /////////////////
+        mat3.translate(mat_tmp2, identity, vec2.set(vec_tmp2, -this.width/2, -this.height/2));
+
+        mat3.multiply(mat_tmp, this.model, mat_tmp2);
+        mat3.multiply(mat_tmp, mat_tmp, entity.model);
+
+        mat3.invert(mat_tmp, mat_tmp);
+        vec2.set(vec_tmp1, x, y);
+        vec2.transformMat3(vec_tmp1, vec_tmp1, mat_tmp);
+        /////////////////
+    };*/
 
     /** EntityZone **/
     function EntityZone() {
@@ -510,12 +550,25 @@
             var w = entity.width;
             var h = entity.height;
 
-            mat3.invert(mat_tmp, entity.getGlobalMatrix());
-            vec2.set(vec_tmp1, x, y);
-            vec2.transformMat3(vec_tmp1, vec_tmp1, mat_tmp);
+           if(this instanceof EntityProduct) {
+                mat3.invert(mat_tmp, entity.getGlobalMatrix());
+                vec2.set(vec_tmp1, x, y);
+                vec2.transformMat3(vec_tmp1, vec_tmp1, mat_tmp);
+            }
+            else {
+                mat3.translate(mat_tmp2, identity, vec2.set(vec_tmp2, -this.width/2, -this.height/2));
+
+                mat3.multiply(mat_tmp, this.model, mat_tmp2);
+                mat3.multiply(mat_tmp, mat_tmp, entity.model);
+
+                mat3.invert(mat_tmp, mat_tmp);
+                vec2.set(vec_tmp1, x, y);
+                vec2.transformMat3(vec_tmp1, vec_tmp1, mat_tmp);
+            }
 
             var xx = vec_tmp1[0];
             var yy = vec_tmp1[1];
+
             if (pointerInside(xx, yy, -w / 2, -h / 2, w, h)) {
                 if(entity instanceof EntityCanvas && !noRecursive) {
                     var e = entity.mouseInsideChildren(x, y);
@@ -624,6 +677,22 @@
     EntityCanvas.prototype.createChild = EntityProduct.prototype.createChild;
     EntityCanvas.prototype.mouseInsideChildren = EntityProduct.prototype.mouseInsideChildren;
 
+    EntityCanvas.prototype.test = function(entity) {
+        console.log(entity);
+        var x = entity.width/2;
+        var y = entity.height/2;
+        var v = vec2.fromValues(x, y);
+        var i = mat3.invert(mat3.create(), entity.model);
+        vec2.transformMat3(v, v, i);
+        if(this.ctx) {
+            this.ctx.save();
+            //this.ctx.translate(entity.x, entity.y);
+            //this.ctx.rotate(entity.angle);
+            this.ctx.strokeRect(-v[0], -v[1], entity.width, entity.height);
+            this.ctx.restore();
+        }
+    };
+
     EntityCanvas.prototype.draw = function(obj) {
         this.ctx.clearRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height);
         this.drawBorder(obj);
@@ -658,6 +727,13 @@
             obj.lineWidth = lineWidth*1.3;
             entityMouseOver.drawBorder(obj);
         }
+
+
+        for(i = 0; i < length; ++i) {
+            this.test(this.children[i]);
+        }
+
+
 
         obj.ctx = ctx;
         obj.lineWidth = lineWidth;
