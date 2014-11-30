@@ -1414,10 +1414,6 @@
         if(this.current_img_id !== null) {
             this.selectedEntity = this.entities[this.current_img_id].mouseInsideChildren(event.localX, event.localY);
             if (this.selectedEntity) {
-                //offsetX = event.globalX - this.selectedEntity.x;
-                //offsetY = event.globalY - this.selectedEntity.y;
-
-
                 vec2.transformMat3(vec_tmp1, vec2.set(vec_tmp1,0,0), this.selectedEntity.getGlobalMatrix());
                 offsetX = event.globalX - vec_tmp1[0];
                 offsetY = event.globalY - vec_tmp1[1];
@@ -1787,7 +1783,15 @@
     };*/
 
     CanvasEditor.prototype._resizeEntity = function(event) {
-        mat3.invert(mat_tmp, this.selectedEntity.rotation);
+
+        if(this.selectedEntity.parent) {
+            mat3.multiply(mat_tmp, this.selectedEntity.rotation, this.selectedEntity.parent.rotation);
+            mat3.invert(mat_tmp, mat_tmp);
+        }
+        else {
+            mat3.invert(mat_tmp, this.selectedEntity.rotation);
+        }
+
         vec2.set(vec_tmp1, event.deltaX, event.deltaY);
         vec2.transformMat3(vec_tmp1, vec_tmp1, mat_tmp);
 
@@ -1851,7 +1855,14 @@
         this.selectedEntity.x += width;
         this.selectedEntity.y += height;
         this.selectedEntity.updateMatrices();
-        this.selectedEntity.updateNormals(this.ctx.canvas.width, this.ctx.canvas.height);
+
+        if(this.selectedEntity.parent) {
+            this.selectedEntity.updateNormals(this.selectedEntity.parent.width, this.selectedEntity.parent.height);
+        }
+        else {
+            this.selectedEntity.updateNormals(this.ctx.canvas.width, this.ctx.canvas.height);
+        }
+
         this.draw();
     };
 
