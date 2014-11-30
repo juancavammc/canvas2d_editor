@@ -9,8 +9,10 @@
     //Temporal matrices and vectors
     var identity = mat3.create();
     var mat_tmp = mat3.create();
+    var mat_tmp2 = mat3.create();
     var vec_tmp1 = vec2.create();
     var vec_tmp2 = vec2.create();
+    var vec_tmp_angles = vec2.create();
 
     //offsets from window to canvas
     var offsetX = 0;
@@ -119,6 +121,8 @@
         this.height = this.normal_height * containerHeight;
         this.x = this.normal_x * containerWidth;
         this.y = this.normal_y * containerHeight;
+        this.container_width = containerWidth;
+        this.container_height = containerHeight;
 
         this.updateMatrices();
 
@@ -134,7 +138,7 @@
         this.normal_width = this.width/containerWidth;
         this.normal_height = this.height/containerHeight;
         this.normal_x = this.x/containerWidth;
-        this.normal_y= this.y/containerHeight;
+        this.normal_y = this.y/containerHeight;
 
         if(this.children) {
             var length = this.children.length;
@@ -233,6 +237,176 @@
         return halfsize;
     };
 
+    //TODO: Change cursors according to the angle
+    /**
+     * obj.squaresSize
+     * obj.ctx
+     * obj.x
+     * obj.y
+     */
+    Entity.prototype.checkCorners = function(obj) {
+        var w = this.width;
+        var h = this.height;
+        mat3.invert(mat_tmp, this.getGlobalMatrix());
+        vec2.set(vec_tmp1, obj.x, obj.y);
+        vec2.transformMat3(vec_tmp1, vec_tmp1, mat_tmp);
+        var x = vec_tmp1[0];
+        var y = vec_tmp1[1];
+
+        var s = obj.squaresSize + 1;
+
+        //up-left
+        if (pointerInside(x, y, (-w / 2) - s, (-h / 2) - s, s * 2, s * 2)) {
+            anchor.x = false;
+            anchor.y = false;
+            anchor.width = true;
+            anchor.height = true;
+            anchor.resizing = true;
+            anchor.rotating = false;
+            obj.ctx.canvas.style.cursor = "nw-resize";
+        }
+        //up-right
+        else if (pointerInside(x, y, (w / 2) - s, (-h / 2) - s, s * 2, s * 2)) {
+            anchor.x = true;
+            anchor.y = false;
+            anchor.width = true;
+            anchor.height = true;
+            anchor.resizing = true;
+            anchor.rotating = false;
+            obj.ctx.canvas.style.cursor = "ne-resize";
+        }
+        //down-left
+        else if (pointerInside(x, y, (-w / 2) - s, (h / 2) - s, s * 2, s * 2)) {
+            anchor.x = false;
+            anchor.y = true;
+            anchor.width = true;
+            anchor.height = true;
+            anchor.resizing = true;
+            anchor.rotating = false;
+            obj.ctx.canvas.style.cursor = "sw-resize";
+        }
+        //down-right
+        else if (pointerInside(x, y, (w / 2) - s, (h / 2) - s, s * 2, s * 2)) {
+            anchor.x = true;
+            anchor.y = true;
+            anchor.width = true;
+            anchor.height = true;
+            anchor.resizing = true;
+            anchor.rotating = false;
+            obj.ctx.canvas.style.cursor = "se-resize";
+        }
+        //up-center
+        else if (pointerInside(x, y, -s, (-h / 2) - s, s * 2, s * 2)) {
+            anchor.x = true;
+            anchor.y = false;
+            anchor.width = false;
+            anchor.height = true;
+            anchor.resizing = true;
+            anchor.rotating = false;
+            obj.ctx.canvas.style.cursor = "n-resize";
+        }
+        //down-center
+        else if (pointerInside(x, y, -s, (h / 2) - s, s * 2, s * 2)) {
+            anchor.x = true;
+            anchor.y = true;
+            anchor.width = false;
+            anchor.height = true;
+            anchor.resizing = true;
+            anchor.rotating = false;
+            obj.ctx.canvas.style.cursor = "s-resize";
+        }
+        //center-left
+        else if (pointerInside(x, y, (-w / 2) - s, -s, s * 2, s * 2)) {
+            anchor.x = false;
+            anchor.y = true;
+            anchor.width = true;
+            anchor.height = false;
+            anchor.resizing = true;
+            anchor.rotating = false;
+            obj.ctx.canvas.style.cursor = "e-resize";
+        }
+        //center-right
+        else if (pointerInside(x, y, (w / 2) - s, -s, s * 2, s * 2)) {
+            anchor.x = true;
+            anchor.y = true;
+            anchor.width = true;
+            anchor.height = false;
+            anchor.resizing = true;
+            anchor.rotating = false;
+            obj.ctx.canvas.style.cursor = "w-resize";
+        }
+        else if (pointerInside(x, y, -s, (-h / 2) - s - obj.sizeLine, s * 2, s * 2)) {
+            anchor.resizing = false;
+            anchor.rotating = true;
+        }
+        else {
+            obj.ctx.canvas.style.cursor = "default";
+            anchor.resizing = false;
+            anchor.rotating = false;
+        }
+    };
+
+    Entity.prototype._checkBoundingBox = function() {
+        this.updateMatrices();
+        var halfsize = this.computeHalfSize();
+        if (this.x + halfsize.x > this.container_width) this.x = this.container_width - halfsize.x;
+        else if (this.x - halfsize.x < 0) this.x = halfsize.x;
+        if (this.y + halfsize.y > this.container_height) this.y = this.container_height - halfsize.y;
+        else if (this.y - halfsize.y < 0) this.y = halfsize.y;
+        this.updateMatrices();
+    };
+
+    Entity.prototype.resetRotation = function() {
+        this.angle = 0;
+        this.updateMatrices();
+    };
+
+    Entity.prototype.rotate = function(angle_rad) {
+        this.angle += angle_rad;
+        this.angle = this.angle % (Math.PI * 2);
+        this.updateMatrices();
+    };
+
+    Entity.prototype.setPosition = function(x,y) {
+        this.x = x;
+        this.y = y;
+        this._checkBoundingBox();
+        this.updateNormals(this.container_width, this.container_height);
+    };
+
+    Entity.prototype.translate = function (x, y) {
+        this.setPosition(this.x + x, this.y + y);
+    };
+
+    Entity.prototype.resize = function (width, height, minimumSize) {
+        this.width = width;
+        this.height = height;
+
+        //check minimum size
+        if (this.width < minimumSize) this.width = minimumSize;
+        if (this.height < minimumSize) this.height = minimumSize;
+
+        this.updateNormals(this.container_width, this.container_height);
+    };
+
+    Entity.prototype.getGlobalMatrix = function() {
+        var m;
+        if(!this.parent) {
+                return this.model;
+        }
+        else {
+            if(this.parent instanceof EntityCanvas) {
+                m = mat3.translate(mat3.create(), identity, vec2.fromValues(-this.parent.width/2, -this.parent.height/2));
+                mat3.multiply(m, this.parent.model, m);
+                mat3.multiply(m, m, this.model);
+            }
+            else {
+                m = mat3.multiply(mat3.create(), this.model, this.parent.getGlobalMatrix());
+            }
+            return m;
+        }
+    };
+
     /** EntityZone **/
     function EntityZone() {
 
@@ -245,14 +419,13 @@
     };
 
     EntityZone.prototype.serializeJSON = function() {
-
         var json = {};
         if(this.id !== undefined) json.id = this.id;
         var  config = {};
-        config.x = this.normal_x * this.parent.image.naturalWidth;
-        config.y = this.normal_y * this.parent.image.naturalHeight;
-        config.width = this.normal_width * this.parent.image.naturalWidth;
-        config.height = this.normal_height * this.parent.image.naturalHeight;
+        config.x = this.normal_x * this.naturalContainer_width;
+        config.y = this.normal_y * this.naturalContainer_height;
+        config.width = this.normal_width * this.naturalContainer_width;
+        config.height = this.normal_height * this.naturalContainer_height;
         config.angle = RADtoDEG(this.angle);
         json.config = config;
         return json;
@@ -293,13 +466,36 @@
         if(this.image) ctx.drawImage(this.image, -Math.abs(this.width) / 2, -Math.abs(this.height) / 2, Math.abs(this.width), Math.abs(this.height));
         ctx.restore();
         var length = this.children.length;
-        for(var i = 0; i < length; ++i) {
+        var i;
+        for(i = 0; i < length; ++i) {
             this.children[i].draw(obj);
+        }
+
+        var lineWidth = obj.lineWidth;
+        var selectedEntity = null;
+        var entityMouseOver = null;
+        for(i = 0; i < length; ++i) {
+            this.children[i].draw(obj);
+            if(obj.selectedEntity === this.children[i]) {
+                selectedEntity = this.children[i];
+            }
+            if(obj.entityMouseOver === this.children[i]) {
+                entityMouseOver = this.children[i];
+            }
+        }
+
+        if(selectedEntity) {
+            obj.lineWidth = lineWidth*1.7;
+            selectedEntity.drawModifiers(obj);
+        }
+        if( entityMouseOver && (entityMouseOver !== selectedEntity) ) {
+            obj.lineWidth = lineWidth*1.5;
+            entityMouseOver.drawBorder(obj);
         }
     };
 
     EntityProduct.prototype.push = function(entity) {
-        entity.parent = this;
+        entity.parent = null;
         this.children.push(entity);
     };
 
@@ -310,15 +506,22 @@
 
             var w = entity.width;
             var h = entity.height;
-            mat3.invert(mat_tmp, entity.model);
+
+            mat3.invert(mat_tmp, entity.getGlobalMatrix());
             vec2.set(vec_tmp1, x, y);
             vec2.transformMat3(vec_tmp1, vec_tmp1, mat_tmp);
+
             var xx = vec_tmp1[0];
             var yy = vec_tmp1[1];
 
             if (pointerInside(xx, yy, -w / 2, -h / 2, w, h)) {
-                if(entity instanceof EntityCanvas && !noRecursive) entity.mouseInsideChildren(x, y);
-                else return entity;
+                if(entity instanceof EntityCanvas && !noRecursive) {
+                    var e = entity.mouseInsideChildren(x, y);
+                    if(e) return e;
+                }
+                else {
+                    return entity;
+                }
             }
         }
         return null;
@@ -327,14 +530,18 @@
     EntityProduct.prototype.deleteChild = function(entity) {
         var l = this.children.length;
         for (var i = 0; i < l; ++i) {
-            if (this.children[i] === entity) {
+            if(this.children[i] instanceof EntityCanvas) {
+                if(this.children[i].deleteChild(entity)) return true;
+            }
+            else if (this.children[i] === entity) {
                 this.children[i] = null;
                 this.children = this.children.filter(function (n) {
-                    return n != undefined
+                    return n != undefined;
                 });
-                break;
+                return true;
             }
         }
+        return false;
     };
 
     EntityProduct.prototype.promoteChild = function(entity) {
@@ -366,9 +573,7 @@
     };
 
     EntityProduct.prototype.createChild = function (type, normalized, img, _x, _y, _width, _height, angle_rad, strokeColor) {
-        var x, y, width, height, normal_x, normal_y, normal_width, normal_height;
-
-        var entity = createEntity(type, normalized, img, _x, _y, _width, _height, this.width, this.height, angle_rad, strokeColor);
+        var entity = createEntity(type, normalized, img, _x, _y, _width, _height, this.width, this.height, this.naturalContainer_width, this.naturalContainer_height, angle_rad, strokeColor);
         this.push(entity);
         return entity;
     };
@@ -389,24 +594,44 @@
     }
 
     cloneProto(Entity, EntityCanvas);
-    EntityCanvas.prototype.push = EntityProduct.prototype.push;
     EntityCanvas.prototype.deleteChild = EntityProduct.prototype.deleteChild;
-    EntityCanvas.prototype.mouseInsideChildren = EntityProduct.prototype.mouseInsideChildren;
     EntityCanvas.prototype.createChild = EntityProduct.prototype.createChild;
+    EntityCanvas.prototype.mouseInsideChildren = EntityProduct.prototype.mouseInsideChildren;
 
     EntityCanvas.prototype.draw = function(obj) {
+        this.ctx.clearRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height);
         this.drawBorder(obj);
 
         var ctx = obj.ctx;
+        var lineWidth = obj.lineWidth;
 
-        //this.ctx.canvas.width = this.width;
-        //this.ctx.canvas.height = this.height;
         var length = this.children.length;
         obj.ctx = this.ctx;
+
+
+        var selectedEntity = null;
+        var entityMouseOver = null;
         for(var i = 0; i < length; ++i) {
             this.children[i].draw(obj);
+            if(obj.selectedEntity === this.children[i]) {
+                selectedEntity = this.children[i];
+            }
+            if(obj.entityMouseOver === this.children[i]) {
+                entityMouseOver = this.children[i];
+            }
         }
+
+        if(selectedEntity) {
+            obj.lineWidth = lineWidth*1.5;
+            selectedEntity.drawModifiers(obj);
+        }
+        if( entityMouseOver && (entityMouseOver !== selectedEntity) ) {
+            obj.lineWidth = lineWidth*1.3;
+            entityMouseOver.drawBorder(obj);
+        }
+
         obj.ctx = ctx;
+        obj.lineWidth = lineWidth;
 
         ctx.save();
         ctx.translate(this.x, this.y);
@@ -447,7 +672,9 @@
         }
     };
 
+
     EntityCanvas.prototype.push = function(entity) {
+        entity.parent = this;
         this.children.push(entity);
     };
 
@@ -589,8 +816,84 @@
                 }
             }
         };
-        //Button handlers
 
+
+        //button handlers
+        function handle_button_click_move() {
+            div_editor_moveButtons.style.display = "block";
+            div_editor_scaleButtons.style.display = "none";
+            div_editor_rotateButtons.style.display = "none";
+        }
+
+        function handle_button_click_scale() {
+            div_editor_moveButtons.style.display = "none";
+            div_editor_scaleButtons.style.display = "block";
+            div_editor_rotateButtons.style.display = "none";
+        }
+
+        function handle_button_click_rotate() {
+            div_editor_moveButtons.style.display = "none";
+            div_editor_scaleButtons.style.display = "none";
+            div_editor_rotateButtons.style.display = "block";
+        }
+
+        function handle_button_click_deleteZone() {
+            if(that.selectedEntity) that._deleteSelectedEntity();
+        }
+
+        function handle_button_click_move_left() {
+            if (that.selectedEntity) that.translate(-that.pixels_move,0);
+        }
+
+        function handle_button_click_move_right() {
+            if (that.selectedEntity) that.translate(that.pixels_move,0);
+        }
+
+        function handle_button_click_move_up() {
+            if (that.selectedEntity) that.translate(0,-that.pixels_move);
+        }
+
+        function handle_button_click_move_down() {
+            if (that.selectedEntity) that.translate(0,that.pixels_move);
+        }
+
+        function handle_button_click_scale_v_shrink() {
+            if (that.selectedEntity) that.resizeStep(0,-that.pixels_scale);
+        }
+
+        function handle_button_click_scale_v_expand() {
+            if (that.selectedEntity) that.resizeStep(0,that.pixels_scale);
+        }
+
+        function handle_button_click_scale_h_shrink() {
+            if (that.selectedEntity) that.resizeStep(-that.pixels_scale,0);
+        }
+
+        function handle_button_click_scale_h_expand() {
+            if (that.selectedEntity) that.resizeStep(that.pixels_scale,0);
+        }
+
+        function handle_button_click_rotate_left() {
+            if (that.selectedEntity) that.rotateDEG(-that.degrees_rotate);
+        }
+
+        function handle_button_click_rotate_right() {
+            if (that.selectedEntity) that.rotateDEG(that.degrees_rotate);
+        }
+
+        button_move.addEventListener("mousedown", handle_button_click_move, false);
+        button_scale.addEventListener("mousedown", handle_button_click_scale, false);
+        button_rotate.addEventListener("mousedown", handle_button_click_rotate, false);
+        button_move_left.addEventListener("mousedown", handle_button_click_move_left, false);
+        button_move_right.addEventListener("mousedown", handle_button_click_move_right, false);
+        button_move_up.addEventListener("mousedown", handle_button_click_move_up, false);
+        button_move_down.addEventListener("mousedown", handle_button_click_move_down, false);
+        button_scale_v_shrink.addEventListener("mousedown", handle_button_click_scale_v_shrink, false);
+        button_scale_v_expand.addEventListener("mousedown", handle_button_click_scale_v_expand, false);
+        button_scale_h_shrink.addEventListener("mousedown", handle_button_click_scale_h_shrink, false);
+        button_scale_h_expand.addEventListener("mousedown", handle_button_click_scale_h_expand, false);
+        button_rotate_left.addEventListener("mousedown", handle_button_click_rotate_left, false);
+        button_rotate_right.addEventListener("mousedown", handle_button_click_rotate_right, false);
 
         //JSON
         //json-->javascript
@@ -611,14 +914,13 @@
                 var img = new Image();
                 img.addEventListener("load", (function(event) {
                     var _id = event.target.dataset.id;
-                    that.entities[_id] = createEntity("product", true, event.target, 0.5, 0.5, 1, 1, event.target.naturalWidth, event.target.naturalHeight, 0, that.strokeColor);
+                    that.entities[_id] = createEntity("product", true, event.target, 0.5, 0.5, 1, 1, event.target.naturalWidth, event.target.naturalHeight, event.target.naturalWidth, event.target.naturalHeight, 0, that.strokeColor);
+                    that.entities[_id].ctx = this.ctx;
                     //load existent zones
                     for(var j = 0; j < this.zone.length; ++j) {
                         var o = this.zone[j].config;
-
-                        var entity = createEntity("canvas", false, null, o.x, o.y, o.width, o.height, event.target.naturalWidth, event.target.naturalHeight, DEGtoRAD(o.angle), that.getRandomColor());
+                        var entity = that.entities[_id].createChild("canvas", false, null, o.x, o.y, o.width, o.height, DEGtoRAD(o.angle), that.getRandomColor());
                         entity.id = this.zone[j].id;
-                        that.entities[_id].push(entity);
                     }
                 }).bind(json[i]), false);
 
@@ -908,7 +1210,8 @@
                 var img = new Image();
                 img.addEventListener("load", (function(event) {
                     var _id = event.target.dataset.id;
-                    that.entities[_id] = createEntity("product", true, event.target, 0.5, 0.5, 1, 1, event.target.naturalWidth, event.target.naturalHeight, 0, that.strokeColor);
+                    that.entities[_id] = createEntity("product", true, event.target, 0.5, 0.5, 1, 1, event.target.naturalWidth, event.target.naturalHeight, event.target.naturalWidth, event.target.naturalHeight, 0, that.strokeColor);
+                    that.entities[_id].ctx = this.ctx;
 
                     //load existent zones
                     for(var j = 0; j < this.zone.length; ++j) {
@@ -940,32 +1243,6 @@
             for (var i = 0; i < that.entities.length; ++i) {
                 if (!that.entities[i]) continue;
                 json[i] = that.entities[i].serializeJSON();
-            }
-            console.log(json);
-            console.log(JSON.stringify(json));
-            return json;
-        }
-
-        function _serializeJSON() {
-            var json = [];
-            for (var i = 0; i < that.entities.length; ++i) {
-                if(!that.entities[i]) continue;
-                var img = that.entities[i].image;
-                json[i] = {"id": i, "url": img.dataset.url, "zone": []};
-                for(var j = 0; j < that.entities[i].length; ++j) {
-                    if(!that.entities[i][j]) continue;
-                    var entity = that.entities[i][j];
-                    var obj = {};
-                    if(entity.id !== undefined) obj["id"] = entity.id;
-                    var config = {};
-                    config.x = entity.normal_x * img.naturalWidth;
-                    config.y = entity.normal_y * img.naturalHeight;
-                    config.width = entity.normal_width * img.naturalWidth;
-                    config.height = entity.normal_height * img.naturalHeight;
-                    config.angle = RADtoDEG(entity.angle);
-                    obj["config"] = config;
-                    json[i].zone.push(obj);
-                }
             }
             console.log(json);
             console.log(JSON.stringify(json));
@@ -1047,27 +1324,40 @@
                 sizeLine: this.sizeLine
             };
             this.entities[this.current_img_id].draw(obj);
-            if(this.selectedEntity) {
-                obj.lineWidth = this.lineWidth*1.5;
-                this.selectedEntity.drawModifiers(obj);
-            }
-            if(this.entityMouseOver && (this.entityMouseOver !== this.selectedEntity) ) {
-                obj.lineWidth = this.lineWidth*1.3;
-                this.entityMouseOver.drawBorder(obj);
-            }
+        }
+    };
+
+    CanvasEditor.prototype.moveTo = function (x, y) {
+        if (this.selectedEntity) {
+            this.selectedEntity.setPosition(x,y);
+            this.draw();
+        }
+    };
+    CanvasEditor.prototype.translate = function (x, y) {
+            this.moveTo(this.selectedEntity.x + x, this.selectedEntity.y + y);
+    };
+
+    CanvasEditor.prototype.rotateRAD = function (angle_rad) {
+        if (this.selectedEntity) {
+            this.selectedEntity.rotate(angle_rad);
+            this.draw();
+        }
+    };
+
+    CanvasEditor.prototype.rotateDEG = function (angle_deg) {
+        this.rotateRAD(DEGtoRAD(angle_deg));
+    };
+
+    CanvasEditor.prototype.resetRotation = function () {
+        if (this.selectedEntity) {
+            this.selectedEntity.resetRotation();
+            this.draw();
         }
     };
 
     CanvasEditor.prototype.resize = function (width, height) {
         if (this.selectedEntity) {
-            this.selectedEntity.width = width;
-            this.selectedEntity.height = height;
-
-            //check minimum size
-            if (this.selectedEntity.width < this.minimumSize) this.selectedEntity.width = this.minimumSize;
-            if (this.selectedEntity.height < this.minimumSize) this.selectedEntity.height = this.minimumSize;
-
-            this.selectedEntity.updateNormals(this.ctx.canvas.width, this.ctx.canvas.height);
+            this.selectedEntity.resize(width, height, this.minimumSize);
             this.draw();
         }
     };
@@ -1076,59 +1366,8 @@
         this.resize(this.selectedEntity.width + width, this.selectedEntity.height + height);
     };
 
-    CanvasEditor.prototype._checkBoundingBox = function(entity) {
-        entity.updateMatrices();
-        var halfsize = entity.computeHalfSize();
-        var canvas = this.ctx.canvas;
-        if (entity.x + halfsize.x > canvas.width) entity.x = canvas.width - halfsize.x;
-        else if (entity.x - halfsize.x < 0) entity.x = halfsize.x;
-        if (entity.y + halfsize.y > canvas.height) entity.y = canvas.height - halfsize.y;
-        else if (entity.y - halfsize.y < 0) entity.y = halfsize.y;
-        entity.updateMatrices();
-    };
-
-    CanvasEditor.prototype.moveTo = function (x, y) {
-        if (this.selectedEntity) {
-            this.selectedEntity.x = x;
-            this.selectedEntity.y = y;
-            this._checkBoundingBox(this.selectedEntity);
-            this.selectedEntity.updateNormals(this.ctx.canvas.width, this.ctx.canvas.height);
-            this.draw();
-        }
-    };
-    CanvasEditor.prototype.translate = function (x, y) {
-            this.moveTo(this.selectedEntity.x + x, this.selectedEntity.y + y);
-    };
-
-    CanvasEditor.prototype.rotateRAD = function (angle) {
-        if (this.selectedEntity) {
-            this.selectedEntity.angle += angle;
-            this.selectedEntity.angle = this.selectedEntity.angle % (Math.PI * 2);
-            this.selectedEntity.updateMatrices();
-            this.draw();
-        }
-    };
-
-    CanvasEditor.prototype.rotateDEG = function (angle) {
-        this.rotateRAD(DEGtoRAD(angle));
-    };
-
-    CanvasEditor.prototype.resetRotation = function () {
-        if (this.selectedEntity) {
-            this.selectedEntity.angle = 0;
-            this.selectedEntity.updateMatrices();
-            this.draw();
-        }
-    };
-
     CanvasEditor.prototype.addZone = function() {
         var aspect = this.ctx.canvas.width /this.ctx.canvas.height;
-        //var container_width = this.entities[this.current_img_id].width;
-        //var container_height = this.entities[this.current_img_id].height;
-        //var entity = createEntity("zone", true, null, 0.5, 0.5, 0.2, 0.2*aspect, container_width, container_height, 0, this.getRandomColor());
-        //entity.update(container_width, container_height);
-        //this.entities[this.current_img_id].push(entity);
-       //return entity;
         return this.entities[this.current_img_id].createChild("zone", true, null, 0.5, 0.5, 0.2, 0.2*aspect, 0, this.getRandomColor());
     };
 
@@ -1151,7 +1390,8 @@
     CanvasEditor.prototype._mouseDown = function(event) {
         //Check if is resizing
         if (this.selectedEntity) {
-            this._checkCorners(event);
+            //this._checkCorners(event);
+            this.selectedEntity.checkCorners({x:event.localX, y:event.localY, squaresSize: this.squaresSize, sizeLine: this.sizeLine, ctx: this.ctx});
             if (anchor.resizing) {
                 offsetX = event.globalX - event.localX;
                 offsetY = event.globalY - event.localY;
@@ -1164,9 +1404,9 @@
                 tempAngle = this.selectedEntity.angle;
                 offsetX = event.globalX - event.localX;
                 offsetY = event.globalY - event.localY;
-                vec2.set(vec_tmp2, event.globalX - offsetX, event.globalY - offsetY);
-                vec2.subtract(vec_tmp2, vec_tmp2, this.selectedEntity.position);
-                vec2.normalize(vec_tmp2, vec_tmp2);
+
+                this._setPositionToRotate(vec_tmp_angles, event.globalX - offsetX, event.globalY - offsetY);
+
                 _global.addEventListener("mousemove", this._handle_mousemove_rotate, false);
                 _global.addEventListener("mouseup", this._handle_mouseup, false);
                 this.draw();
@@ -1178,33 +1418,16 @@
         if(this.current_img_id !== null) {
             this.selectedEntity = this.entities[this.current_img_id].mouseInsideChildren(event.localX, event.localY);
             if (this.selectedEntity) {
-                offsetX = event.globalX - this.selectedEntity.x;
-                offsetY = event.globalY - this.selectedEntity.y;
+                vec2.transformMat3(vec_tmp1, vec2.set(vec_tmp1,0,0), this.selectedEntity.getGlobalMatrix());
+                offsetX = event.globalX - vec_tmp1[0];
+                offsetY = event.globalY - vec_tmp1[1];
+                //console.log(vec_tmp1, event.localX, event.localY);
+
                 _global.addEventListener("mousemove", this._handle_mousemove_move_clicked, false);
                 _global.addEventListener("mouseup", this._handle_mouseup, false);
             }
             this.draw();
         }
-    };
-
-    CanvasEditor.prototype._mouseInsideEntity = function(x, y) {
-        if(this.current_img_id !== null) {
-            for (var i = this.entities[this.current_img_id].length - 1; i >= 0; i--) {
-                var entity = this.entities[this.current_img_id][i];
-                if (!entity) continue;
-
-                var w = entity.width;
-                var h = entity.height;
-                mat3.invert(mat_tmp, entity.model);
-                vec2.set(vec_tmp1, x, y);
-                vec2.transformMat3(vec_tmp1, vec_tmp1, mat_tmp);
-                var xx = vec_tmp1[0];
-                var yy = vec_tmp1[1];
-
-                if (pointerInside(xx, yy, -w / 2, -h / 2, w, h)) return entity;
-            }
-        }
-        return null;
     };
 
     CanvasEditor.prototype.updateAll = function() {
@@ -1267,7 +1490,7 @@
         var data = this.getDropData(event);
         if(data === null) return false;
 
-        var image, entity, parent, i;
+        var image, parent, i;
 
         for(i = 0; i < data.files.length; ++i) {
             image = this.searchImage(data.files[i].name);
@@ -1346,7 +1569,7 @@
 
     //if normalized === true : x, y , width, height are normalized
     //else: x, y, width, height are not normalized
-    function createEntity(type, normalized, img, _x, _y, _width, _height, container_width, container_height, angle_rad, strokeColor) {
+    function createEntity(type, normalized, img, _x, _y, _width, _height, container_width, container_height, naturalContainer_width, naturalContainer_height, angle_rad, strokeColor) {
         var x, y, width, height, normal_x, normal_y, normal_width, normal_height;
 
         var entity;
@@ -1424,6 +1647,8 @@
         entity.normal_height = normal_height;
         entity.container_width = container_width;
         entity.container_height = container_height;
+        entity.naturalContainer_width = naturalContainer_width;
+        entity.naturalContainer_height = naturalContainer_height;
         entity.angle = angle_rad;
         entity.strokeColor = strokeColor;
         entity.position = pos;
@@ -1433,109 +1658,6 @@
 
         return entity;
     }
-
-    //TODO: Change cursors according to the angle
-    CanvasEditor.prototype._checkCorners = function(event) {
-        var w = this.selectedEntity.width;
-        var h = this.selectedEntity.height;
-        mat3.invert(mat_tmp, this.selectedEntity.model);
-        vec2.set(vec_tmp1, event.localX, event.localY);
-        vec2.transformMat3(vec_tmp1, vec_tmp1, mat_tmp);
-        var x = vec_tmp1[0];
-        var y = vec_tmp1[1];
-
-        var s = this.squaresSize + 1;
-
-        //up-left
-        if (pointerInside(x, y, (-w / 2) - s, (-h / 2) - s, s * 2, s * 2)) {
-            anchor.x = false;
-            anchor.y = false;
-            anchor.width = true;
-            anchor.height = true;
-            anchor.resizing = true;
-            anchor.rotating = false;
-            this.ctx.canvas.style.cursor = "nw-resize";
-        }
-        //up-right
-        else if (pointerInside(x, y, (w / 2) - s, (-h / 2) - s, s * 2, s * 2)) {
-            anchor.x = true;
-            anchor.y = false;
-            anchor.width = true;
-            anchor.height = true;
-            anchor.resizing = true;
-            anchor.rotating = false;
-            this.ctx.canvas.style.cursor = "ne-resize";
-        }
-        //down-left
-        else if (pointerInside(x, y, (-w / 2) - s, (h / 2) - s, s * 2, s * 2)) {
-            anchor.x = false;
-            anchor.y = true;
-            anchor.width = true;
-            anchor.height = true;
-            anchor.resizing = true;
-            anchor.rotating = false;
-            this.ctx.canvas.style.cursor = "sw-resize";
-        }
-        //down-right
-        else if (pointerInside(x, y, (w / 2) - s, (h / 2) - s, s * 2, s * 2)) {
-            anchor.x = true;
-            anchor.y = true;
-            anchor.width = true;
-            anchor.height = true;
-            anchor.resizing = true;
-            anchor.rotating = false;
-            this.ctx.canvas.style.cursor = "se-resize";
-        }
-        //up-center
-        else if (pointerInside(x, y, -s, (-h / 2) - s, s * 2, s * 2)) {
-            anchor.x = true;
-            anchor.y = false;
-            anchor.width = false;
-            anchor.height = true;
-            anchor.resizing = true;
-            anchor.rotating = false;
-            this.ctx.canvas.style.cursor = "n-resize";
-        }
-        //down-center
-        else if (pointerInside(x, y, -s, (h / 2) - s, s * 2, s * 2)) {
-            anchor.x = true;
-            anchor.y = true;
-            anchor.width = false;
-            anchor.height = true;
-            anchor.resizing = true;
-            anchor.rotating = false;
-            this.ctx.canvas.style.cursor = "s-resize";
-        }
-        //center-left
-        else if (pointerInside(x, y, (-w / 2) - s, -s, s * 2, s * 2)) {
-            anchor.x = false;
-            anchor.y = true;
-            anchor.width = true;
-            anchor.height = false;
-            anchor.resizing = true;
-            anchor.rotating = false;
-            this.ctx.canvas.style.cursor = "e-resize";
-        }
-        //center-right
-        else if (pointerInside(x, y, (w / 2) - s, -s, s * 2, s * 2)) {
-            anchor.x = true;
-            anchor.y = true;
-            anchor.width = true;
-            anchor.height = false;
-            anchor.resizing = true;
-            anchor.rotating = false;
-            this.ctx.canvas.style.cursor = "w-resize";
-        }
-        else if (pointerInside(x, y, -s, (-h / 2) - s - this.sizeLine, s * 2, s * 2)) {
-            anchor.resizing = false;
-            anchor.rotating = true;
-        }
-        else {
-            this.ctx.canvas.style.cursor = "default";
-            anchor.resizing = false;
-            anchor.rotating = false;
-        }
-    };
 
     /*CanvasEditor.prototype.__resizeEntity = function(event) {
         var entity = this.selectedEntity;
@@ -1665,7 +1787,15 @@
     };*/
 
     CanvasEditor.prototype._resizeEntity = function(event) {
-        mat3.invert(mat_tmp, this.selectedEntity.rotation);
+
+        if(this.selectedEntity.parent) {
+            mat3.multiply(mat_tmp, this.selectedEntity.rotation, this.selectedEntity.parent.rotation);
+            mat3.invert(mat_tmp, mat_tmp);
+        }
+        else {
+            mat3.invert(mat_tmp, this.selectedEntity.rotation);
+        }
+
         vec2.set(vec_tmp1, event.deltaX, event.deltaY);
         vec2.transformMat3(vec_tmp1, vec_tmp1, mat_tmp);
 
@@ -1729,7 +1859,14 @@
         this.selectedEntity.x += width;
         this.selectedEntity.y += height;
         this.selectedEntity.updateMatrices();
-        this.selectedEntity.updateNormals(this.ctx.canvas.width, this.ctx.canvas.height);
+
+        if(this.selectedEntity.parent) {
+            this.selectedEntity.updateNormals(this.selectedEntity.parent.width, this.selectedEntity.parent.height);
+        }
+        else {
+            this.selectedEntity.updateNormals(this.ctx.canvas.width, this.ctx.canvas.height);
+        }
+
         this.draw();
     };
 
@@ -1741,12 +1878,20 @@
         }
     };
 
+    CanvasEditor.prototype._setPositionToRotate = function(out, x, y) {
+        vec2.set(vec_tmp2, 0, 0);
+        vec2.set(out, x, y);
+        vec2.transformMat3(vec_tmp2, vec_tmp2, this.selectedEntity.getGlobalMatrix());
+        vec2.subtract(out, out, vec_tmp2);
+        vec2.normalize(out, out);
+    };
+
     CanvasEditor.prototype._rotateEntity = function(event) {
-        vec2.set(vec_tmp1, event.globalX - offsetX, event.globalY - offsetY);
-        vec2.subtract(vec_tmp1, vec_tmp1, this.selectedEntity.position);
+        this._setPositionToRotate(vec_tmp1, event.globalX - offsetX, event.globalY - offsetY);
+
         vec2.normalize(vec_tmp1, vec_tmp1);
-        var angle = vec2.computeSignedAngle(vec_tmp1, vec_tmp2);
-        vec2.copy(vec_tmp2, vec_tmp1);
+        var angle = vec2.computeSignedAngle(vec_tmp1, vec_tmp_angles);
+        vec2.copy(vec_tmp_angles, vec_tmp1);
         tempAngle += angle;
 
         if(this.stickyAngles) {
@@ -1762,7 +1907,18 @@
     };
 
     CanvasEditor.prototype._setNewPosition = function(event) {
-        this.moveTo(event.globalX - offsetX, event.globalY - offsetY);
+        vec2.set(vec_tmp1, event.globalX - offsetX, event.globalY - offsetY);
+        if(this.selectedEntity.parent) {
+            mat3.translate(mat_tmp, identity, vec2.fromValues(-this.selectedEntity.parent.width/2, -this.selectedEntity.parent.height/2));
+            mat3.multiply(mat_tmp, this.selectedEntity.parent.getGlobalMatrix(), mat_tmp);
+            mat3.invert(mat_tmp, mat_tmp);
+
+            vec2.transformMat3(vec_tmp1, vec_tmp1, mat_tmp);
+            console.log(vec_tmp1);
+            this.moveTo(vec_tmp1[0], vec_tmp1[1]);
+            console.log(this.selectedEntity.x, this.selectedEntity.y);
+        }
+        else this.moveTo(event.globalX - offsetX, event.globalY - offsetY);
     };
 
     CanvasEditor.prototype._check_mouseOverEntity = function(event) {
@@ -1770,23 +1926,9 @@
             var entity = this.entities[this.current_img_id].mouseInsideChildren(event.localX, event.localY);
             if (entity) {
                 this.entityMouseOver = entity;
-                this.ctx.save();
-                this.ctx.strokeStyle = entity.strokeColor;
-                this.ctx.lineWidth = this.lineWidth;
-                var x = entity.x;
-                var y = entity.y;
-                var w = entity.width;
-                var h = entity.height;
-
-                this.ctx.translate(x, y);
-                this.ctx.rotate(entity.angle);
-
-                this.ctx.strokeRect(-w / 2, -h / 2, w, h);
-                this.ctx.restore();
-
                 this.draw();
             }
-            else {
+             else {
                 if (this.entityMouseOver) {
                     this.entityMouseOver = null;
                     this.draw();
@@ -1912,7 +2054,10 @@
         event.stopPropagation();
         event.preventDefault();
         _augmentEvent(event);
-        if (this.selectedEntity) this._checkCorners(event);
+        if (this.selectedEntity) {
+            //this._checkCorners(event);
+            this.selectedEntity.checkCorners({x:event.localX, y:event.localY, squaresSize: this.squaresSize, ctx: this.ctx});
+        }
         if(this.current_img_id !== null) this._check_mouseOverEntity(event);
     }
 
