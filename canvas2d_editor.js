@@ -1414,8 +1414,15 @@
         if(this.current_img_id !== null) {
             this.selectedEntity = this.entities[this.current_img_id].mouseInsideChildren(event.localX, event.localY);
             if (this.selectedEntity) {
-                offsetX = event.globalX - this.selectedEntity.x;
-                offsetY = event.globalY - this.selectedEntity.y;
+                //offsetX = event.globalX - this.selectedEntity.x;
+                //offsetY = event.globalY - this.selectedEntity.y;
+
+
+                vec2.transformMat3(vec_tmp1, vec2.set(vec_tmp1,0,0), this.selectedEntity.getGlobalMatrix());
+                offsetX = event.globalX - vec_tmp1[0];
+                offsetY = event.globalY - vec_tmp1[1];
+                //console.log(vec_tmp1, event.localX, event.localY);
+
                 _global.addEventListener("mousemove", this._handle_mousemove_move_clicked, false);
                 _global.addEventListener("mouseup", this._handle_mouseup, false);
             }
@@ -1885,7 +1892,18 @@
     };
 
     CanvasEditor.prototype._setNewPosition = function(event) {
-        this.moveTo(event.globalX - offsetX, event.globalY - offsetY);
+        vec2.set(vec_tmp1, event.globalX - offsetX, event.globalY - offsetY);
+        if(this.selectedEntity.parent) {
+            mat3.translate(mat_tmp, identity, vec2.fromValues(-this.selectedEntity.parent.width/2, -this.selectedEntity.parent.height/2));
+            mat3.multiply(mat_tmp, this.selectedEntity.parent.getGlobalMatrix(), mat_tmp);
+            mat3.invert(mat_tmp, mat_tmp);
+
+            vec2.transformMat3(vec_tmp1, vec_tmp1, mat_tmp);
+            console.log(vec_tmp1);
+            this.moveTo(vec_tmp1[0], vec_tmp1[1]);
+            console.log(this.selectedEntity.x, this.selectedEntity.y);
+        }
+        else this.moveTo(event.globalX - offsetX, event.globalY - offsetY);
     };
 
     CanvasEditor.prototype._check_mouseOverEntity = function(event) {
