@@ -1462,7 +1462,10 @@
 
     CanvasEditor.prototype.getDropData = function(event) {
         var data = {};
-        if( event.hasOwnProperty("dataTransfer") ) {
+        console.log(event.hasOwnProperty("dataTransfer"));
+        console.log(event.dataTransfer);
+        //if( event.hasOwnProperty("dataTransfer") ) {
+        if(event.dataTransfer) {
             data.text = event.dataTransfer.getData("text");
             data.files = event.dataTransfer.files;
             return data;
@@ -2023,20 +2026,22 @@
 
     //*** START HANDLERS ***
     function handle_dragover(event) {
+        console.log("dragover");
         event.stopPropagation();
         event.preventDefault();
         _augmentEvent(event);
     }
 
     function handle_drop_inLogoZone(event) {
+        console.log("drop_inLogoZone");
         event.stopPropagation();
         event.preventDefault();
         _augmentEvent(event);
-        //this._createNewImages(event);
         this._drop_inLogoZone(event);
     }
 
     function handle_drop_inCanvas(event) {
+        console.log("drop_inCanvas");
         event.stopPropagation();
         event.preventDefault();
         _augmentEvent(event);
