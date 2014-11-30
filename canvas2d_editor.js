@@ -544,10 +544,32 @@
         return false;
     };
 
+    EntityProduct.prototype.deleteAllChildren = function() {
+        var l = this.children.length;
+        var aux = false;
+        for (var i = 0; i < l; ++i) {
+            if(this.children[i] instanceof EntityCanvas) {
+                this.children[i].deleteAllChildren();
+            }
+            else if (this.children[i]) {
+                this.children[i] = null;
+                aux = true;
+            }
+        }
+        if(aux) {
+            this.children = this.children.filter(function (n) {
+                return n != undefined;
+            });
+        }
+    };
+
     EntityProduct.prototype.promoteChild = function(entity) {
         var l = this.children.length;
         for (var i = 0; i < l; ++i) {
-            if (this.children[i] === entity) {
+            if(this.children[i] instanceof EntityCanvas) {
+                if(this.children[i].promoteChild(entity)) return true;
+            }
+            else if (this.children[i] === entity) {
                 if (i < l - 1) {
                     var temp = this.children[i + 1];
                     this.children[i + 1] = this.children[i];
@@ -561,7 +583,10 @@
     EntityProduct.prototype.demoteChild = function(entity) {
         var l = this.children.length;
         for (var i = 0; i < l; ++i) {
-            if (this.children[i] === entity) {
+            if(this.children[i] instanceof EntityCanvas) {
+                if(this.children[i].demoteChild(entity)) return true;
+            }
+            else if (this.children[i] === entity) {
                 if (i > 0) {
                     var temp = this.children[i - 1];
                     this.children[i - 1] = this.children[i];
@@ -593,10 +618,11 @@
         this.ctx = canvas.getContext("2d");
     }
 
-    cloneProto(Entity, EntityCanvas);
-    EntityCanvas.prototype.deleteChild = EntityProduct.prototype.deleteChild;
-    EntityCanvas.prototype.createChild = EntityProduct.prototype.createChild;
-    EntityCanvas.prototype.mouseInsideChildren = EntityProduct.prototype.mouseInsideChildren;
+    cloneProto(EntityProduct, EntityCanvas);
+    //EntityCanvas.prototype.deleteChild = EntityProduct.prototype.deleteChild;
+    //EntityCanvas.prototype.createChild = EntityProduct.prototype.createChild;
+    //EntityCanvas.prototype.mouseInsideChildren = EntityProduct.prototype.mouseInsideChildren;
+    //EntityCanvas.prototype.deleteAllChildren = EntityProduct.prototype.deleteAllChildren;
 
     EntityCanvas.prototype.draw = function(obj) {
         this.ctx.clearRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height);
@@ -768,7 +794,7 @@
 
         //Get all buttons
         var button_removeSelection = document.getElementById("editor_removeSelection");
-        var button_cleanSelection = document.getElementById("editor_cleanSelection");
+        var button_cleanAll = document.getElementById("editor_cleanAll");
         var button_addText = document.getElementById("editor_addText");
         var button_move = document.getElementById("editor_move");
         var button_scale = document.getElementById("editor_scale");
@@ -837,63 +863,32 @@
             div_editor_rotateButtons.style.display = "block";
         }
 
-        function handle_button_click_deleteZone() {
-            if(that.selectedEntity) that._deleteSelectedEntity();
+        function handle_button_cleanAll() {
+            if(this.current_img_id) {
+                this.entities[this.current_img_id].deleteAllChildren();
+            }
         }
 
-        function handle_button_click_move_left() {
-            if (that.selectedEntity) that.translate(-that.pixels_move,0);
+        function handle_button_addText() {
+
         }
 
-        function handle_button_click_move_right() {
-            if (that.selectedEntity) that.translate(that.pixels_move,0);
-        }
-
-        function handle_button_click_move_up() {
-            if (that.selectedEntity) that.translate(0,-that.pixels_move);
-        }
-
-        function handle_button_click_move_down() {
-            if (that.selectedEntity) that.translate(0,that.pixels_move);
-        }
-
-        function handle_button_click_scale_v_shrink() {
-            if (that.selectedEntity) that.resizeStep(0,-that.pixels_scale);
-        }
-
-        function handle_button_click_scale_v_expand() {
-            if (that.selectedEntity) that.resizeStep(0,that.pixels_scale);
-        }
-
-        function handle_button_click_scale_h_shrink() {
-            if (that.selectedEntity) that.resizeStep(-that.pixels_scale,0);
-        }
-
-        function handle_button_click_scale_h_expand() {
-            if (that.selectedEntity) that.resizeStep(that.pixels_scale,0);
-        }
-
-        function handle_button_click_rotate_left() {
-            if (that.selectedEntity) that.rotateDEG(-that.degrees_rotate);
-        }
-
-        function handle_button_click_rotate_right() {
-            if (that.selectedEntity) that.rotateDEG(that.degrees_rotate);
-        }
-
-        button_move.addEventListener("mousedown", handle_button_click_move, false);
-        button_scale.addEventListener("mousedown", handle_button_click_scale, false);
-        button_rotate.addEventListener("mousedown", handle_button_click_rotate, false);
-        button_move_left.addEventListener("mousedown", handle_button_click_move_left, false);
-        button_move_right.addEventListener("mousedown", handle_button_click_move_right, false);
-        button_move_up.addEventListener("mousedown", handle_button_click_move_up, false);
-        button_move_down.addEventListener("mousedown", handle_button_click_move_down, false);
-        button_scale_v_shrink.addEventListener("mousedown", handle_button_click_scale_v_shrink, false);
-        button_scale_v_expand.addEventListener("mousedown", handle_button_click_scale_v_expand, false);
-        button_scale_h_shrink.addEventListener("mousedown", handle_button_click_scale_h_shrink, false);
-        button_scale_h_expand.addEventListener("mousedown", handle_button_click_scale_h_expand, false);
-        button_rotate_left.addEventListener("mousedown", handle_button_click_rotate_left, false);
-        button_rotate_right.addEventListener("mousedown", handle_button_click_rotate_right, false);
+        button_move.addEventListener("mousedown", handle_button_click_move.bind(this), false);
+        button_scale.addEventListener("mousedown", handle_button_click_scale.bind(this), false);
+        button_rotate.addEventListener("mousedown", handle_button_click_rotate.bind(this), false);
+        button_move_left.addEventListener("mousedown", handle_button_click_move_left.bind(this), false);
+        button_move_right.addEventListener("mousedown", handle_button_click_move_right.bind(this), false);
+        button_move_up.addEventListener("mousedown", handle_button_click_move_up.bind(this), false);
+        button_move_down.addEventListener("mousedown", handle_button_click_move_down.bind(this), false);
+        button_scale_v_shrink.addEventListener("mousedown", handle_button_click_scale_v_shrink.bind(this), false);
+        button_scale_v_expand.addEventListener("mousedown", handle_button_click_scale_v_expand.bind(this), false);
+        button_scale_h_shrink.addEventListener("mousedown", handle_button_click_scale_h_shrink.bind(this), false);
+        button_scale_h_expand.addEventListener("mousedown", handle_button_click_scale_h_expand.bind(this), false);
+        button_rotate_left.addEventListener("mousedown", handle_button_click_rotate_left.bind(this), false);
+        button_rotate_right.addEventListener("mousedown", handle_button_click_rotate_right.bind(this), false);
+        button_removeSelection.addEventListener("mousedown", handle_button_click_deleteEntity.bind(this), false)
+        button_cleanAll.addEventListener("mousedown", handle_button_cleanAll.bind(this), false)
+        button_addText.addEventListener("mousedown", handle_button_addText.bind(this), false)
 
         //JSON
         //json-->javascript
@@ -1034,7 +1029,6 @@
 
         that.current_img_id = null;
 
-
         //Get all buttons
         var button_addZone = document.getElementById("editor_addZone");
         var button_move = document.getElementById("editor_move");
@@ -1073,7 +1067,7 @@
         //START
 
         this.manageDivs = function() {
-            if(that.current_img_id === null) {
+            if(this.current_img_id === null) {
                 div_editor_addzone.style.display = "none";
                 div_editor_mainButtons.style.display = "none";
                 div_editor_moveButtons.style.display = "none";
@@ -1085,7 +1079,7 @@
             else {
                 div_editor_addzone.style.display = "block";
                 div_editor_saveButton.style.display = "block";
-                if (that.selectedEntity) {
+                if (this.selectedEntity) {
                     div_editor_mainButtons.style.display = "block";
                     div_editor_removeButton.style.display = "block";
                 }
@@ -1101,9 +1095,9 @@
 
         //button handlers
         function handle_button_click_addZone() {
-            that.selectedEntity = that.addZone();
-            that.manageDivs();
-            that.draw();
+            this.selectedEntity = this.addZone();
+            this.manageDivs();
+            this.draw();
         }
 
         function handle_button_click_move() {
@@ -1124,71 +1118,27 @@
             div_editor_rotateButtons.style.display = "block";
         }
 
-        function handle_button_click_deleteZone() {
-            if(that.selectedEntity) that._deleteSelectedEntity();
-        }
-
-        function handle_button_click_move_left() {
-            if (that.selectedEntity) that.translate(-that.pixels_move,0);
-        }
-
-        function handle_button_click_move_right() {
-            if (that.selectedEntity) that.translate(that.pixels_move,0);
-        }
-
-        function handle_button_click_move_up() {
-            if (that.selectedEntity) that.translate(0,-that.pixels_move);
-        }
-
-        function handle_button_click_move_down() {
-            if (that.selectedEntity) that.translate(0,that.pixels_move);
-        }
-
-        function handle_button_click_scale_v_shrink() {
-            if (that.selectedEntity) that.resizeStep(0,-that.pixels_scale);
-        }
-
-        function handle_button_click_scale_v_expand() {
-            if (that.selectedEntity) that.resizeStep(0,that.pixels_scale);
-        }
-
-        function handle_button_click_scale_h_shrink() {
-            if (that.selectedEntity) that.resizeStep(-that.pixels_scale,0);
-        }
-
-        function handle_button_click_scale_h_expand() {
-            if (that.selectedEntity) that.resizeStep(that.pixels_scale,0);
-        }
-
-        function handle_button_click_rotate_left() {
-            if (that.selectedEntity) that.rotateDEG(-that.degrees_rotate);
-        }
-
-        function handle_button_click_rotate_right() {
-            if (that.selectedEntity) that.rotateDEG(that.degrees_rotate);
-        }
-
         function handle_button_click_save() {
-            that._updateNormals();
+            this._updateNormals();
             saveZones(0);
         }
 
-        button_addZone.addEventListener("mousedown", handle_button_click_addZone, false);
-        button_move.addEventListener("mousedown", handle_button_click_move, false);
-        button_scale.addEventListener("mousedown", handle_button_click_scale, false);
-        button_rotate.addEventListener("mousedown", handle_button_click_rotate, false);
-        button_move_left.addEventListener("mousedown", handle_button_click_move_left, false);
-        button_move_right.addEventListener("mousedown", handle_button_click_move_right, false);
-        button_move_up.addEventListener("mousedown", handle_button_click_move_up, false);
-        button_move_down.addEventListener("mousedown", handle_button_click_move_down, false);
-        button_scale_v_shrink.addEventListener("mousedown", handle_button_click_scale_v_shrink, false);
-        button_scale_v_expand.addEventListener("mousedown", handle_button_click_scale_v_expand, false);
-        button_scale_h_shrink.addEventListener("mousedown", handle_button_click_scale_h_shrink, false);
-        button_scale_h_expand.addEventListener("mousedown", handle_button_click_scale_h_expand, false);
-        button_rotate_left.addEventListener("mousedown", handle_button_click_rotate_left, false);
-        button_rotate_right.addEventListener("mousedown", handle_button_click_rotate_right, false);
-        button_deleteZone.addEventListener("mousedown", handle_button_click_deleteZone, false);
-        button_save.addEventListener("mousedown", handle_button_click_save, false);
+        button_addZone.addEventListener("mousedown", handle_button_click_addZone.bind(this), false);
+        button_move.addEventListener("mousedown", handle_button_click_move.bind(this), false);
+        button_scale.addEventListener("mousedown", handle_button_click_scale.bind(this), false);
+        button_rotate.addEventListener("mousedown", handle_button_click_rotate.bind(this), false);
+        button_move_left.addEventListener("mousedown", handle_button_click_move_left.bind(this), false);
+        button_move_right.addEventListener("mousedown", handle_button_click_move_right.bind(this), false);
+        button_move_up.addEventListener("mousedown", handle_button_click_move_up.bind(this), false);
+        button_move_down.addEventListener("mousedown", handle_button_click_move_down.bind(this), false);
+        button_scale_v_shrink.addEventListener("mousedown", handle_button_click_scale_v_shrink.bind(this), false);
+        button_scale_v_expand.addEventListener("mousedown", handle_button_click_scale_v_expand.bind(this), false);
+        button_scale_h_shrink.addEventListener("mousedown", handle_button_click_scale_h_shrink.bind(this), false);
+        button_scale_h_expand.addEventListener("mousedown", handle_button_click_scale_h_expand.bind(this), false);
+        button_rotate_left.addEventListener("mousedown", handle_button_click_rotate_left.bind(this), false);
+        button_rotate_right.addEventListener("mousedown", handle_button_click_rotate_right.bind(this), false);
+        button_deleteZone.addEventListener("mousedown", handle_button_click_deleteEntity.bind(this), false);
+        button_save.addEventListener("mousedown", handle_button_click_save.bind(this), false);
 
 
         //JSON
@@ -2025,6 +1975,8 @@
     //*** END INTERNAL FUNCTIONS ***
 
     //*** START HANDLERS ***
+
+    //*** INTERACTION HANDLERS ***
     function handle_dragover(event) {
         console.log("dragover");
         event.stopPropagation();
@@ -2111,6 +2063,51 @@
     function stop_default_drop(event) {
         event.stopPropagation();
         event.preventDefault();
+    }
+
+    //*** BUTTON HANDLERS ***
+    function handle_button_click_move_left() {
+        if (this.selectedEntity) this.translate(-this.pixels_move,0);
+    }
+
+    function handle_button_click_move_right() {
+        if (this.selectedEntity) this.translate(this.pixels_move,0);
+    }
+
+    function handle_button_click_move_up() {
+        if (this.selectedEntity) this.translate(0,-this.pixels_move);
+    }
+
+    function handle_button_click_move_down() {
+        if (this.selectedEntity) this.translate(0,this.pixels_move);
+    }
+
+    function handle_button_click_scale_v_shrink() {
+        if (this.selectedEntity) this.resizeStep(0,-this.pixels_scale);
+    }
+
+    function handle_button_click_scale_v_expand() {
+        if (this.selectedEntity) this.resizeStep(0,this.pixels_scale);
+    }
+
+    function handle_button_click_scale_h_shrink() {
+        if (this.selectedEntity) this.resizeStep(-this.pixels_scale,0);
+    }
+
+    function handle_button_click_scale_h_expand() {
+        if (this.selectedEntity) this.resizeStep(this.pixels_scale,0);
+    }
+
+    function handle_button_click_rotate_left() {
+        if (this.selectedEntity) this.rotateDEG(-this.degrees_rotate);
+    }
+
+    function handle_button_click_rotate_right() {
+        if (this.selectedEntity) this.rotateDEG(this.degrees_rotate);
+    }
+
+    function handle_button_click_deleteEntity() {
+        if(this.selectedEntity) this._deleteSelectedEntity();
     }
 
     //*** END HANDLERS ***
