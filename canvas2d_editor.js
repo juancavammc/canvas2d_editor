@@ -12,6 +12,7 @@
     var mat_tmp2 = mat3.create();
     var vec_tmp1 = vec2.create();
     var vec_tmp2 = vec2.create();
+    var vec_tmp_angles = vec2.create();
 
     //offsets from window to canvas
     var offsetX = 0;
@@ -1399,9 +1400,9 @@
                 tempAngle = this.selectedEntity.angle;
                 offsetX = event.globalX - event.localX;
                 offsetY = event.globalY - event.localY;
-                vec2.set(vec_tmp2, event.globalX - offsetX, event.globalY - offsetY);
-                vec2.subtract(vec_tmp2, vec_tmp2, this.selectedEntity.position);
-                vec2.normalize(vec_tmp2, vec_tmp2);
+
+                this._setPositionToRotate(vec_tmp_angles, event.globalX - offsetX, event.globalY - offsetY);
+
                 _global.addEventListener("mousemove", this._handle_mousemove_rotate, false);
                 _global.addEventListener("mouseup", this._handle_mouseup, false);
                 this.draw();
@@ -1855,12 +1856,20 @@
         }
     };
 
+    CanvasEditor.prototype._setPositionToRotate = function(out, x, y) {
+        vec2.set(vec_tmp2, 0, 0);
+        vec2.set(out, x, y);
+        vec2.transformMat3(vec_tmp2, vec_tmp2, this.selectedEntity.getGlobalMatrix());
+        vec2.subtract(out, out, vec_tmp2);
+        vec2.normalize(out, out);
+    };
+
     CanvasEditor.prototype._rotateEntity = function(event) {
-        vec2.set(vec_tmp1, event.globalX - offsetX, event.globalY - offsetY);
-        vec2.subtract(vec_tmp1, vec_tmp1, this.selectedEntity.position);
+        this._setPositionToRotate(vec_tmp1, event.globalX - offsetX, event.globalY - offsetY);
+
         vec2.normalize(vec_tmp1, vec_tmp1);
-        var angle = vec2.computeSignedAngle(vec_tmp1, vec_tmp2);
-        vec2.copy(vec_tmp2, vec_tmp1);
+        var angle = vec2.computeSignedAngle(vec_tmp1, vec_tmp_angles);
+        vec2.copy(vec_tmp_angles, vec_tmp1);
         tempAngle += angle;
 
         if(this.stickyAngles) {
