@@ -530,14 +530,18 @@
     EntityProduct.prototype.deleteChild = function(entity) {
         var l = this.children.length;
         for (var i = 0; i < l; ++i) {
-            if (this.children[i] === entity) {
+            if(this.children[i] instanceof EntityCanvas) {
+                if(this.children[i].deleteChild(entity)) return true;
+            }
+            else if (this.children[i] === entity) {
                 this.children[i] = null;
                 this.children = this.children.filter(function (n) {
-                    return n != undefined
+                    return n != undefined;
                 });
-                break;
+                return true;
             }
         }
+        return false;
     };
 
     EntityProduct.prototype.promoteChild = function(entity) {
@@ -1486,7 +1490,7 @@
         var data = this.getDropData(event);
         if(data === null) return false;
 
-        var image, entity, parent, i;
+        var image, parent, i;
 
         for(i = 0; i < data.files.length; ++i) {
             image = this.searchImage(data.files[i].name);
@@ -1513,7 +1517,7 @@
                 if(this.current_img_id) {
                     parent = this.entities[this.current_img_id].mouseInsideChildren(event.localX, event.localY, true);
                     if(parent) {
-                        parent.createChild("image", false, image, image.naturalWidth/2, image.naturalHeight/2, image.naturalWidth, image.naturalHeight, 0, this.strokeColor);
+                        parent.createChild("image", false, image, parent.width/2, parent.height/2, image.naturalWidth, image.naturalHeight, 0, this.strokeColor);
                         this.draw();
                     }
                 }
