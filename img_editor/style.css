@@ -157,3 +157,9 @@ input[type="button"].green {
 input[type="button"]:hover:not(:disabled).green {
     background: #21dc81;
 }
+
+textArea {
+    resize: none;
+    width: 125px;
+    height: 40px;
+}
