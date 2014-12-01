@@ -916,6 +916,7 @@
                         div_editor_textArea.style.display = "block";
                         that._editor_textArea.value = that.selectedEntity.text;
                     }
+                    else div_editor_textArea.style.display = "none";
                 }
                 else {
                     div_editor_mainButtons.style.display = "none";
