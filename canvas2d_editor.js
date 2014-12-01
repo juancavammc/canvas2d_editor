@@ -863,16 +863,6 @@
             div_editor_rotateButtons.style.display = "block";
         }
 
-        function handle_button_cleanAll() {
-            if(this.current_img_id) {
-                this.entities[this.current_img_id].deleteAllChildren();
-            }
-        }
-
-        function handle_button_addText() {
-
-        }
-
         button_move.addEventListener("mousedown", handle_button_click_move.bind(this), false);
         button_scale.addEventListener("mousedown", handle_button_click_scale.bind(this), false);
         button_rotate.addEventListener("mousedown", handle_button_click_rotate.bind(this), false);
@@ -887,7 +877,7 @@
         button_rotate_left.addEventListener("mousedown", handle_button_click_rotate_left.bind(this), false);
         button_rotate_right.addEventListener("mousedown", handle_button_click_rotate_right.bind(this), false);
         button_removeSelection.addEventListener("mousedown", handle_button_click_deleteEntity.bind(this), false)
-        button_cleanAll.addEventListener("mousedown", handle_button_cleanAll.bind(this), false)
+        button_cleanAll.addEventListener("mousedown", handle_button_deleteAll.bind(this), false)
         button_addText.addEventListener("mousedown", handle_button_addText.bind(this), false)
 
         //JSON
@@ -1317,8 +1307,10 @@
     };
 
     CanvasEditor.prototype.addZone = function() {
-        var aspect = this.ctx.canvas.width /this.ctx.canvas.height;
-        return this.entities[this.current_img_id].createChild("zone", true, null, 0.5, 0.5, 0.2, 0.2*aspect, 0, this.getRandomColor());
+        if(this.current_img_id !== null) {
+            var aspect = this.ctx.canvas.width / this.ctx.canvas.height;
+            return this.entities[this.current_img_id].createChild("zone", true, null, 0.5, 0.5, 0.2, 0.2 * aspect, 0, this.getRandomColor());
+        }
     };
 
     CanvasEditor.prototype.getRandomColor = function() {
@@ -1388,7 +1380,7 @@
     };
 
     CanvasEditor.prototype.update = function() {
-        if(this.current_img_id) this.entities[this.current_img_id].update(this.ctx.canvas.width, this.ctx.canvas.height);
+        if(this.current_img_id !== null) this.entities[this.current_img_id].update(this.ctx.canvas.width, this.ctx.canvas.height);
     };
 
     CanvasEditor.prototype._updateNormalsAll = function() {
@@ -1399,7 +1391,7 @@
     };
 
     CanvasEditor.prototype._updateNormals = function() {
-        if(this.current_img_id) this.entities[this.current_img_id].updateNormals(this.ctx.canvas.width, this.ctx.canvas.height);
+        if(this.current_img_id !== null) this.entities[this.current_img_id].updateNormals(this.ctx.canvas.width, this.ctx.canvas.height);
     };
 
     CanvasEditor.prototype.searchImage = function(name) {
@@ -1448,7 +1440,7 @@
         for(i = 0; i < data.files.length; ++i) {
             image = this.searchImage(data.files[i].name);
             if(image) {
-                if(this.current_img_id) {
+                if(this.current_img_id !== null) {
                     parent = this.entities[this.current_img_id].mouseInsideChildren(event.localX, event.localY, true);
                     if(parent) {
                         parent.createChild("image", false, image, parent.width/2, parent.height/2, image.naturalWidth, image.naturalHeight, 0, this.strokeColor);
@@ -1457,7 +1449,7 @@
                 }
             }
             else {
-                if(this.current_img_id) {
+                if(this.current_img_id !== null) {
                     parent = this.entities[this.current_img_id].mouseInsideChildren(event.localX, event.localY, true);
                     if(parent) image = this._createNewLogo(data.files[i], imageLoadedEvent.bind( {that:this, parent:parent} ));
                 }
@@ -1467,7 +1459,7 @@
         if(data.text) {
             image = this.searchImage(data.text);
             if(image) {
-                if(this.current_img_id) {
+                if(this.current_img_id !== null) {
                     parent = this.entities[this.current_img_id].mouseInsideChildren(event.localX, event.localY, true);
                     if(parent) {
                         parent.createChild("image", false, image, parent.width/2, parent.height/2, image.naturalWidth, image.naturalHeight, 0, this.strokeColor);
@@ -1914,6 +1906,14 @@
         }
     };
 
+    CanvasEditor.prototype._deleteAllEntities = function() {
+        if(this.current_img_id !== null) {
+            this.entities[this.current_img_id].deleteAllChildren();
+            this.draw();
+            if(this.manageDivs) this.manageDivs();
+        }
+    };
+
     CanvasEditor.prototype._keyDown = function(event) {
         //console.log(event.keyCode);
         switch(event.keyCode) {
@@ -2108,6 +2108,14 @@
 
     function handle_button_click_deleteEntity() {
         if(this.selectedEntity) this._deleteSelectedEntity();
+    }
+
+    function handle_button_deleteAll() {
+        this._deleteAllEntities();
+    }
+
+    function handle_button_addText() {
+
     }
 
     //*** END HANDLERS ***
