@@ -884,7 +884,7 @@
         var button_rotate_right = document.getElementById("editor_rotate_right");
 
         //Get textArea
-        var textArea = document.getElementById("editor_textArea");
+        this._editor_textArea = document.getElementById("editor_textArea");
 
         //Get divs
         var div_canvas_tools_zone_content = document.getElementById("canvas_tools_zone_content");
@@ -907,16 +907,22 @@
                 div_editor_moveButtons.style.display = "none";
                 div_editor_scaleButtons.style.display = "none";
                 div_editor_rotateButtons.style.display = "none";
+                div_editor_textArea.style.display = "none";
             }
             else {
                 if (that.selectedEntity) {
                     div_editor_mainButtons.style.display = "block";
+                    if(that.selectedEntity instanceof EntityText) {
+                        div_editor_textArea.style.display = "block";
+                        that._editor_textArea.value = that.selectedEntity.text;
+                    }
                 }
                 else {
                     div_editor_mainButtons.style.display = "none";
                     div_editor_moveButtons.style.display = "none";
                     div_editor_scaleButtons.style.display = "none";
                     div_editor_rotateButtons.style.display = "none";
+                    div_editor_textArea.style.display = "none";
                 }
             }
         };
@@ -957,6 +963,22 @@
         button_removeSelection.addEventListener("mousedown", handle_button_click_deleteEntity.bind(this), false);
         button_cleanAll.addEventListener("mousedown", handle_button_deleteAll.bind(this), false);
         button_addText.addEventListener("mousedown", handle_button_addText.bind(this), false);
+
+        //Text Area Handler
+
+        this._editor_textArea.addEventListener("focus", function() {
+            if(that.selectedEntity && that.selectedEntity instanceof EntityText) {
+                this.value = that.selectedEntity.text;
+            }
+        },false);
+
+        this._editor_textArea.addEventListener("input", function() {
+            if(that.selectedEntity && that.selectedEntity instanceof EntityText) {
+                that.selectedEntity.text = this.value;
+                console.log(that.selectedEntity.text);
+                that.draw();
+            }
+        },false);
 
         //JSON
         //json-->javascript
