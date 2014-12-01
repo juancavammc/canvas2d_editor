@@ -449,6 +449,74 @@
         }
     };
 
+    function EntityText() {
+        this.text = "Test!";
+        this.ctx = document.createElement("canvas").getContext("2d");
+
+        //Default options
+        this.textAlign = "center";
+        this.textBaseline = "middle";
+
+        this.fontStyle = "normal";
+        this.fontSize = "20px";
+        this.font = "Arial";
+    }
+
+    cloneProto(Entity, EntityText);
+
+    EntityText.prototype.draw = function(obj) {
+        this.ctx.clearRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height);
+        if (this.text) {
+            this.ctx.save();
+
+            this.ctx.textAlign = this.textAlign;
+            this.ctx.textBaseline = this.textBaseline;
+            this.ctx.font = this.fontStyle + " " + this.fontSize + " " + this.font;
+            //this.ctx.lineWidth = 1;
+            //this.ctx.strokeStyle = "black";
+            //this.ctx.fillStyle = "black";
+            this.ctx.fillText(this.text, this.width / 2, this.height / 2);
+            this.ctx.restore();
+        }
+        if (this.ctx) {
+            obj.ctx.save();
+            obj.ctx.translate(this.x, this.y);
+            obj.ctx.rotate(this.angle);
+            //obj.ctx.lineWidth = 1;
+            //obj.ctx.strokeStyle = "black";
+            //obj.ctx.fillStyle = "black";
+            obj.ctx.drawImage(this.ctx.canvas, -Math.abs(this.width) / 2, -Math.abs(this.height) / 2, Math.abs(this.width), Math.abs(this.height));
+            obj.ctx.restore();
+        }
+    };
+
+    EntityText.prototype.update = function(containerWidth, containerHeight) {
+        this.width = this.normal_width * containerWidth;
+        this.height = this.normal_height * containerHeight;
+        this.x = this.normal_x * containerWidth;
+        this.y = this.normal_y * containerHeight;
+        this.ctx.canvas.width = this.width;
+        this.ctx.canvas.height = this.height;
+
+        this.updateMatrices();
+    };
+
+    EntityText.prototype.updateNormals = function(containerWidth, containerHeight) {
+        this.normal_width = this.width/containerWidth;
+        this.normal_height = this.height/containerHeight;
+        this.normal_x = this.x/containerWidth;
+        this.normal_y = this.y/containerHeight;
+        this.ctx.canvas.width = this.width;
+        this.ctx.canvas.height = this.height;
+
+        if(this.children) {
+            var length = this.children.length;
+            for(var i = 0; i < length; ++i) {
+                this.children[i].updateNormals(containerWidth, containerHeight);
+            }
+        }
+    };
+
     /** EntityProduct **/
     function EntityProduct() {
         this.image = undefined;
@@ -599,6 +667,10 @@
 
     EntityProduct.prototype.createChild = function (type, normalized, img, _x, _y, _width, _height, angle_rad, strokeColor) {
         var entity = createEntity(type, normalized, img, _x, _y, _width, _height, this.width, this.height, this.naturalContainer_width, this.naturalContainer_height, angle_rad, strokeColor);
+        if(entity instanceof EntityCanvas || entity instanceof EntityText) {
+            entity.ctx.canvas.width = entity.width;
+            entity.ctx.canvas.height = entity.height;
+        }
         this.push(entity);
         return entity;
     };
@@ -614,8 +686,7 @@
     /** EntityCanvas **/
     function EntityCanvas() {
         this.children = [];
-        var canvas = document.createElement("canvas");
-        this.ctx = canvas.getContext("2d");
+        this.ctx = document.createElement("canvas").getContext("2d");
     }
 
     cloneProto(EntityProduct, EntityCanvas);
@@ -689,6 +760,8 @@
         this.normal_height = this.height/containerHeight;
         this.normal_x = this.x/containerWidth;
         this.normal_y= this.y/containerHeight;
+        this.ctx.canvas.width = this.width;
+        this.ctx.canvas.height = this.height;
 
         if(this.children) {
             var length = this.children.length;
@@ -810,17 +883,22 @@
         var button_rotate_left = document.getElementById("editor_rotate_left");
         var button_rotate_right = document.getElementById("editor_rotate_right");
 
+        //Get textArea
+        var textArea = document.getElementById("editor_textArea");
+
         //Get divs
         var div_canvas_tools_zone_content = document.getElementById("canvas_tools_zone_content");
         var div_editor_mainButtons =  document.getElementById("div_editor_mainButtons");
         var div_editor_moveButtons =  document.getElementById("div_editor_moveButtons");
         var div_editor_scaleButtons =  document.getElementById("div_editor_scaleButtons");
         var div_editor_rotateButtons =  document.getElementById("div_editor_rotateButtons");
+        var div_editor_textArea = document.getElementById("div_editor_textArea");
 
         div_editor_mainButtons.style.display = "none";
         div_editor_moveButtons.style.display = "none";
         div_editor_scaleButtons.style.display = "none";
         div_editor_rotateButtons.style.display = "none";
+        div_editor_textArea.style.display = "none";
         //div_canvas_tools_zone_content.style.display = "none";
 
         this.manageDivs = function() {
@@ -946,6 +1024,8 @@
         this._handle_mousemove_rotate = handle_mousemove_rotate.bind(this);
         this._handle_mousemove_move_notClicked = handle_mousemove_move_notClicked.bind(this);
         this._handle_mousemove_move_clicked = handle_mousemove_move_clicked.bind(this);
+        this._handle_mousedown = handle_mousedown.bind(this);
+        this._handle_mousedown_addText = handle_mousedown_addText.bind(this);
 
         _global.addEventListener("keydown", handle_keydown.bind(this), false);
         _global.addEventListener("keyup", handle_keyup.bind(this), false);
@@ -953,9 +1033,11 @@
         document.body.addEventListener("drop", stop_default_drop.bind(this), false);
         this.drop_zone.addEventListener("dragover", handle_dragover.bind(this), false);
         this.drop_zone.addEventListener("drop", handle_drop_inLogoZone.bind(this), false);
-        this.ctx.canvas.addEventListener("mousedown", handle_mousedown.bind(this), false);
+        this.ctx.canvas.addEventListener("mousedown", this._handle_mousedown, false);
         this.ctx.canvas.addEventListener("mousemove", this._handle_mousemove_move_notClicked, false);
         this.ctx.canvas.addEventListener("drop", handle_drop_inCanvas.bind(this), false);
+
+
 
         loadProduct(1);
     };
@@ -1213,6 +1295,7 @@
         this._handle_mousemove_rotate = handle_mousemove_rotate.bind(this);
         this._handle_mousemove_move_notClicked = handle_mousemove_move_notClicked.bind(this);
         this._handle_mousemove_move_clicked = handle_mousemove_move_clicked.bind(this);
+        this._handle_mousedown = handle_mousedown.bind(this);
 
 
 
@@ -1220,7 +1303,7 @@
         _global.addEventListener("keyup", handle_keyup.bind(this), false);
         document.body.addEventListener("dragover", stop_default_drop.bind(this), false); //TODO: remove?
         document.body.addEventListener("drop", stop_default_drop.bind(this), false); //TODO: remove?
-        this.ctx.canvas.addEventListener("mousedown", handle_mousedown.bind(this), false);
+        this.ctx.canvas.addEventListener("mousedown", this._handle_mousedown, false);
         this.ctx.canvas.addEventListener("mousemove", this._handle_mousemove_move_notClicked, false);
 
         loadProduct(1);
@@ -1307,6 +1390,13 @@
         }
     };
 
+    CanvasEditor.prototype.addText = function() {
+        if(this.current_img_id !== null) {
+            var aspect = this.ctx.canvas.width / this.ctx.canvas.height;
+            return this.entities[this.current_img_id].createChild("text", true, null, 0.5, 0.5, 0.3, 0.1 * aspect, 0, this.getRandomColor());
+        }
+    };
+
     CanvasEditor.prototype.getRandomColor = function() {
         return this.color_list[Math.floor(Math.random()*this.color_list.length)];
     };
@@ -1364,6 +1454,13 @@
             }
             this.draw();
         }
+
+        //if(this.selectedEntity instanceof EntityText) {
+        //    this.ctx.canvas.addEventListener
+        //}
+        //else {
+        //
+        //}
     };
 
     CanvasEditor.prototype.updateAll = function() {
@@ -1526,6 +1623,9 @@
                 break;
             case "canvas":
                 entity = new EntityCanvas();
+                break;
+            case "text":
+                entity = new EntityText();
                 break;
             default:
                 return false;
@@ -2046,6 +2146,25 @@
         this.manageDivs();
     }
 
+    function handle_mousedown_addText(event) {
+        event.stopPropagation();
+        event.preventDefault();
+        _augmentEvent(event);
+        if(this.current_img_id !== null) {
+            var entity = this.entities[this.current_img_id].mouseInsideChildren(event.localX, event.localY, true);
+            console.log(entity);
+            if(entity && entity instanceof EntityCanvas) {
+                var aspect = entity.width / entity.height;
+                this.selectedEntity = entity.createChild("text", true, null, 0.5, 0.5, 0.45, 0.2 * aspect, 0, this.getRandomColor());;
+                this.manageDivs();
+                this.draw();
+            }
+        }
+        this.ctx.canvas.style.cursor = "auto";
+        this.ctx.canvas.removeEventListener("mousedown", this._handle_mousedown_addText, false);
+        this.ctx.canvas.addEventListener("mousedown", this._handle_mousedown, false);
+    }
+
     function handle_keydown(event) {
         this._keyDown(event);
     }
@@ -2117,7 +2236,9 @@
     }
 
     function handle_button_addText() {
-
+        this.ctx.canvas.removeEventListener("mousedown", this._handle_mousedown, false);
+        this.ctx.canvas.addEventListener("mousedown", this._handle_mousedown_addText, false);
+        this.ctx.canvas.style.cursor = "crosshair";
     }
 
     //*** END HANDLERS ***
