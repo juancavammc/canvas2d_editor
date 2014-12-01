@@ -876,9 +876,9 @@
         button_scale_h_expand.addEventListener("mousedown", handle_button_click_scale_h_expand.bind(this), false);
         button_rotate_left.addEventListener("mousedown", handle_button_click_rotate_left.bind(this), false);
         button_rotate_right.addEventListener("mousedown", handle_button_click_rotate_right.bind(this), false);
-        button_removeSelection.addEventListener("mousedown", handle_button_click_deleteEntity.bind(this), false)
-        button_cleanAll.addEventListener("mousedown", handle_button_deleteAll.bind(this), false)
-        button_addText.addEventListener("mousedown", handle_button_addText.bind(this), false)
+        button_removeSelection.addEventListener("mousedown", handle_button_click_deleteEntity.bind(this), false);
+        button_cleanAll.addEventListener("mousedown", handle_button_deleteAll.bind(this), false);
+        button_addText.addEventListener("mousedown", handle_button_addText.bind(this), false);
 
         //JSON
         //json-->javascript
@@ -1084,12 +1084,6 @@
         };
 
         //button handlers
-        function handle_button_click_addZone() {
-            this.selectedEntity = this.addZone();
-            this.manageDivs();
-            this.draw();
-        }
-
         function handle_button_click_move() {
             div_editor_moveButtons.style.display = "block";
             div_editor_scaleButtons.style.display = "none";
@@ -2108,6 +2102,14 @@
 
     function handle_button_click_deleteEntity() {
         if(this.selectedEntity) this._deleteSelectedEntity();
+    }
+
+    function handle_button_click_addZone() {
+        if(this.current_img_id !== null) {
+            this.selectedEntity = this.addZone();
+            this.manageDivs();
+            this.draw();
+        }
     }
 
     function handle_button_deleteAll() {
