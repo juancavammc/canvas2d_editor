@@ -450,7 +450,7 @@
     };
 
     function EntityText() {
-        this.text = "Test!";
+        this.text = "Text";
         this.ctx = document.createElement("canvas").getContext("2d");
 
         //Default options
