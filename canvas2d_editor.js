@@ -466,9 +466,11 @@
         this.textAlign = "center";
         this.textBaseline = "middle";
 
+        this.font = "Arial";
         this.fontStyle = "normal";
         this.fontSize = 20;
-        this.font = "Arial";
+        this.fontOffset = 10;
+
 
         this.fillStyle = "black";
     }
@@ -482,10 +484,19 @@
 
             this.ctx.textAlign = this.textAlign;
             this.ctx.textBaseline = this.textBaseline;
-            this.ctx.font = this.fontStyle + " " + this.fontSize + "px " + this.font;
+            this.ctx.font = this.fontStyle + " " + this.fontSize + "pt " + this.font;
             //this.ctx.strokeStyle = "red";
             this.ctx.fillStyle = this.fillStyle;
-            this.ctx.fillText(this.text, this.width / 2, this.height / 2);
+
+            var split = this.text.split("\n");
+            console.log(split);
+            var length = split.length;
+            var offset = this.fontSize+this.fontOffset;
+            var pos = - ( (length-1)*(offset/2) );
+            for(var i = 0; i < length; ++i) {
+                this.ctx.fillText(split[i], this.width/2 , (this.height/2) + ( pos+(offset*i) ) );
+
+            }
             this.ctx.restore();
         }
         if (this.ctx) {
