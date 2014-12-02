@@ -87,6 +87,15 @@
             //'yellow',
             'white'
         ];
+
+        this.font_list = [
+            "Arial",
+            "monospace",
+            "Verdana",
+            "Impact"
+
+        ]
+        this.font_sizes = [ 8, 9, 10, 11, 12, 14, 16, 18, 20, 22, 24, 26, 28, 32, 36, 48, 72 ]
     }
 
     function cloneProto(A, B) {
@@ -458,8 +467,10 @@
         this.textBaseline = "middle";
 
         this.fontStyle = "normal";
-        this.fontSize = "20px";
+        this.fontSize = 20;
         this.font = "Arial";
+
+        this.fillStyle = "black";
     }
 
     cloneProto(Entity, EntityText);
@@ -471,10 +482,9 @@
 
             this.ctx.textAlign = this.textAlign;
             this.ctx.textBaseline = this.textBaseline;
-            this.ctx.font = this.fontStyle + " " + this.fontSize + " " + this.font;
-            //this.ctx.lineWidth = 1;
-            //this.ctx.strokeStyle = "black";
-            //this.ctx.fillStyle = "black";
+            this.ctx.font = this.fontStyle + " " + this.fontSize + "px " + this.font;
+            //this.ctx.strokeStyle = "red";
+            this.ctx.fillStyle = this.fillStyle;
             this.ctx.fillText(this.text, this.width / 2, this.height / 2);
             this.ctx.restore();
         }
@@ -482,9 +492,6 @@
             obj.ctx.save();
             obj.ctx.translate(this.x, this.y);
             obj.ctx.rotate(this.angle);
-            //obj.ctx.lineWidth = 1;
-            //obj.ctx.strokeStyle = "black";
-            //obj.ctx.fillStyle = "black";
             obj.ctx.drawImage(this.ctx.canvas, -Math.abs(this.width) / 2, -Math.abs(this.height) / 2, Math.abs(this.width), Math.abs(this.height));
             obj.ctx.restore();
         }
@@ -560,6 +567,7 @@
             obj.lineWidth = lineWidth*1.5;
             entityMouseOver.drawBorder(obj);
         }
+        obj.lineWidth = lineWidth;
     };
 
     EntityProduct.prototype.push = function(entity) {
@@ -719,11 +727,11 @@
         }
 
         if(selectedEntity) {
-            obj.lineWidth = lineWidth*1.5;
+            obj.lineWidth = lineWidth*1.3;
             selectedEntity.drawModifiers(obj);
         }
         if( entityMouseOver && (entityMouseOver !== selectedEntity) ) {
-            obj.lineWidth = lineWidth*1.3;
+            obj.lineWidth = lineWidth*1.1;
             entityMouseOver.drawBorder(obj);
         }
 
@@ -863,7 +871,6 @@
         this.current_img_id = null;
         this.logos_images = []; //html images
         this.images = []; //images
-        //that.entities[that.current_img_id] = [];
 
         //Get all buttons
         var button_removeSelection = document.getElementById("editor_removeSelection");
@@ -883,8 +890,10 @@
         var button_rotate_left = document.getElementById("editor_rotate_left");
         var button_rotate_right = document.getElementById("editor_rotate_right");
 
-        //Get textArea
+        //Get other elements
         this._editor_textArea = document.getElementById("editor_textArea");
+        this._editor_selectFont = document.getElementById("editor_selectFont");
+        this._editor_selectSize = document.getElementById("editor_selectSize");
 
         //Get divs
         var div_canvas_tools_zone_content = document.getElementById("canvas_tools_zone_content");
@@ -892,14 +901,23 @@
         var div_editor_moveButtons =  document.getElementById("div_editor_moveButtons");
         var div_editor_scaleButtons =  document.getElementById("div_editor_scaleButtons");
         var div_editor_rotateButtons =  document.getElementById("div_editor_rotateButtons");
-        var div_editor_textArea = document.getElementById("div_editor_textArea");
+        var div_editor_fontOptions = document.getElementById("div_editor_fontOptions");
 
         div_editor_mainButtons.style.display = "none";
         div_editor_moveButtons.style.display = "none";
         div_editor_scaleButtons.style.display = "none";
         div_editor_rotateButtons.style.display = "none";
-        div_editor_textArea.style.display = "none";
+        div_editor_fontOptions.style.display = "none";
         //div_canvas_tools_zone_content.style.display = "none";
+
+        //populate dropdown lists
+        var i;
+        for(i = 0; i < this.font_list.length; ++i) {
+            addOption(this._editor_selectFont, this.font_list[i], i);
+        }
+        for(i = 0; i < this.font_sizes.length; ++i) {
+            addOption(this._editor_selectSize, this.font_sizes[i], i);
+        }
 
         this.manageDivs = function() {
             if(that.current_img_id === null) {
@@ -907,23 +925,27 @@
                 div_editor_moveButtons.style.display = "none";
                 div_editor_scaleButtons.style.display = "none";
                 div_editor_rotateButtons.style.display = "none";
-                div_editor_textArea.style.display = "none";
+                div_editor_fontOptions.style.display = "none";
             }
             else {
                 if (that.selectedEntity) {
                     div_editor_mainButtons.style.display = "block";
                     if(that.selectedEntity instanceof EntityText) {
-                        div_editor_textArea.style.display = "block";
+                        div_editor_fontOptions.style.display = "block";
                         that._editor_textArea.value = that.selectedEntity.text;
+                        that._editor_selectFont.selectedIndex = that.font_list.indexOf(that.selectedEntity.font);
+                        that._editor_selectSize.selectedIndex = that.font_sizes.indexOf(that.selectedEntity.fontSize);
+                        //that._editor_selectFont.selectedIndex = that.selectedEntity.fontIndex;
+                        //that._editor_selectSize.selectedIndex = that.selectedEntity.fontSizeIndex;
                     }
-                    else div_editor_textArea.style.display = "none";
+                    else div_editor_fontOptions.style.display = "none";
                 }
                 else {
                     div_editor_mainButtons.style.display = "none";
                     div_editor_moveButtons.style.display = "none";
                     div_editor_scaleButtons.style.display = "none";
                     div_editor_rotateButtons.style.display = "none";
-                    div_editor_textArea.style.display = "none";
+                    div_editor_fontOptions.style.display = "none";
                 }
             }
         };
@@ -948,6 +970,40 @@
             div_editor_rotateButtons.style.display = "block";
         }
 
+        //Text Handlers
+
+        /*this._editor_textArea.addEventListener("focus", function() {
+            if(that.selectedEntity && that.selectedEntity instanceof EntityText) {
+                this.value = that.selectedEntity.text;
+            }
+        },false);*/
+
+        this._editor_textArea.addEventListener("input", function() {
+            if(that.selectedEntity && that.selectedEntity instanceof EntityText) {
+                that.selectedEntity.text = this.value;
+                console.log(that.selectedEntity.text);
+                that.draw();
+            }
+        },false);
+
+        this._editor_selectFont.addEventListener("input", function() {
+            if(that.selectedEntity && that.selectedEntity instanceof EntityText) {
+                that.selectedEntity.font = this.options[this.selectedIndex].text;
+                //that.selectedEntity.fontIndex = this.selectedIndex;
+                console.log(that.selectedEntity.font);
+                that.draw();
+            }
+        },false);
+
+        this._editor_selectSize.addEventListener("input", function() {
+            if(that.selectedEntity && that.selectedEntity instanceof EntityText) {
+                that.selectedEntity.fontSize = this.options[this.selectedIndex].text;
+                //that.selectedEntity.fontSizeIndex = this.selectedIndex;
+                console.log(that.selectedEntity.font);
+                that.draw();
+            }
+        },false);
+
         button_move.addEventListener("mousedown", handle_button_click_move.bind(this), false);
         button_scale.addEventListener("mousedown", handle_button_click_scale.bind(this), false);
         button_rotate.addEventListener("mousedown", handle_button_click_rotate.bind(this), false);
@@ -965,21 +1021,6 @@
         button_cleanAll.addEventListener("mousedown", handle_button_deleteAll.bind(this), false);
         button_addText.addEventListener("mousedown", handle_button_addText.bind(this), false);
 
-        //Text Area Handler
-
-        this._editor_textArea.addEventListener("focus", function() {
-            if(that.selectedEntity && that.selectedEntity instanceof EntityText) {
-                this.value = that.selectedEntity.text;
-            }
-        },false);
-
-        this._editor_textArea.addEventListener("input", function() {
-            if(that.selectedEntity && that.selectedEntity instanceof EntityText) {
-                that.selectedEntity.text = this.value;
-                console.log(that.selectedEntity.text);
-                that.draw();
-            }
-        },false);
 
         //JSON
         //json-->javascript
@@ -2297,6 +2338,12 @@
         return canvas;
     }
 
+    function addOption(selectBox, text, value) {
+        var opt = document.createElement("option");
+        opt.text = text;
+        opt.value = value;
+        selectBox.add(opt);
+    }
     function sign(num) {
         return num > 0 ? 1 : num < 0 ? -1 : 1;
     }
