@@ -2019,10 +2019,12 @@
         this.draw();
     };
 
+    //TODO: Redo this part
     CanvasEditor.prototype._fixResize = function(entity) {
         if (entity) {
             if (entity.width < 0) entity.width = -entity.width;
             if (entity.height < 0) entity.height = -entity.height;
+            if(entity.parent) entity.updateNormals(entity.parent.width, entity.parent.height);
             this.draw();
         }
     };
@@ -2108,9 +2110,21 @@
         }
     };
 
+    //CanvasEditor.prototype._deleteAllEntities = function() {
+    //    if(this.current_img_id !== null) {
+    //        this.entities[this.current_img_id].deleteAllChildren();
+    //        this.draw();
+    //        if(this.manageDivs) this.manageDivs();
+    //    }
+    //};
+
     CanvasEditor.prototype._deleteAllEntities = function() {
+        for(var i = 0; i < this.entities.length; ++i) {
+            this.entities[i].deleteAllChildren();
+        }
+        this.selectedEntity = null;
+        this.entityMouseOver = null;
         if(this.current_img_id !== null) {
-            this.entities[this.current_img_id].deleteAllChildren();
             this.draw();
             if(this.manageDivs) this.manageDivs();
         }
