@@ -93,9 +93,9 @@
             "monospace",
             "Verdana",
             "Impact"
-
-        ]
-        this.font_sizes = [ 8, 9, 10, 11, 12, 14, 16, 18, 20, 22, 24, 26, 28, 32, 36, 48, 72 ]
+        ];
+        this.font_sizes = [ 8, 9, 10, 11, 12, 14, 16, 18, 20, 22, 24, 26, 28, 32, 36, 48, 72 ];
+        this.font_offsets = [ 2,4,6,8,10,12,14,16,18,20 ];
     }
 
     function cloneProto(A, B) {
@@ -468,8 +468,8 @@
 
         this.font = "Arial";
         this.fontStyle = "normal";
-        this.fontSize = 20;
-        this.fontOffset = 10;
+        this.fontSize = 18;
+        this.fontOffset = 8;
 
 
         this.fillStyle = "black";
@@ -489,9 +489,10 @@
             this.ctx.fillStyle = this.fillStyle;
 
             var split = this.text.split("\n");
-            console.log(split);
             var length = split.length;
-            var offset = this.fontSize+this.fontOffset;
+            var offset = parseInt(this.fontSize)+parseInt(this.fontOffset);
+            console.log(this.fontOffset);
+            console.log(this.fontSize);
             var pos = - ( (length-1)*(offset/2) );
             for(var i = 0; i < length; ++i) {
                 this.ctx.fillText(split[i], this.width/2 , (this.height/2) + ( pos+(offset*i) ) );
@@ -905,6 +906,7 @@
         this._editor_textArea = document.getElementById("editor_textArea");
         this._editor_selectFont = document.getElementById("editor_selectFont");
         this._editor_selectSize = document.getElementById("editor_selectSize");
+        this._editor_selectOffset = document.getElementById("editor_selectOffset");
         this._editor_zonesCheckBox = document.getElementById("editor_zonesCheckBox");
 
         this._editor_zonesCheckBox.checked = true;
@@ -932,6 +934,9 @@
         for(i = 0; i < this.font_sizes.length; ++i) {
             addOption(this._editor_selectSize, this.font_sizes[i], i);
         }
+        for(i = 0; i < this.font_offsets.length; ++i) {
+            addOption(this._editor_selectOffset, this.font_offsets[i], i);
+        }
 
         this.manageDivs = function() {
             if(that.current_img_id === null) {
@@ -948,9 +953,8 @@
                         div_editor_fontOptions.style.display = "block";
                         that._editor_textArea.value = that.selectedEntity.text;
                         that._editor_selectFont.selectedIndex = that.font_list.indexOf(that.selectedEntity.font);
-                        that._editor_selectSize.selectedIndex = that.font_sizes.indexOf(that.selectedEntity.fontSize);
-                        //that._editor_selectFont.selectedIndex = that.selectedEntity.fontIndex;
-                        //that._editor_selectSize.selectedIndex = that.selectedEntity.fontSizeIndex;
+                        that._editor_selectSize.selectedIndex = that.font_sizes.indexOf(parseInt(that.selectedEntity.fontSize));
+                        that._editor_selectOffset.selectedIndex = that.font_offsets.indexOf(parseInt(that.selectedEntity.fontOffset));
                     }
                     else div_editor_fontOptions.style.display = "none";
                 }
@@ -1009,6 +1013,13 @@
         this._editor_selectSize.addEventListener("input", function() {
             if(that.selectedEntity && that.selectedEntity instanceof EntityText) {
                 that.selectedEntity.fontSize = this.options[this.selectedIndex].text;
+                that.draw();
+            }
+        },false);
+
+        this._editor_selectOffset.addEventListener("input", function() {
+            if(that.selectedEntity && that.selectedEntity instanceof EntityText) {
+                that.selectedEntity.fontOffset = this.options[this.selectedIndex].text;
                 that.draw();
             }
         },false);
