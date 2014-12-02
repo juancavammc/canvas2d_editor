@@ -95,7 +95,7 @@
             "Impact"
         ];
         this.font_sizes = [ 8, 9, 10, 11, 12, 14, 16, 18, 20, 22, 24, 26, 28, 32, 36, 48, 72 ];
-        this.font_offsets = [ 2,4,6,8,10,12,14,16,18,20 ];
+        this.font_offsets = [ 0,2,4,6,8,10,12,14,16,18,20 ];
     }
 
     function cloneProto(A, B) {
@@ -469,7 +469,7 @@
         this.font = "Arial";
         this.fontStyle = "normal";
         this.fontSize = 18;
-        this.fontOffset = 8;
+        this.fontOffset = 0;
 
 
         this.fillStyle = "black";
@@ -484,15 +484,12 @@
 
             this.ctx.textAlign = this.textAlign;
             this.ctx.textBaseline = this.textBaseline;
-            this.ctx.font = this.fontStyle + " " + this.fontSize + "pt " + this.font;
-            //this.ctx.strokeStyle = "red";
+            this.ctx.font = this.fontStyle + " " + this.fontSize + "px " + this.font;
             this.ctx.fillStyle = this.fillStyle;
 
             var split = this.text.split("\n");
             var length = split.length;
             var offset = parseInt(this.fontSize)+parseInt(this.fontOffset);
-            console.log(this.fontOffset);
-            console.log(this.fontSize);
             var pos = - ( (length-1)*(offset/2) );
             for(var i = 0; i < length; ++i) {
                 this.ctx.fillText(split[i], this.width/2 , (this.height/2) + ( pos+(offset*i) ) );
