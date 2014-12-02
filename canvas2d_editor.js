@@ -880,6 +880,7 @@
         this.current_img_id = null;
         this.logos_images = []; //html images
         this.images = []; //images
+        this.colors = ["black", "blue", "red", "orange" ];
 
         //Get all buttons
         var button_removeSelection = document.getElementById("editor_removeSelection");
@@ -898,6 +899,15 @@
         var button_scale_h_expand = document.getElementById("editor_scale_h_expand");
         var button_rotate_left = document.getElementById("editor_rotate_left");
         var button_rotate_right = document.getElementById("editor_rotate_right");
+
+        var button_color1_apply = document.getElementById("editor_color1_apply");
+        var button_color2_apply = document.getElementById("editor_color2_apply");
+        var button_color3_apply = document.getElementById("editor_color3_apply");
+        var button_color4_apply = document.getElementById("editor_color4_apply");
+        button_color1_apply.dataset.index = 0;
+        button_color2_apply.dataset.index = 1;
+        button_color3_apply.dataset.index = 2;
+        button_color4_apply.dataset.index = 3;
 
         //Get other elements
         this._editor_textArea = document.getElementById("editor_textArea");
@@ -923,6 +933,7 @@
         div_editor_fontOptions.style.display = "none";
         //div_canvas_tools_zone_content.style.display = "none";
 
+
         //populate dropdown lists
         var i;
         for(i = 0; i < this.font_list.length; ++i) {
@@ -934,6 +945,13 @@
         for(i = 0; i < this.font_offsets.length; ++i) {
             addOption(this._editor_selectOffset, this.font_offsets[i], i);
         }
+
+        //color the buttons
+        button_color1_apply.style.background = that.colors[parseInt(button_color1_apply.dataset.index)];
+        button_color2_apply.style.background = that.colors[parseInt(button_color2_apply.dataset.index)];
+        button_color3_apply.style.background = that.colors[parseInt(button_color3_apply.dataset.index)];
+        button_color4_apply.style.background = that.colors[parseInt(button_color4_apply.dataset.index)];
+
 
         this.manageDivs = function() {
             if(that.current_img_id === null) {
@@ -983,6 +1001,13 @@
             div_editor_moveButtons.style.display = "none";
             div_editor_scaleButtons.style.display = "none";
             div_editor_rotateButtons.style.display = "block";
+        }
+
+        function handle_button_applyColor() {
+            if(that.selectedEntity && that.selectedEntity instanceof EntityText) {
+                that.selectedEntity.fillStyle = that.colors[parseInt(this.dataset.index)];
+                that.draw();
+            }
         }
 
         //Text Handlers
@@ -1036,6 +1061,11 @@
         button_removeSelection.addEventListener("mousedown", handle_button_click_deleteEntity.bind(this), false);
         button_cleanAll.addEventListener("mousedown", handle_button_deleteAll.bind(this), false);
         button_addText.addEventListener("mousedown", handle_button_addText.bind(this), false);
+
+        button_color1_apply.addEventListener("mousedown", handle_button_applyColor, false);
+        button_color2_apply.addEventListener("mousedown", handle_button_applyColor, false);
+        button_color3_apply.addEventListener("mousedown", handle_button_applyColor, false);
+        button_color4_apply.addEventListener("mousedown", handle_button_applyColor, false);
 
 
         //JSON

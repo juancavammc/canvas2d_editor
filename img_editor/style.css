@@ -131,6 +131,11 @@ input[type="button"].size1 {
     width: 125px;
 }
 
+
+input[type="button"].size2 {
+    width: 60px;
+}
+
 input[type="button"]:hover:not(:disabled) {
     background: #a2a2a2;
 }
