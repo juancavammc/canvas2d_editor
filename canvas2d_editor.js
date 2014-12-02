@@ -705,7 +705,7 @@
 
     EntityCanvas.prototype.draw = function(obj) {
         this.ctx.clearRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height);
-        this.drawBorder(obj);
+        if(obj.drawZones) this.drawBorder(obj);
 
         var ctx = obj.ctx;
         var lineWidth = obj.lineWidth;
@@ -894,6 +894,9 @@
         this._editor_textArea = document.getElementById("editor_textArea");
         this._editor_selectFont = document.getElementById("editor_selectFont");
         this._editor_selectSize = document.getElementById("editor_selectSize");
+        this._editor_zonesCheckBox = document.getElementById("editor_zonesCheckBox");
+
+        this._editor_zonesCheckBox.checked = true;
 
         //Get divs
         var div_canvas_tools_zone_content = document.getElementById("canvas_tools_zone_content");
@@ -981,7 +984,6 @@
         this._editor_textArea.addEventListener("input", function() {
             if(that.selectedEntity && that.selectedEntity instanceof EntityText) {
                 that.selectedEntity.text = this.value;
-                console.log(that.selectedEntity.text);
                 that.draw();
             }
         },false);
@@ -989,8 +991,6 @@
         this._editor_selectFont.addEventListener("input", function() {
             if(that.selectedEntity && that.selectedEntity instanceof EntityText) {
                 that.selectedEntity.font = this.options[this.selectedIndex].text;
-                //that.selectedEntity.fontIndex = this.selectedIndex;
-                console.log(that.selectedEntity.font);
                 that.draw();
             }
         },false);
@@ -998,8 +998,12 @@
         this._editor_selectSize.addEventListener("input", function() {
             if(that.selectedEntity && that.selectedEntity instanceof EntityText) {
                 that.selectedEntity.fontSize = this.options[this.selectedIndex].text;
-                //that.selectedEntity.fontSizeIndex = this.selectedIndex;
-                console.log(that.selectedEntity.font);
+                that.draw();
+            }
+        },false);
+
+        this._editor_zonesCheckBox.addEventListener("change", function() {
+            if(that.current_img_id !== null) {
                 that.draw();
             }
         },false);
@@ -1402,7 +1406,8 @@
                 entityMouseOver: this.entityMouseOver,
                 lineWidth: this.lineWidth,
                 squaresSize: this.squaresSize,
-                sizeLine: this.sizeLine
+                sizeLine: this.sizeLine,
+                drawZones: this._editor_zonesCheckBox.checked
             };
             this.entities[this.current_img_id].draw(obj);
         }
@@ -1511,7 +1516,6 @@
                 vec2.transformMat3(vec_tmp1, vec2.set(vec_tmp1,0,0), this.selectedEntity.getGlobalMatrix());
                 offsetX = event.globalX - vec_tmp1[0];
                 offsetY = event.globalY - vec_tmp1[1];
-                //console.log(vec_tmp1, event.localX, event.localY);
 
                 _global.addEventListener("mousemove", this._handle_mousemove_move_clicked, false);
                 _global.addEventListener("mouseup", this._handle_mouseup, false);
@@ -1559,8 +1563,6 @@
 
     CanvasEditor.prototype.getDropData = function(event) {
         var data = {};
-        console.log(event.hasOwnProperty("dataTransfer"));
-        console.log(event.dataTransfer);
         //if( event.hasOwnProperty("dataTransfer") ) {
         if(event.dataTransfer) {
             data.text = event.dataTransfer.getData("text");
@@ -2017,9 +2019,7 @@
             mat3.invert(mat_tmp, mat_tmp);
 
             vec2.transformMat3(vec_tmp1, vec_tmp1, mat_tmp);
-            console.log(vec_tmp1);
             this.moveTo(vec_tmp1[0], vec_tmp1[1]);
-            console.log(this.selectedEntity.x, this.selectedEntity.y);
         }
         else this.moveTo(event.globalX - offsetX, event.globalY - offsetY);
     };
@@ -2136,14 +2136,12 @@
 
     //*** INTERACTION HANDLERS ***
     function handle_dragover(event) {
-        console.log("dragover");
         event.stopPropagation();
         event.preventDefault();
         _augmentEvent(event);
     }
 
     function handle_drop_inLogoZone(event) {
-        console.log("drop_inLogoZone");
         event.stopPropagation();
         event.preventDefault();
         _augmentEvent(event);
@@ -2151,7 +2149,6 @@
     }
 
     function handle_drop_inCanvas(event) {
-        console.log("drop_inCanvas");
         event.stopPropagation();
         event.preventDefault();
         _augmentEvent(event);
@@ -2216,7 +2213,6 @@
         _augmentEvent(event);
         if(this.current_img_id !== null) {
             var entity = this.entities[this.current_img_id].mouseInsideChildren(event.localX, event.localY, true);
-            console.log(entity);
             if(entity && entity instanceof EntityCanvas) {
                 var aspect = entity.width / entity.height;
                 this.selectedEntity = entity.createChild("text", true, null, 0.5, 0.5, 0.45, 0.2 * aspect, 0, this.getRandomColor());;
