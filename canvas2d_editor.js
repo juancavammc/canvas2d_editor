@@ -1000,21 +1000,21 @@
             }
         },false);
 
-        this._editor_selectFont.addEventListener("input", function() {
+        this._editor_selectFont.addEventListener("change", function() {
             if(that.selectedEntity && that.selectedEntity instanceof EntityText) {
                 that.selectedEntity.font = this.options[this.selectedIndex].text;
                 that.draw();
             }
         },false);
 
-        this._editor_selectSize.addEventListener("input", function() {
+        this._editor_selectSize.addEventListener("change", function() {
             if(that.selectedEntity && that.selectedEntity instanceof EntityText) {
                 that.selectedEntity.fontSize = this.options[this.selectedIndex].text;
                 that.draw();
             }
         },false);
 
-        this._editor_selectOffset.addEventListener("input", function() {
+        this._editor_selectOffset.addEventListener("change", function() {
             if(that.selectedEntity && that.selectedEntity instanceof EntityText) {
                 that.selectedEntity.fontOffset = this.options[this.selectedIndex].text;
                 that.draw();
