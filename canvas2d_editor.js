@@ -986,13 +986,6 @@
         }
 
         //Text Handlers
-
-        /*this._editor_textArea.addEventListener("focus", function() {
-            if(that.selectedEntity && that.selectedEntity instanceof EntityText) {
-                this.value = that.selectedEntity.text;
-            }
-        },false);*/
-
         this._editor_textArea.addEventListener("input", function() {
             if(that.selectedEntity && that.selectedEntity instanceof EntityText) {
                 that.selectedEntity.text = this.value;
@@ -1536,9 +1529,11 @@
                 offsetX = event.globalX - vec_tmp1[0];
                 offsetY = event.globalY - vec_tmp1[1];
 
-                _global.addEventListener("mousemove", this._handle_mousemove_move_clicked, false);
-                _global.addEventListener("mouseup", this._handle_mouseup, false);
+                //_global.addEventListener("mousemove", this._handle_mousemove_move_clicked, false);
+                //_global.addEventListener("mouseup", this._handle_mouseup, false);
             }
+            _global.addEventListener("mousemove", this._handle_mousemove_move_clicked, false);
+            _global.addEventListener("mouseup", this._handle_mouseup, false);
             this.draw();
         }
 
