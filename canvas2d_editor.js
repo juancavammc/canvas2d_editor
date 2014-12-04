@@ -1448,9 +1448,9 @@
                 entityMouseOver: this.entityMouseOver,
                 lineWidth: this.lineWidth,
                 squaresSize: this.squaresSize,
-                sizeLine: this.sizeLine,
-                drawZones: this._editor_zonesCheckBox.checked
+                sizeLine: this.sizeLine
             };
+            if(this._editor_zonesCheckBox) obj.drawZones = this._editor_zonesCheckBox.checked;
             this.entities[this.current_img_id].draw(obj);
         }
     };
