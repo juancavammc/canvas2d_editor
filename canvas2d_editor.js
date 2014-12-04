@@ -193,26 +193,26 @@
         ctx.translate(x, y);
         ctx.rotate(this.angle);
 
-        ctx.strokeRect(-w / 2, -h / 2, w, h);
+        ctx.strokeRect(-w/2,-h/2, w, h);
 
-        this.fillSquare(ctx, -w / 2, -h / 2, size);
-        this.fillSquare(ctx, w / 2, -h / 2, size);
-        this.fillSquare(ctx, -w / 2, h / 2, size);
-        this.fillSquare(ctx, w / 2, h / 2, size);
+        this.fillSquare(ctx,-w/2,-h/2, size);
+        this.fillSquare(ctx, w/2,-h/2, size);
+        this.fillSquare(ctx,-w/2, h/2, size);
+        this.fillSquare(ctx, w/2, h/2, size);
 
-        this.fillSquare(ctx, 0, -h / 2, size);
-        this.fillSquare(ctx, -w / 2, 0, size);
-        this.fillSquare(ctx, 0, h / 2, size);
-        this.fillSquare(ctx, w / 2, 0, size);
+        this.fillSquare(ctx, 0,-h/2, size);
+        this.fillSquare(ctx,-w/2, 0, size);
+        this.fillSquare(ctx, 0, h/2, size);
+        this.fillSquare(ctx, w/2, 0, size);
 
         ctx.beginPath();
-        ctx.moveTo(0, -h / 2);
-        ctx.lineTo(0, -obj.sizeLine - h / 2);
+        ctx.moveTo(0, -h/2);
+        ctx.lineTo(0, -obj.sizeLine - h/2);
         ctx.stroke();
         ctx.closePath();
 
         ctx.beginPath();
-        ctx.arc(0, -obj.sizeLine - h / 2, size, 0, 2 * Math.PI);
+        ctx.arc(0, -obj.sizeLine - h/2, size, 0, 2 * Math.PI);
         ctx.fill();
         ctx.stroke();
 
@@ -247,12 +247,6 @@
     };
 
     //TODO: Change cursors according to the angle
-    /**
-     * obj.squaresSize
-     * obj.ctx
-     * obj.x
-     * obj.y
-     */
     Entity.prototype.checkCorners = function(obj) {
         var w = this.width;
         var h = this.height;
@@ -458,6 +452,7 @@
         }
     };
 
+    /** EntityText **/
     function EntityText() {
         this.text = "Text";
         this.ctx = document.createElement("canvas").getContext("2d");
@@ -482,14 +477,17 @@
         if (this.text) {
             this.ctx.save();
 
+
+            var fontSize = this.fontSize*obj.resizeFactor;
+
             this.ctx.textAlign = this.textAlign;
             this.ctx.textBaseline = this.textBaseline;
-            this.ctx.font = this.fontStyle + " " + this.fontSize + "px " + this.font;
+            this.ctx.font = this.fontStyle + " " + fontSize + "px " + this.font;
             this.ctx.fillStyle = this.fillStyle;
 
             var split = this.text.split("\n");
             var length = split.length;
-            var offset = parseInt(this.fontSize)+parseInt(this.fontOffset);
+            var offset = parseInt(fontSize)+parseInt(this.fontOffset);
             var pos = - ( (length-1)*(offset/2) );
             for(var i = 0; i < length; ++i) {
                 this.ctx.fillText(split[i], this.width/2 , (this.height/2) + ( pos+(offset*i) ) );
@@ -539,7 +537,6 @@
         this.children = [];
     }
 
-    //EntityProduct.prototype = new Entity;
     cloneProto(Entity, EntityProduct);
 
     EntityProduct.prototype.draw = function(obj) {
@@ -707,10 +704,6 @@
     }
 
     cloneProto(EntityProduct, EntityCanvas);
-    //EntityCanvas.prototype.deleteChild = EntityProduct.prototype.deleteChild;
-    //EntityCanvas.prototype.createChild = EntityProduct.prototype.createChild;
-    //EntityCanvas.prototype.mouseInsideChildren = EntityProduct.prototype.mouseInsideChildren;
-    //EntityCanvas.prototype.deleteAllChildren = EntityProduct.prototype.deleteAllChildren;
 
     EntityCanvas.prototype.draw = function(obj) {
         this.ctx.clearRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height);
@@ -1448,7 +1441,8 @@
                 entityMouseOver: this.entityMouseOver,
                 lineWidth: this.lineWidth,
                 squaresSize: this.squaresSize,
-                sizeLine: this.sizeLine
+                sizeLine: this.sizeLine,
+                resizeFactor: this.entities[this.current_img_id].container_width/this.entities[this.current_img_id].naturalContainer_width
             };
             if(this._editor_zonesCheckBox) obj.drawZones = this._editor_zonesCheckBox.checked;
             this.entities[this.current_img_id].draw(obj);
