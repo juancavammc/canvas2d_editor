@@ -1501,10 +1501,15 @@
         }
     };
 
-    CanvasEditor.prototype.addText = function() {
+    CanvasEditor.prototype.addText = function(x,y) {
         if(this.current_img_id !== null) {
-            var aspect = this.ctx.canvas.width / this.ctx.canvas.height;
-            return this.entities[this.current_img_id].createChild("text", true, null, 0.5, 0.5, 0.3, 0.1 * aspect, 0, this.getRandomColor());
+            var entity = this.entities[this.current_img_id].mouseInsideChildren(x, y, true);
+            if(entity && entity instanceof EntityCanvas) {
+                var aspect = entity.width / entity.height;
+                this.selectedEntity = entity.createChild("text", true, null, 0.5, 0.5, 0.45, 0.2 * aspect, 0, this.getRandomColor());
+                this.manageDivs();
+                this.draw();
+            }
         }
     };
 
@@ -1566,13 +1571,6 @@
             _global.addEventListener("mouseup", this._handle_mouseup, false);
             this.draw();
         }
-
-        //if(this.selectedEntity instanceof EntityText) {
-        //    this.ctx.canvas.addEventListener
-        //}
-        //else {
-        //
-        //}
     };
 
     CanvasEditor.prototype.updateAll = function() {
@@ -1681,7 +1679,6 @@
 
         var img = this.searchImage(file.name);
         if(img) {
-            //console.log("Image already exists: " + file.name);
             return img;
         }
 
@@ -2110,13 +2107,13 @@
         }
     };
 
-    //CanvasEditor.prototype._deleteAllEntities = function() {
-    //    if(this.current_img_id !== null) {
-    //        this.entities[this.current_img_id].deleteAllChildren();
-    //        this.draw();
-    //        if(this.manageDivs) this.manageDivs();
-    //    }
-    //};
+    /*CanvasEditor.prototype._deleteAllEntities = function() {
+        if(this.current_img_id !== null) {
+            this.entities[this.current_img_id].deleteAllChildren();
+            this.draw();
+            if(this.manageDivs) this.manageDivs();
+        }
+    };*/
 
     CanvasEditor.prototype._deleteAllEntities = function() {
         for(var i = 0; i < this.entities.length; ++i) {
@@ -2225,8 +2222,7 @@
         event.preventDefault();
         _augmentEvent(event);
         if (this.selectedEntity) {
-            //this._checkCorners(event);
-            this.selectedEntity.checkCorners({x:event.localX, y:event.localY, squaresSize: this.squaresSize, ctx: this.ctx});
+            this.selectedEntity.checkCorners({x: event.localX, y :event.localY, squaresSize: this.squaresSize, ctx: this.ctx});
         }
         if(this.current_img_id !== null) this._check_mouseOverEntity(event);
     }
@@ -2269,15 +2265,7 @@
         event.stopPropagation();
         event.preventDefault();
         _augmentEvent(event);
-        if(this.current_img_id !== null) {
-            var entity = this.entities[this.current_img_id].mouseInsideChildren(event.localX, event.localY, true);
-            if(entity && entity instanceof EntityCanvas) {
-                var aspect = entity.width / entity.height;
-                this.selectedEntity = entity.createChild("text", true, null, 0.5, 0.5, 0.45, 0.2 * aspect, 0, this.getRandomColor());;
-                this.manageDivs();
-                this.draw();
-            }
-        }
+        this.addText(event.localX, event.localY);
         this.ctx.canvas.style.cursor = "auto";
         this.ctx.canvas.removeEventListener("mousedown", this._handle_mousedown_addText, false);
         this.ctx.canvas.addEventListener("mousedown", this._handle_mousedown, false);
