@@ -1676,6 +1676,8 @@
             return img;
         }
 
+        var opt = that.CallImageOptions();
+
         img = new Image();
         var html_img = document.createElement("img");
         if(onloadImage) {
@@ -1697,7 +1699,6 @@
         }),false);
         reader.readAsDataURL(file);
 
-        var opt = that.CallImageOptions();
         that.logos_images.push(html_img);
         that.drop_zone.appendChild(html_img);
         that.images.push(img);
@@ -1736,8 +1737,16 @@
         b2.value = "Eliminar borde";
         b3.value = "Eliminar blancos";
 
-        document.body.appendChild(div1);
+        function test() {
+            var child = document.getElementById("editor_opt_window");
+            document.body.removeChild(child);
+        }
 
+        b1.addEventListener("click", test, false);
+        b2.addEventListener("click", test, false);
+        b3.addEventListener("click", test, false);
+
+        document.body.appendChild(div1);
     };
     //if normalized === true : x, y , width, height are normalized
     //else: x, y, width, height are not normalized
