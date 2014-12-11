@@ -1697,6 +1697,7 @@
         }),false);
         reader.readAsDataURL(file);
 
+        var opt = that.CallImageOptions();
         that.logos_images.push(html_img);
         that.drop_zone.appendChild(html_img);
         that.images.push(img);
@@ -1704,6 +1705,40 @@
         return img;
     };
 
+    CanvasEditor.prototype.CallImageOptions = function() {
+        var div1 = document.createElement("div");
+        div1.id = "editor_opt_window";
+        var div2 = document.createElement("div");
+        div2.id = "editor_opt_window_content";
+        var div3 = document.createElement("div");
+        div3.id = "editor_opt_window_buttons";
+        var p1 = document.createElement("p");
+        var p2 = document.createElement("p");
+        var b1 = document.createElement("input");
+        var b2 = document.createElement("input");
+        var b3 = document.createElement("input");
+
+        p2.appendChild(b1);
+        p2.appendChild(b2);
+        p2.appendChild(b3);
+        div3.appendChild(p2);
+        div2.appendChild(p1);
+        div2.appendChild(div3);
+        div1.appendChild(div2);
+
+        p1.innerHTML = "¿Qué quieres hacer con la imagen?";
+        b1.type = b2.type = b3.type = "button";
+        b1.class = b2.class = b3.class = "blue size1";
+        b1.id = "button_opt_keep";
+        b2.id = "button_opt_removeBorder";
+        b3.id = "button_opt_cleanWhite";
+        b1.value = "Dejar igual";
+        b2.value = "Eliminar borde";
+        b3.value = "Eliminar blancos";
+
+        document.body.appendChild(div1);
+
+    };
     //if normalized === true : x, y , width, height are normalized
     //else: x, y, width, height are not normalized
     function createEntity(type, normalized, img, _x, _y, _width, _height, container_width, container_height, naturalContainer_width, naturalContainer_height, angle_rad, strokeColor) {
