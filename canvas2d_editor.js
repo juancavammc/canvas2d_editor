@@ -994,18 +994,21 @@
 
         //button handlers
         function handle_button_click_move() {
+            console.log("move");
             div_editor_moveButtons.style.display = "block";
             div_editor_scaleButtons.style.display = "none";
             div_editor_rotateButtons.style.display = "none";
         }
 
         function handle_button_click_scale() {
+            console.log("scale");
             div_editor_moveButtons.style.display = "none";
             div_editor_scaleButtons.style.display = "block";
             div_editor_rotateButtons.style.display = "none";
         }
 
         function handle_button_click_rotate() {
+            console.log("rotate");
             div_editor_moveButtons.style.display = "none";
             div_editor_scaleButtons.style.display = "none";
             div_editor_rotateButtons.style.display = "block";
@@ -1071,9 +1074,9 @@
             console.log(this.value);
         },false);
 
-        button_move.addEventListener("mousedown", handle_button_click_move.bind(this), false);
-        button_scale.addEventListener("mousedown", handle_button_click_scale.bind(this), false);
-        button_rotate.addEventListener("mousedown", handle_button_click_rotate.bind(this), false);
+        button_move.addEventListener("change", handle_button_click_move.bind(this), false);
+        button_scale.addEventListener("change", handle_button_click_scale.bind(this), false);
+        button_rotate.addEventListener("change", handle_button_click_rotate.bind(this), false);
         button_move_left.addEventListener("mousedown", handle_button_click_move_left.bind(this), false);
         button_move_right.addEventListener("mousedown", handle_button_click_move_right.bind(this), false);
         button_move_up.addEventListener("mousedown", handle_button_click_move_up.bind(this), false);

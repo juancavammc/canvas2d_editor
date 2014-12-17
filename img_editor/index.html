@@ -11,15 +11,22 @@
                 <!-- <div id="drop_zone"></div> -->
             </div>
             <div id="tools_zone">
+                <h2>Camiseta Fruit of the Loom - Yellow</h2>
+                <p>Ref. 002 - CAM - 23598</p>
                 <div id="tools_zone_main">
                     <p>Marcaje: <select name="selectMarking" id="editor_selectMarking"></select></p>
                     <p>Unidades: <select name="selectUnits" id="editor_selectUnits"></select></p>
                 </div>
                 <div id="tools_zone_serigraphy">
-                    <p><input type="button" value="Color 1" src="" id="editor_color1_select" class="size2">
-                        <input type="button" value="Color 2" src="" id="editor_color2_select" class="size2"></p>
-                    <p><input type="button" value="Color 3" src="" id="editor_color3_select" class="size2">
-                        <input type="button" value="Color 4" src="" id="editor_color4_select" class="size2"></p>
+                    <h3>Colores marcaje:</h3>
+                    <p><input type="checkbox" value="Color 1" name="editor_colors_select" id="editor_color1_select">
+                        <label for="editor_color1_select">C1</label>
+                        <input type="checkbox" value="Color 2" name="editor_colors_select" id="editor_color2_select">
+                        <label for="editor_color2_select">C2</label>
+                        <input type="checkbox" value="Color 3" name="editor_colors_select" id="editor_color3_select">
+                        <label for="editor_color3_select">C3</label>
+                        <input type="checkbox" value="Color 4" name="editor_colors_select" id="editor_color4_select">
+                        <label for="editor_color4_select">C4</label></p>
                     <input type="text" class="color">
                 </div>
                 <div id="tools_zone_laser">
@@ -27,7 +34,7 @@
                 </div>
                 <div id="tools_zone_final">
                     <p>Precio: </p>
-                    <p><input type="button" value="Agregar al carro" src="" id="editor_addToCart" class="size1 green"></p></p>
+                    <p><input type="button" value="Agregar al carro" src="" id="editor_addToCart" class="size1 green"></p>
                 </div>
             </div>
             <div id="product_zone">
@@ -37,9 +44,12 @@
                         <div id="div_editor_entityButtons">
                             <div id="div_editor_tools">
                                 <div id="div_editor_mainButtons">
-                                    <input type="image" value="Mover" src="" id="editor_move">
-                                    <input type="image" value="Escalar" src="" id="editor_scale">
-                                    <input type="image" value="Rotar" src="" id="editor_rotate">
+                                    <input type="radio" name="editor_mainButtons" id="editor_move">
+                                    <label for="editor_move">Mover</label>
+                                    <input type="radio" name="editor_mainButtons" id="editor_scale">
+                                    <label for="editor_scale">Escalar</label>
+                                    <input type="radio" name="editor_mainButtons" id="editor_rotate">
+                                    <label for="editor_rotate">Rotar</label>
                                 </div>
 
                                 <div id="div_editor_moveButtons">
