@@ -140,14 +140,6 @@ input {
 	padding-left: 5px;
 }
 
-/*input[type="text"] {
-	font-size: 14px;
-    font-family: ‘Lucida Console’, Monaco, monospace;
-    width: 30px;
-    //height: 14px;
-    border: 2px solid black;
-}*/
-
 input[type="image"] {
     border: 0;
     margin: 0;
@@ -206,3 +198,20 @@ textArea {
     width: 125px;
     height: 40px;
 }
+
+
+input[type=radio].buttonizer, input[type=checkbox].buttonizer{
+    display:none;
+    margin:10px;
+}
+
+input[type=radio] + label, input[type=checkbox] + label{
+    /*display:inline-block;*/
+    background-color: #e7e7e7;
+    border: 2px solid rgba(0,0,0,0);
+}
+input[type=radio]:checked + label, input[type=checkbox]:checked + label {
+    background: #d0d0d0 none;
+    border: 2px solid black;
+}
+
