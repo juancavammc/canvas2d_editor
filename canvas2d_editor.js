@@ -96,6 +96,8 @@
         ];
         this.font_sizes = [ 8, 9, 10, 11, 12, 14, 16, 18, 20, 22, 24, 26, 28, 32, 36, 48, 72 ];
         this.font_offsets = [ 0,2,4,6,8,10,12,14,16,18,20 ];
+        this.markingOptions = [ "serigrafía", "láser" ];
+        this.unitsOptions = [25, 50, 100]
     }
 
     function cloneProto(A, B) {
@@ -909,6 +911,10 @@
         this._editor_selectOffset = document.getElementById("editor_selectOffset");
         this._editor_zonesCheckBox = document.getElementById("editor_zonesCheckBox");
 
+        this._editor_selectMarking = document.getElementById("editor_selectMarking");
+        this._editor_selectUnits = document.getElementById("editor_selectUnits");
+
+
         this._editor_zonesCheckBox.checked = true;
 
         //Get divs
@@ -918,6 +924,8 @@
         var div_editor_scaleButtons =  document.getElementById("div_editor_scaleButtons");
         var div_editor_rotateButtons =  document.getElementById("div_editor_rotateButtons");
         var div_editor_fontOptions = document.getElementById("div_editor_fontOptions");
+        var div_tools_zone_serigraphy = document.getElementById("tools_zone_serigraphy");
+        var div_tools_zone_laser = document.getElementById("tools_zone_laser");
 
         div_editor_mainButtons.style.display = "none";
         div_editor_moveButtons.style.display = "none";
@@ -925,6 +933,7 @@
         div_editor_rotateButtons.style.display = "none";
         div_editor_fontOptions.style.display = "none";
         //div_canvas_tools_zone_content.style.display = "none";
+        div_tools_zone_laser.style.display = "none";
 
 
         //populate dropdown lists
@@ -937,6 +946,12 @@
         }
         for(i = 0; i < this.font_offsets.length; ++i) {
             addOption(this._editor_selectOffset, this.font_offsets[i], i);
+        }
+        for(i = 0; i < this.markingOptions.length; ++i) {
+            addOption(this._editor_selectMarking, this.markingOptions[i], i);
+        }
+        for(i = 0; i < this.unitsOptions.length; ++i) {
+            addOption(this._editor_selectUnits, this.unitsOptions[i], i);
         }
 
         //color the buttons
@@ -1036,6 +1051,24 @@
             if(that.current_img_id !== null) {
                 that.draw();
             }
+        },false);
+
+        //Product options handlers
+        this._editor_selectMarking.addEventListener("change", function() {
+            console.log(this);
+            if(this.value === "0") {
+                div_tools_zone_serigraphy.style.display = "block";
+                div_tools_zone_laser.style.display = "none";
+            }
+            else if(this.value === "1") {
+                div_tools_zone_serigraphy.style.display = "none";
+                div_tools_zone_laser.style.display = "block";
+            }
+
+        },false);
+
+        this._editor_selectUnits.addEventListener("change", function() {
+            console.log(this.value);
         },false);
 
         button_move.addEventListener("mousedown", handle_button_click_move.bind(this), false);
@@ -2305,6 +2338,7 @@
         _augmentEvent(event);
         this.addText(event.localX, event.localY);
         this.ctx.canvas.style.cursor = "auto";
+        document.body.style.cursor = "auto";
         this.ctx.canvas.removeEventListener("mousedown", this._handle_mousedown_addText, false);
         this.ctx.canvas.addEventListener("mousedown", this._handle_mousedown, false);
     }
@@ -2383,6 +2417,7 @@
         this.ctx.canvas.removeEventListener("mousedown", this._handle_mousedown, false);
         this.ctx.canvas.addEventListener("mousedown", this._handle_mousedown_addText, false);
         this.ctx.canvas.style.cursor = "crosshair";
+        document.body.style.cursor = "crosshair";
     }
 
     //*** END HANDLERS ***
