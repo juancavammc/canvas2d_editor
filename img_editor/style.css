@@ -200,12 +200,12 @@ textArea {
 }
 
 
-input[type=radio], input[type=checkbox] {
+input[type=radio].buttonizer, input[type=checkbox].buttonizer{
     display:none;
     margin:10px;
 }
 
-input[type=radio] + label, input[type=checkbox] + label {
+input[type=radio] + label, input[type=checkbox] + label{
     /*display:inline-block;*/
     background-color: #e7e7e7;
     border: 2px solid rgba(0,0,0,0);
