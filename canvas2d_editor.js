@@ -895,14 +895,16 @@
         var button_rotate_left = document.getElementById("editor_rotate_left");
         var button_rotate_right = document.getElementById("editor_rotate_right");
 
-        var button_color1_apply = document.getElementById("editor_color1_apply");
-        var button_color2_apply = document.getElementById("editor_color2_apply");
-        var button_color3_apply = document.getElementById("editor_color3_apply");
-        var button_color4_apply = document.getElementById("editor_color4_apply");
-        button_color1_apply.dataset.index = 0;
-        button_color2_apply.dataset.index = 1;
-        button_color3_apply.dataset.index = 2;
-        button_color4_apply.dataset.index = 3;
+        var button_color_apply = [];
+        button_color_apply[0] = document.getElementById("editor_color1_apply");
+        button_color_apply[1] = document.getElementById("editor_color2_apply");
+        button_color_apply[2] = document.getElementById("editor_color3_apply");
+        button_color_apply[3] = document.getElementById("editor_color4_apply");
+        button_color_apply[1].dataset.index = 0;
+        button_color_apply[1].dataset.index = 1;
+        button_color_apply[2].dataset.index = 2;
+        button_color_apply[3].dataset.index = 3;
+
 
         //Get other elements
         this._editor_textArea_font = document.getElementById("editor_textArea_font");
@@ -955,12 +957,94 @@
         }
 
         //color the buttons
-        button_color1_apply.style.background = that.colors[parseInt(button_color1_apply.dataset.index)];
-        button_color2_apply.style.background = that.colors[parseInt(button_color2_apply.dataset.index)];
-        button_color3_apply.style.background = that.colors[parseInt(button_color3_apply.dataset.index)];
-        button_color4_apply.style.background = that.colors[parseInt(button_color4_apply.dataset.index)];
+        button_color_apply[0].style.display = "none";
+        button_color_apply[1].style.display = "none";
+        button_color_apply[2].style.display = "none";
+        button_color_apply[3].style.display = "none";
 
+        //Colorpicker
+        var color_list = [];
+        var div_colorButtons_container = document.getElementById("editor_color_buttons_container");
+        var color_picker = document.createElement("div");
+        var currentColor = undefined;
+        color_picker.id = "color_picker";
+        color_picker.className = "cp-default";
 
+        function handle_colorpicker(hex, hsv, rgb) {
+
+            console.log(hex);
+            currentColor.style.backgroundColor = hex;        // #HEX
+            updateTextColors();
+        }
+        ColorPicker(color_picker, handle_colorpicker);
+        color_picker.style.display = "none";
+        document.body.appendChild(color_picker);
+
+        function handle_click_on_color(event) {
+            _augmentEvent(event);
+            if(this.dataset.status === "add") {
+                currentColor = this;
+                this.dataset.status = "remove";
+                this.className = "div_colors remove";
+                this.style.backgroundColor = "#000000";
+                color_picker.style.display = "block";
+                color_picker.style.position = "fixed";
+                color_picker.style.overflow = "hidden";
+                color_picker.style.left = event.globalX - 100 + "px";
+                color_picker.style.top = event.globalY + 50 + "px";
+                if(color_list.length < 4) addColorButton();
+                updateTextColors();
+            }
+            else if (this.dataset.status === "remove") {
+                color_picker.style.display = "none";
+                var length = color_list.length;
+                var id = this.dataset.id;
+                div_colorButtons_container.removeChild(this);
+                color_list[id] = null;
+                color_list = color_list.filter(function (n) {
+                    return n != undefined;
+                });
+                for(var i = parseInt(id); i < color_list.length; ++i) {
+                    color_list[i].dataset.id = i;
+                    color_list[i].id = "editor_color_select" + (i+1) ;
+                }
+                if(color_list[color_list.length-1].dataset.status === "remove") addColorButton();
+                updateTextColors();
+            }
+        }
+
+        function addColorButton() {
+            var length = color_list.length;
+            if(length < 4) {
+                var div = document.createElement("div");
+                div.id = "editor_color_select" + (length + 1);
+                div.className = "div_colors add";
+                div.dataset.id = length;
+                div.dataset.status = "add";
+                color_list.push(div);
+                div.addEventListener("click", handle_click_on_color, false);
+                div_colorButtons_container.appendChild(div);
+            }
+        }
+
+        function updateTextColors() {
+            console.log("updateTextColors");
+            for(var i = 0; i < color_list.length; ++i) {
+                if(color_list[i].dataset.status === "remove") {
+                    button_color_apply[i].style.background = color_list[i].style.backgroundColor;
+                    button_color_apply[i].style.display = "inline-block";
+                    console.log("if");
+                }
+                else {
+                    button_color_apply[i].style.display = "none";
+                    console.log("else");
+                }
+            }
+        }
+        //color_list[0].addEventListener("click", handle_click_on_color, false);
+        addColorButton();
+
+        //MANAGE DIVS
         this.manageDivs = function() {
             if(that.current_img_id === null) {
                 div_editor_mainButtons.style.display = "none";
@@ -994,21 +1078,18 @@
 
         //button handlers
         function handle_button_click_move() {
-            console.log("move");
             div_editor_moveButtons.style.display = "block";
             div_editor_scaleButtons.style.display = "none";
             div_editor_rotateButtons.style.display = "none";
         }
 
         function handle_button_click_scale() {
-            console.log("scale");
             div_editor_moveButtons.style.display = "none";
             div_editor_scaleButtons.style.display = "block";
             div_editor_rotateButtons.style.display = "none";
         }
 
         function handle_button_click_rotate() {
-            console.log("rotate");
             div_editor_moveButtons.style.display = "none";
             div_editor_scaleButtons.style.display = "none";
             div_editor_rotateButtons.style.display = "block";
@@ -1016,7 +1097,7 @@
 
         function handle_button_applyColor() {
             if(that.selectedEntity && that.selectedEntity instanceof EntityText) {
-                that.selectedEntity.fillStyle = that.colors[parseInt(this.dataset.index)];
+                that.selectedEntity.fillStyle = this.style.background;
                 that.draw();
             }
         }
@@ -1058,7 +1139,6 @@
 
         //Product options handlers
         this._editor_selectMarking.addEventListener("change", function() {
-            console.log(this);
             if(this.value === "0") {
                 div_tools_zone_serigraphy.style.display = "block";
                 div_tools_zone_laser.style.display = "none";
@@ -1091,10 +1171,10 @@
         button_cleanAll.addEventListener("mousedown", handle_button_deleteAll.bind(this), false);
         button_addText.addEventListener("mousedown", handle_button_addText.bind(this), false);
 
-        button_color1_apply.addEventListener("mousedown", handle_button_applyColor, false);
-        button_color2_apply.addEventListener("mousedown", handle_button_applyColor, false);
-        button_color3_apply.addEventListener("mousedown", handle_button_applyColor, false);
-        button_color4_apply.addEventListener("mousedown", handle_button_applyColor, false);
+        button_color_apply[0].addEventListener("mousedown", handle_button_applyColor, false);
+        button_color_apply[1].addEventListener("mousedown", handle_button_applyColor, false);
+        button_color_apply[2].addEventListener("mousedown", handle_button_applyColor, false);
+        button_color_apply[3].addEventListener("mousedown", handle_button_applyColor, false);
 
 
         //JSON
