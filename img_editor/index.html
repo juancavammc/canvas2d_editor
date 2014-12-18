@@ -11,11 +11,11 @@
                 <!-- <div id="drop_zone"></div> -->
             </div>
             <div id="tools_zone">
-                <h2>Camiseta Fruit of the Loom - Yellow</h2>
-                <p>Ref. 002 - CAM - 23598</p>
+                <h2><span id="nameProduct">Camiseta Fruit of the Loom - Yellow</span>></h2>
+                <p><span id="refProduct">Ref. 002 - CAM - 23598</span></p>
                 <div id="tools_zone_main">
-                    <p>Marcaje: <select name="selectMarking" id="editor_selectMarking"></select></p>
-                    <p>Unidades: <select name="selectUnits" id="editor_selectUnits"></select></p>
+                    <p><label for="editor_selectMarking">Marcaje:</label><select name="selectMarking" id="editor_selectMarking"></select></p>
+                    <p><label for="editor_selectUnits">Unidades:</label><select name="selectUnits" id="editor_selectUnits"></select></p>
                 </div>
                 <div id="tools_zone_serigraphy">
                     <h3>Colores marcaje:</h3>
@@ -71,18 +71,19 @@
                                 </div>
                             </div>
                         </div>
-                        <div id="div_editor_fontOptions">
+                        <div id="editor_tools_fontOptions">
                             <p><textArea id="editor_textArea_font"></textArea></p>
-                            <p>Fuente: <select name="selectFont" id="editor_selectFont"></select></p>
-                            <p>Tamaño: <select name="selectSize" id="editor_selectSize"></select></p>
-                            <p>Offset: <select name="selectOffset" id="editor_selectOffset"></select></p>
+                            <p><label for="editor_selectFont" >Fuente:</label><select name="selectFont" id="editor_selectFont"></select></p>
+                            <p><label for="editor_selectSize" >Tamaño:</label><select name="selectSize" id="editor_selectSize"></select></p>
+                            <p><label for="editor_selectOffset" >Offset:</label><select name="selectOffset" id="editor_selectOffset"></select></p>
                             <p><input type="button" value="C1" src="" id="editor_color1_apply" class="size2">
                             <input type="button" value="C2" src="" id="editor_color2_apply" class="size2"></p>
                             <p><input type="button" value="C3" src="" id="editor_color3_apply" class="size2">
                             <input type="button" value="C4" src="" id="editor_color4_apply" class="size2"></p>
                         </div>
-                        <div id="canvas_tools_zone_content">
-                            Mostrar zonas: <input type="checkbox" id="editor_zonesCheckBox">
+                        <div id="editor_tools_buttons">
+                            <label for="editor_zonesCheckBox" >Mostrar zonas:</label>
+                            <input type="checkbox" id="editor_zonesCheckBox">
                             <p><input type="button" value="Eliminar selección" src="" id="editor_removeSelection" class="red size1"></p>
                             <p><input type="button" value="Limpiar todo" src="" id="editor_cleanAll" class="red size1"></p>
                             <p><input type="button" value="Agregar texto" src="" id="editor_addText" class="blue size1"></p>

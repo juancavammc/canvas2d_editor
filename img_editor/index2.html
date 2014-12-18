@@ -25,14 +25,12 @@
                             </div>
                             <div id="tools_zone_serigraphy"> <!-- JS -->
                                 <h3>Colores marcaje:</h3>
-                                <p><input type="checkbox" value="Color 1" name="editor_colors_select" id="editor_color1_select" class="buttonizer">
-                                    <label for="editor_color1_select" >C1</label>
-                                    <input type="checkbox" value="Color 2" name="editor_colors_select" id="editor_color2_select" class="buttonizer">
-                                    <label for="editor_color2_select">C2</label>
-                                    <input type="checkbox" value="Color 3" name="editor_colors_select" id="editor_color3_select" class="buttonizer">
-                                    <label for="editor_color3_select">C3</label>
-                                    <input type="checkbox" value="Color 4" name="editor_colors_select" id="editor_color4_select" class="buttonizer">
-                                    <label for="editor_color4_select">C4</label></p>
+                                <p>
+                                    <label class="buttonizer"><input type="checkbox" name="editor_colors_select" id="editor_color1_select"><span>C1</span></label>
+                                    <label class="buttonizer"><input type="checkbox" name="editor_colors_select" id="editor_color2_select"><span>C2</span></label>
+                                    <label class="buttonizer"><input type="checkbox" name="editor_colors_select" id="editor_color3_select"><span>C3</span></label>
+                                    <label class="buttonizer"><input type="checkbox" name="editor_colors_select" id="editor_color4_select"><span>C4</span></label>
+                                </p>
                                 <input type="text" class="color">
                             </div>
                             <div id="tools_zone_laser"> <!-- JS -->
@@ -44,13 +42,11 @@
                         </div>
                     </div>
                     <div id="editor_tools">
-                        <div id="editor_tools_removeOptions">
-                            <div id="canvas_tools_zone_content"> <!-- JS -->
-                                Mostrar zonas: <input type="checkbox" id="editor_zonesCheckBox">
-                                <p><input type="button" value="Eliminar selección" src="" id="editor_removeSelection" class="red size1"></p>
-                                <p><input type="button" value="Limpiar todo" src="" id="editor_cleanAll" class="red size1"></p>
-                                <p><input type="button" value="Agregar texto" src="" id="editor_addText" class="blue size1"></p>
-                            </div>
+                        <div id="editor_tools_buttons"> <!-- JS -->
+                            <p>Mostrar zonas: <input type="checkbox" id="editor_zonesCheckBox"></p>
+                            <p><input type="button" value="Eliminar selección" src="" id="editor_removeSelection" class="red size1"></p>
+                            <p><input type="button" value="Limpiar todo" src="" id="editor_cleanAll" class="red size1"></p>
+                            <p><input type="button" value="Agregar texto" src="" id="editor_addText" class="blue size1"></p>
                         </div>
                         <div id="editor_tools_transformOptions">
                             <div id="div_editor_mainButtons"> <!-- JS -->
@@ -80,26 +76,24 @@
                                 <input type="image" value="Right" src="" id="editor_rotate_right">
                             </div>
                         </div>
-                        <div id="editor_tools_fontOptions">
-                            <div id="div_editor_fontOptions"> <!-- JS -->
-                                <div id="div_editor_fontOptions_up">
-                                    <div id="div_editor_fontOptions_textArea">
-                                        <p><textArea id="editor_textArea_font" class="textInput"></textArea></p>
-                                    </div>
-                                    <div id="div_editor_fontOptions_options">
-                                        <p>Fuente: <select name="selectFont" id="editor_selectFont"></select></p>
-                                        <p>Tamaño: <select name="selectSize" id="editor_selectSize"></select></p>
-                                        <p>Offset: <select name="selectOffset" id="editor_selectOffset"></select></p>
-                                    </div>
+                        <div id="editor_tools_fontOptions"> <!-- JS -->
+                            <div id="div_editor_fontOptions_up">
+                                <div id="div_editor_fontOptions_textArea">
+                                    <p><textArea id="editor_textArea_font" class="textInput"></textArea></p>
                                 </div>
-                                <div id="div_editor_fontOptions_color">
-                                    <p>Selecciona color texto
-                                    <input type="button" value="C" src="" id="editor_color1_apply" class="size2">
-                                    <input type="button" value="2" src="" id="editor_color2_apply" class="size2">
-                                    <input type="button" value="3" src="" id="editor_color3_apply" class="size2">
-                                    <input type="button" value="4" src="" id="editor_color4_apply" class="size2">
-                                    </p>
+                                <div id="div_editor_fontOptions_options">
+                                    <p>Fuente: <select name="selectFont" id="editor_selectFont"></select></p>
+                                    <p>Tamaño: <select name="selectSize" id="editor_selectSize"></select></p>
+                                    <p>Offset: <select name="selectOffset" id="editor_selectOffset"></select></p>
                                 </div>
+                            </div>
+                            <div id="div_editor_fontOptions_color">
+                                <p>Selecciona color texto
+                                <input type="button" value="C" src="" id="editor_color1_apply" class="size2">
+                                <input type="button" value="2" src="" id="editor_color2_apply" class="size2">
+                                <input type="button" value="3" src="" id="editor_color3_apply" class="size2">
+                                <input type="button" value="4" src="" id="editor_color4_apply" class="size2">
+                                </p>
                             </div>
                         </div>
                     </div>
