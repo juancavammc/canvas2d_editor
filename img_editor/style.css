@@ -1,5 +1,5 @@
 html {
-    background-color: #d9d9d9;
+    background-color: #ebebeb;
     width: 100%;
     height: 100%;
     margin: 0;
@@ -19,91 +19,126 @@ p {
     border: 0;
     margin: 0;
 }
-#wrap {
+
+div#wrap {
     position: absolute;
     top: 50px;
     left: 50px;
     right: 50px;
     bottom: 50px;
+    min-width: 800px;
+    min-height: 600px;
+}
+
+div#editor_wrap {
+    //box-shadow: 0  0  5px 5px #c3c3c3;
+    width: 100%;
+    height: calc(100% - 110px);
+}
+div#editor_footer {
+    background-color: #ffffff;
+    margin-top: 10px;
+    bottom: 0;
+    width: 100%;
+    height: 100px;
 }
 
 
-#logos_zone {
-    background-color: #787878;
+div#logos_zone {
+    box-shadow: 0  0  5px 5px #c3c3c3;
     width: 200px;
     height: 100%;
     margin: 0;
     padding: 0;
     float: left;
     overflow-y: scroll;
+    background: white;
 }
 
-#tools_zone {
-    background-color: #787878;
-    height: 100%;
-    width: 200px;
-    float: right;
-    margin: 0;
-    padding: 0;
-}
-
-#product_zone {
-    padding: 0;
+div#product_wrap {
+    box-shadow: 0  0  5px 5px #c3c3c3;
     height: 100%;
     margin-left: 210px;
-    margin-right: 210px;
+    background: white;
 }
 
-#product_thumbs_zone {
-    background-color: #787878;
+
+
+div#product_zone {
+    background-color: #ffffff;
+    width: 100%;
+    height: calc(100% - 105px);
+}
+
+div#editor_tools {
+    background-color: #e1e1e1;
+    margin-top: 4px;
+    bottom: 0;
+    width: 100%;
     height: 100px;
-    text-align: center;
-    /*overflow-x: scroll;
-    overflow-y: hidden;*/
 }
 
-#editor_zone {
-    background-color: #787878;
-    margin-top: 10px;
-    height: calc(100% - 110px);
-}
 
-#canvas_tools_zone {
+div#product_thumbs_zone {
+    float: left;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 75px;
+}
+div#product_tools {
     position: relative;
-    background-color: #787878;
+    background-color: #e1e1e1;
     height: 100%;
     float: right;
-    width: 150px;
+    width: 300px;
 }
 
-#div_editor_entityButtons {
-    padding: 5px;
-}
-
-#editor_tools_buttons {
-    position: absolute;
-    bottom: 0;
-    padding: 5px;
-}
-
-#canvas_zone {
+div#canvas_zone {
     height: 100%;
-    margin-right: 150px;
+    margin-left: 75px;
+    margin-right: 300px;
 }
 
-.thumb {
-    max-width:100%;
-    max-height:100%;
-    border: 0;
-    margin: 0;
-    padding: 0;
+div#editor_tools_buttons {
+    float: left;
 }
 
-#tools_zone_final {
+div#editor_tools_transformOptions {
+    float: left;
+}
+
+div#editor_tools_fontOptions {
+    float: right;
+}
+
+div#editor_footer_comments {
+    float: left;
+}
+
+div#editor_footer_finish {
+    float: right;
+}
+
+div#editor_tools_fontOptions {
+    height: 100%;
+}
+div#editor_tools_fontOptions {
+    height: 100%;
+    position: relative;
+}
+div#div_editor_fontOptions_textArea {
+    float:left
+}
+
+div#div_editor_fontOptions_options {
+    float: left;
+}
+div#div_editor_fontOptions_color {
     position: absolute;
-    bottom: 0;
-    padding: 5px;
+    bottom:0;
 }
+
 
 #editor_opt_window {
     position: absolute;
@@ -126,32 +161,19 @@ p {
 #editor_opt_window_buttons{
     box-sizing: border-box;
     padding:10px;
-   /* position: absolute;*/
     text-align: center;
     width: 100%;
     bottom: 0;
 }
 
-input {
-	border: 0;
-	margin: 3px;
-	background-color: #d9d9d9;
-	color: #000;
-	padding-left: 5px;
-}
 
-input[type="image"] {
+.thumb {
+    max-width:100%;
+    max-height:100%;
     border: 0;
     margin: 0;
     padding: 0;
 }
-
-input[type="button"] {
-    background: #42A0FF;
-    color: #FFFFFF;
-    height: 30px;
-}
-
 input[type="button"].size1 {
     width: 125px;
 }
@@ -161,57 +183,46 @@ input[type="button"].size2 {
     width: 60px;
 }
 
-input[type="button"]:hover:not(:disabled) {
-    background: #a2a2a2;
-}
-
-input[type="button"]:active:not(:disabled) {
-    background: #a6a6a6;
-}
-
-input[type="button"].blue {
-    background: #3d77d2;
-}
-
-input[type="button"]:hover:not(:disabled).blue {
-    background: #42A0FF;
-}
-
-input[type="button"].red {
-    background: #d25656;
-}
-
-input[type="button"]:hover:not(:disabled).red {
-    background: #ff6464;
-}
-
-input[type="button"].green {
-    background: #20af57;
-}
-
-input[type="button"]:hover:not(:disabled).green {
-    background: #21dc81;
-}
-
-textArea {
+textArea.textInput {
     resize: none;
     width: 125px;
     height: 40px;
 }
 
-
-input[type=radio].buttonizer, input[type=checkbox].buttonizer{
-    display:none;
-    margin:10px;
+textArea.comments {
+    resize: none;
+    width: 400px;
+    height: 80px;
 }
 
-input[type=radio] + label, input[type=checkbox] + label{
-    /*display:inline-block;*/
-    background-color: #e7e7e7;
-    border: 2px solid rgba(0,0,0,0);
-}
-input[type=radio]:checked + label, input[type=checkbox]:checked + label {
-    background: #d0d0d0 none;
-    border: 2px solid black;
+label.buttonizer {
+    float:left;
+    margin:4px;
+    background-color:#EFEFEF;
+    border-radius:4px;
+//border:5px solid #D0D0D0;
+    overflow:auto;
+
 }
 
+label.buttonizer span {
+    text-align:center;
+    font-size: 12px;
+    //padding:13px 0px;
+    padding: 0;
+    display:block;
+    height: 30px;
+    width: 30px;
+
+}
+
+label.buttonizer input {
+    display: none;
+}
+
+label.buttonizer input:checked + span {
+    border:3px solid black;
+}
+label.buttonizer input + span {
+    border:3px solid grey;
+}
