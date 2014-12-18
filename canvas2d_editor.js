@@ -971,9 +971,7 @@
         color_picker.className = "cp-default";
 
         function handle_colorpicker(hex, hsv, rgb) {
-
-            console.log(hex);
-            currentColor.style.backgroundColor = hex;        // #HEX
+            currentColor.style.backgroundColor = hex;
             updateTextColors();
         }
         ColorPicker(color_picker, handle_colorpicker);
@@ -1028,16 +1026,13 @@
         }
 
         function updateTextColors() {
-            console.log("updateTextColors");
             for(var i = 0; i < color_list.length; ++i) {
                 if(color_list[i].dataset.status === "remove") {
                     button_color_apply[i].style.background = color_list[i].style.backgroundColor;
                     button_color_apply[i].style.display = "inline-block";
-                    console.log("if");
                 }
                 else {
                     button_color_apply[i].style.display = "none";
-                    console.log("else");
                 }
             }
         }
