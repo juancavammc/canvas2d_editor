@@ -918,12 +918,12 @@
         this._editor_zonesCheckBox.checked = true;
 
         //Get divs
-        var div_canvas_tools_zone_content = document.getElementById("canvas_tools_zone_content");
+        var div_editor_tools_buttons = document.getElementById("editor_tools_buttons");
         var div_editor_mainButtons =  document.getElementById("div_editor_mainButtons");
         var div_editor_moveButtons =  document.getElementById("div_editor_moveButtons");
         var div_editor_scaleButtons =  document.getElementById("div_editor_scaleButtons");
         var div_editor_rotateButtons =  document.getElementById("div_editor_rotateButtons");
-        var div_editor_fontOptions = document.getElementById("div_editor_fontOptions");
+        var div_editor_tools_fontOptions = document.getElementById("editor_tools_fontOptions");
         var div_tools_zone_serigraphy = document.getElementById("tools_zone_serigraphy");
         var div_tools_zone_laser = document.getElementById("tools_zone_laser");
 
@@ -931,8 +931,8 @@
         div_editor_moveButtons.style.display = "none";
         div_editor_scaleButtons.style.display = "none";
         div_editor_rotateButtons.style.display = "none";
-        div_editor_fontOptions.style.display = "none";
-        //div_canvas_tools_zone_content.style.display = "none";
+        div_editor_tools_fontOptions.style.display = "none";
+        //div_editor_tools_buttons.style.display = "none";
         div_tools_zone_laser.style.display = "none";
 
 
@@ -967,26 +967,26 @@
                 div_editor_moveButtons.style.display = "none";
                 div_editor_scaleButtons.style.display = "none";
                 div_editor_rotateButtons.style.display = "none";
-                div_editor_fontOptions.style.display = "none";
+                div_editor_tools_fontOptions.style.display = "none";
             }
             else {
                 if (that.selectedEntity) {
                     div_editor_mainButtons.style.display = "block";
                     if(that.selectedEntity instanceof EntityText) {
-                        div_editor_fontOptions.style.display = "block";
+                        div_editor_tools_fontOptions.style.display = "block";
                         that._editor_textArea_font.value = that.selectedEntity.text;
                         that._editor_selectFont.selectedIndex = that.font_list.indexOf(that.selectedEntity.font);
                         that._editor_selectSize.selectedIndex = that.font_sizes.indexOf(parseInt(that.selectedEntity.fontSize));
                         that._editor_selectOffset.selectedIndex = that.font_offsets.indexOf(parseInt(that.selectedEntity.fontOffset));
                     }
-                    else div_editor_fontOptions.style.display = "none";
+                    else div_editor_tools_fontOptions.style.display = "none";
                 }
                 else {
                     div_editor_mainButtons.style.display = "none";
                     div_editor_moveButtons.style.display = "none";
                     div_editor_scaleButtons.style.display = "none";
                     div_editor_rotateButtons.style.display = "none";
-                    div_editor_fontOptions.style.display = "none";
+                    div_editor_tools_fontOptions.style.display = "none";
                 }
             }
         };
