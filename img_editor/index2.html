@@ -82,15 +82,24 @@
                         </div>
                         <div id="editor_tools_fontOptions">
                             <div id="div_editor_fontOptions"> <!-- JS -->
-                                <p><textArea id="editor_textArea_font"></textArea></p>
-                                <p>Fuente: <select name="selectFont" id="editor_selectFont"></select></p>
-                                <p>Tamaño: <select name="selectSize" id="editor_selectSize"></select></p>
-                                <p>Offset: <select name="selectOffset" id="editor_selectOffset"></select></p>
-                                <p>Selecciona color texto
+                                <div id="div_editor_fontOptions_up">
+                                    <div id="div_editor_fontOptions_textArea">
+                                        <p><textArea id="editor_textArea_font" class="textInput"></textArea></p>
+                                    </div>
+                                    <div id="div_editor_fontOptions_options">
+                                        <p>Fuente: <select name="selectFont" id="editor_selectFont"></select></p>
+                                        <p>Tamaño: <select name="selectSize" id="editor_selectSize"></select></p>
+                                        <p>Offset: <select name="selectOffset" id="editor_selectOffset"></select></p>
+                                    </div>
+                                </div>
+                                <div id="div_editor_fontOptions_color">
+                                    <p>Selecciona color texto
                                     <input type="button" value="C" src="" id="editor_color1_apply" class="size2">
                                     <input type="button" value="2" src="" id="editor_color2_apply" class="size2">
                                     <input type="button" value="3" src="" id="editor_color3_apply" class="size2">
-                                    <input type="button" value="4" src="" id="editor_color4_apply" class="size2"></p>
+                                    <input type="button" value="4" src="" id="editor_color4_apply" class="size2">
+                                    </p>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -99,7 +108,7 @@
             <div id="editor_footer">
                 <div id="editor_footer_comments">
                     <p>Comentarios
-                    <textarea></textarea></p>
+                    <textarea id="editor_comments" class="comments"></textarea></p>
                 </div>
                 <div id="editor_footer_finish">
                     <p>Precio: </p>

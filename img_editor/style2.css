@@ -44,7 +44,6 @@ div#editor_footer {
 }
 
 
-
 div#logos_zone {
     box-shadow: 0  0  5px 5px #c3c3c3;
     width: 200px;
@@ -53,14 +52,14 @@ div#logos_zone {
     padding: 0;
     float: left;
     overflow-y: scroll;
-    background: #ccc153;
+    background: white;
 }
 
 div#product_wrap {
     box-shadow: 0  0  5px 5px #c3c3c3;
     height: 100%;
     margin-left: 210px;
-    background: #ffffff;
+    background: white;
 }
 
 
@@ -113,12 +112,31 @@ div#editor_tools_fontOptions {
     float: right;
 }
 
-.thumb {
-    max-width:100%;
-    max-height:100%;
-    border: 0;
-    margin: 0;
-    padding: 0;
+div#editor_footer_comments {
+    float: left;
+}
+
+div#editor_footer_finish {
+    float: right;
+}
+
+div#editor_tools_fontOptions {
+    height: 100%;
+}
+div#div_editor_fontOptions {
+    height: 100%;
+    position: relative;
+}
+div#div_editor_fontOptions_textArea {
+    float:left
+}
+
+div#div_editor_fontOptions_options {
+    float: left;
+}
+div#div_editor_fontOptions_color {
+    position: absolute;
+    bottom:0;
 }
 
 
@@ -143,12 +161,19 @@ div#editor_tools_fontOptions {
 #editor_opt_window_buttons{
     box-sizing: border-box;
     padding:10px;
-    /* position: absolute;*/
     text-align: center;
     width: 100%;
     bottom: 0;
 }
 
+
+.thumb {
+    max-width:100%;
+    max-height:100%;
+    border: 0;
+    margin: 0;
+    padding: 0;
+}
 input[type="button"].size1 {
     width: 125px;
 }
@@ -156,4 +181,31 @@ input[type="button"].size1 {
 
 input[type="button"].size2 {
     width: 60px;
+}
+
+textArea.textInput {
+    resize: none;
+    width: 125px;
+    height: 40px;
+}
+
+textArea.comments {
+    resize: none;
+    width: 400px;
+    height: 80px;
+}
+
+input[type=radio].buttonizer, input[type=checkbox].buttonizer{
+    display:none;
+    margin:10px;
+}
+
+input[type=radio] + label, input[type=checkbox] + label{
+    /*display:inline-block;*/
+    background-color: #e7e7e7;
+    border: 2px solid rgba(0,0,0,0);
+}
+input[type=radio]:checked + label, input[type=checkbox]:checked + label {
+    background: #d0d0d0 none;
+    border: 2px solid black;
 }
