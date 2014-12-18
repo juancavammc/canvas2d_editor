@@ -226,3 +226,21 @@ label.buttonizer input:checked + span {
 label.buttonizer input + span {
     border:3px solid grey;
 }
+
+.div_colors {
+    margin:0;
+    border-radius:6px;
+    border:3px solid grey;
+    width: 30px;
+    height: 30px;
+}
+
+.color_picker_pos {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+}
+
+
+#picker { width: 200px; height: 200px }
+#slider { width: 30px; height: 200px }

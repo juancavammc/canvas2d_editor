@@ -904,6 +904,7 @@
         button_color3_apply.dataset.index = 2;
         button_color4_apply.dataset.index = 3;
 
+
         //Get other elements
         this._editor_textArea_font = document.getElementById("editor_textArea_font");
         this._editor_selectFont = document.getElementById("editor_selectFont");
