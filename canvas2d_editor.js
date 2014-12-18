@@ -905,7 +905,7 @@
         button_color4_apply.dataset.index = 3;
 
         //Get other elements
-        this._editor_textArea = document.getElementById("editor_textArea");
+        this._editor_textArea_font = document.getElementById("editor_textArea_font");
         this._editor_selectFont = document.getElementById("editor_selectFont");
         this._editor_selectSize = document.getElementById("editor_selectSize");
         this._editor_selectOffset = document.getElementById("editor_selectOffset");
@@ -974,7 +974,7 @@
                     div_editor_mainButtons.style.display = "block";
                     if(that.selectedEntity instanceof EntityText) {
                         div_editor_fontOptions.style.display = "block";
-                        that._editor_textArea.value = that.selectedEntity.text;
+                        that._editor_textArea_font.value = that.selectedEntity.text;
                         that._editor_selectFont.selectedIndex = that.font_list.indexOf(that.selectedEntity.font);
                         that._editor_selectSize.selectedIndex = that.font_sizes.indexOf(parseInt(that.selectedEntity.fontSize));
                         that._editor_selectOffset.selectedIndex = that.font_offsets.indexOf(parseInt(that.selectedEntity.fontOffset));
@@ -1022,7 +1022,7 @@
         }
 
         //Text Handlers
-        this._editor_textArea.addEventListener("input", function() {
+        this._editor_textArea_font.addEventListener("input", function() {
             if(that.selectedEntity && that.selectedEntity instanceof EntityText) {
                 that.selectedEntity.text = this.value;
                 that.draw();
