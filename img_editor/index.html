@@ -4,6 +4,7 @@
         <meta charset="utf-8">
         <title>Canvas2D Image Editor</title>
         <link rel="stylesheet" type="text/css" href="style.css" />
+        <link rel="stylesheet" type="text/css" href="colorpicker/themes.css" />
     </head>
     <body>
         <div id="wrap">
@@ -25,19 +26,13 @@
                             </div>
                             <div id="tools_zone_serigraphy"> <!-- JS -->
                                 <h3>Colores marcaje:</h3>
-                                <!--<p>
-                                    <label class="buttonizer"><input type="checkbox" name="editor_colors_select" id="editor_color1_select"><span>C1</span></label>
-                                    <label class="buttonizer"><input type="checkbox" name="editor_colors_select" id="editor_color2_select"><span>C2</span></label>
-                                    <label class="buttonizer"><input type="checkbox" name="editor_colors_select" id="editor_color3_select"><span>C3</span></label>
-                                    <label class="buttonizer"><input type="checkbox" name="editor_colors_select" id="editor_color4_select"><span>C4</span></label>
-                                </p>-->
-                                <p>
-                                <!--<input type="button" id="editor_color1_select" class="color{valueElement: 'colortext'} div_colors">-->
-                                <div id="editor_color1_select" class="div_colors add"></div>
-                                </p>
+                                <div id="editor_color_buttons_container">
+                                    <!--<div id="editor_color_select1" class="div_colors add"></div>
+                                    <div id="editor_color_select2" class="div_colors add"></div>
+                                    <div id="editor_color_select3" class="div_colors add"></div>
+                                    <div id="editor_color_select4" class="div_colors add"></div>-->
+                                </div>
 
-
-                                <input type="text" id="colortext" style="visibility: hidden">
                             </div>
                             <div id="tools_zone_laser"> <!-- JS -->
                                 <p>El marcaje por láser no permite selección de colores.</p>
@@ -116,8 +111,7 @@
                 </div>
             </div>
         </div>
-        <script type="text/javascript" src="../jscolor/jscolor.js"></script>
-        <script type="text/javascript" src="colorpicker.js"></script>
+        <script type="text/javascript" src="colorpicker/colorpicker.js"></script>
         <script type="text/javascript" src="../gl-matrix.js"></script>
         <script type="text/javascript" src="../canvas2d_editor.js"></script>
         <script type="text/javascript" src="editor.js"></script>
