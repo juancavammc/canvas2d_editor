@@ -965,8 +965,19 @@
         //Colorpicker
         var color_list = [];
         var div_colorButtons_container = document.getElementById("editor_color_buttons_container");
-        var color_picker = document.createElement("div");
         var currentColor = undefined;
+
+        //////////
+        var color_picker = document.getElementById("color_picker_wrap");
+        var color_picker_tool = document.getElementById("color_picker");
+        function handle_colorpicker(hex, hsv, rgb) {
+            currentColor.style.backgroundColor = hex;
+            updateTextColors();
+        }
+        document.getElementById("color_picker_closer").addEventListener("click", function() {color_picker.style.display = "none";}, false);
+        ColorPicker(color_picker_tool, handle_colorpicker);
+        //////////
+        /*var color_picker = document.createElement("div");
         color_picker.id = "color_picker";
         color_picker.className = "cp-default";
 
@@ -976,7 +987,7 @@
         }
         ColorPicker(color_picker, handle_colorpicker);
         color_picker.style.display = "none";
-        document.body.appendChild(color_picker);
+        document.body.appendChild(color_picker);*/
 
         function handle_click_on_color(event) {
             _augmentEvent(event);
