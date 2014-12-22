@@ -1,17 +1,8 @@
-html {
-    background-color: #ebebeb;
-    width: 100%;
-    height: 100%;
-    margin: 0;
-    padding: 0;
-}
-
 body {
-    width: 100%;
-    height: 100%;
     margin: 0;
     padding: 0;
-    font:  14px 'Tahoma';
+    font-family: 'Montserrat', Fallback, sans-serif;
+    font-size: 10px;
 }
 
 p {
@@ -21,83 +12,86 @@ p {
 }
 
 div#wrap {
-    position: absolute;
-    top: 50px;
-    left: 50px;
-    right: 50px;
-    bottom: 50px;
-    min-width: 800px;
-    min-height: 600px;
+    /*padding: 20px;*/
 }
 
 div#editor_wrap {
-    //box-shadow: 0  0  5px 5px #c3c3c3;
-    width: 100%;
-    height: calc(100% - 110px);
+    min-height:100%;
+    width:100%;
+    float:left;
 }
+
 div#editor_footer {
     background-color: #ffffff;
     margin-top: 10px;
     bottom: 0;
     width: 100%;
     height: 100px;
+    float:left;
 }
 
 
 div#logos_zone {
-    box-shadow: 0  0  5px 5px #c3c3c3;
-    width: 200px;
-    height: 100%;
-    margin: 0;
+    width: 14.5%;
+    margin-right: 0.5%;
+    min-height: 733px;
     padding: 0;
-    float: left;
     overflow-y: scroll;
     background: white;
+    vertical-align: top;
+    text-align: center;
+    float:left;
 }
 
 div#product_wrap {
-    box-shadow: 0  0  5px 5px #c3c3c3;
+    padding: 3px;
     height: 100%;
-    margin-left: 210px;
-    background: white;
+    width: 84%;
+    min-width: 600px;
+    background: #FFF;
+    float:left;
 }
-
-
 
 div#product_zone {
     background-color: #ffffff;
-    width: 100%;
+    width: 70%;
     height: calc(100% - 105px);
 }
 
 div#editor_tools {
-    background-color: #e1e1e1;
+    background-color: #F2F2F2;
     margin-top: 4px;
-    bottom: 0;
     width: 100%;
-    height: 100px;
+    min-height: 120px;
+    float: left;
 }
 
+.product_column {
+    float: left;
+}
+
+.thumbs_zone {
+    width: 7%;
+    min-height: 600px;
+    background-color: #FFF;
+}
 
 div#product_thumbs_zone {
-    float: left;
-    top: 0;
-    left: 0;
-    height: 100%;
-    width: 75px;
+    vertical-align: bottom;
 }
 div#product_tools {
+    min-height: 600px;
     position: relative;
-    background-color: #e1e1e1;
+    background-color: #F2F2F2;
     height: 100%;
-    float: right;
-    width: 300px;
+    width: 23%;
+    vertical-align:top;
 }
 
 div#canvas_zone {
-    height: 100%;
-    margin-left: 75px;
-    margin-right: 300px;
+    height: 600px !important;
+    max-height: 600px;
+    text-align: center;
 }
 
 div#editor_tools_buttons {
@@ -110,14 +104,18 @@ div#editor_tools_transformOptions {
 
 div#editor_tools_fontOptions {
     float: right;
+    width: 400px;
 }
 
 div#editor_footer_comments {
-    float: left;
+    
 }
 
 div#editor_footer_finish {
-    float: right;
+    text-align: right;
+    padding: 0px 0px 15px;
+    margin: 0px 0px 30px;
+    border-bottom: 2px solid #E2E2E2;
 }
 
 div#editor_tools_fontOptions {
@@ -128,15 +126,6 @@ div#editor_tools_fontOptions {
     position: relative;
 }
 div#div_editor_fontOptions_textArea {
-    float:left
-}
-
-div#div_editor_fontOptions_options {
-    float: left;
-}
-div#div_editor_fontOptions_color {
-    position: absolute;
-    bottom:0;
 }
 
 
@@ -168,30 +157,26 @@ div#div_editor_fontOptions_color {
 
 
 .thumb {
-    max-width:100%;
+    width:90%;
     max-height:100%;
-    border: 0;
     margin: 0;
     padding: 0;
+    border: 2px solid #F2F2F2;
+    border-radius: 2px;
 }
 input[type="button"].size1 {
     width: 125px;
 }
 
-
-input[type="button"].size2 {
-    width: 60px;
-}
-
 textArea.textInput {
     resize: none;
-    width: 125px;
-    height: 40px;
+    width: 100%;
+    height: 20px;
 }
 
-textArea.comments {
+.comments {
     resize: none;
-    width: 400px;
+    width: 100%;
     height: 80px;
 }
 
@@ -231,18 +216,15 @@ label.buttonizer input + span {
     display: inline-block;
     margin:0;
     border-radius:6px;
-    border:3px solid grey;
+    border:1px solid #C3C3C3;
     width: 30px;
     height: 30px;
+    margin-right: 4px;
 }
 
-.add {
-    border:3px solid green;
-}
+.add {}
 
-.remove {
-    border:3px solid red;
-}
+.remove {}
 
 .color_picker_pos {
     position: absolute;
@@ -250,3 +232,83 @@ label.buttonizer input + span {
     left: 50%;
 }
 
+
+.border_shaded { 
+    box-shadow: 0 0 5px 5px #C3C3C3;
+    border-radius: 2px;
+    padding: 3px;
+}
+
+.product_tools_wrapper { padding: 15px; }
+
+.product_paragraph { margin-bottom: 15px; }
+
+.product_name { 
+    margin: 0; 
+    font-size: 20px; 
+    font-weight: bold; 
+}
+
+table.editor_table { 
+    border-spacing: 0px; 
+    width: 100%; 
+    text-transform: uppercase;
+}
+
+table.editor_table tbody tr th { 
+    vertical-align: middle;
+    text-align: left;
+    color: #7C7C7C;
+}
+
+table.editor_table tbody tr td select { 
+    width: 100%; 
+    padding:2px 4px;
+    background-color: white;
+    border: 2px solid #BBB;
+    border-radius: 3px;
+    text-transform: uppercase;
+}
+
+.size2 {
+    display: inline-block;
+    margin: 0;
+    border-radius:4px;
+    border: 1px solid #C3C3C3;
+    width: 20px;
+    height: 20px;   
+}
+
+.editor_button {
+    background-color: #FFF;
+    color: #333;
+    padding: 5px 0px;
+    border: 1px solid #C3C3C3;
+    border-radius: 3px;
+    box-shadow: none;
+}
+
+.editor_footer_paragraph {
+    margin: 0px 50px 30px;
+}
+
+#editor_addToCart
+{
+    background-color: #019ee1;
+    color: #FFF;
+    padding: 5px 0px;
+    border: 1px solid #C3C3C3;
+    border-radius: 3px;
+    box-shadow: none;
+}
+
+@font-face {
+    font-family: 'Montserrat';
+    src: url('font/Montserrat/Montserrat-Regular.ttf')  format('truetype'); /* Safari, Android, iOS */
+}
+
+@font-face {
+    font-family: "Montserrat";
+    src: url("font/Montserrat/Montserrat-Bold.ttf");
+    font-weight: bold;
+}
